@@ -1,4 +1,4 @@
-import airfb, airtoolkit, sys, time, pygraph.readwrite.dot, pygraph.classes.graph
+import airfb, airtoolkit, sys, time#, pygraph.readwrite.dot, pygraph.classes.graph
 
 def downloadPrint(access_token):
     downloader = Downloader()
@@ -55,9 +55,10 @@ def makeGraph(filename):
 def getPMI(filename):
     graph = airfb.FBGraph()
     graph.load(filename)
-    print 'filtering'
-    graph.filterByActivity(3)
-    print 'getting likes'
+    print len(graph.graph),'objects before filtering'
+    activity = graph.filterByActivity(3)
+    print len(graph.graph),'objects after filtering'
     likes = graph.linksOfRel('likes')
-    print likes
+    print 'number of likes',len(likes)
     pmi = airtoolkit.PMIMatrix(likes)
+    return graph, activity, pmi

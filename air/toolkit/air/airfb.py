@@ -198,7 +198,7 @@ def dlFriends(graphapi,fbid):
         return (fbid,'friends',{})
 
 """
-Commands for starting rabbitmql and celery
+Commands for starting rabbitmql and celery:
 sudo rabbitmq-server -detached
 celeryd --loglevel=INFO
 """

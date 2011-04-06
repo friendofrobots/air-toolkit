@@ -1,12 +1,5 @@
-"""
-other things to do:
+import math
 
-finish downloader:
-  
-settle on graph data structure
-  look up more graph models
-  look up possibilities for storage
-"""
 class Graph(object):
     def __init__(self,data={}):
         self.graph = data
@@ -36,7 +29,6 @@ class Graph(object):
         filtered = []
         for id1, links in self.graph.iteritems():
             for id2, link in links.iteritems():
-                print link[1],rel
                 if link[1] == rel:
                     filtered.append(link)
         return filtered
@@ -48,15 +40,24 @@ class Graph(object):
     Warning: this action is permanent for the data in memory
     """
     def filterByActivity(self,min):
-        purge = []
+        activity = dict([(item,0) for item in self.graph.keys()])
         for left, links in self.graph.iteritems():
-            if len(self.graph[left]) < min:
-                purge.append(left)
-        for item in purge:
-            self.graph.pop(item,False)
-            for left, links in self.graph.iteritems():
-                links.pop(item,False)
+            activity[left] += len(links)
+            for right in links:
+                if right not in activity:
+                    activity[right] = 0
+                activity[right] += 1
 
+        purge = [item for item,n in activity.iteritems() if n < min]
+        
+        for item in purge:
+            if item in self.graph:
+                self.graph.pop(item,False)
+            for left in self.graph:
+                if item in self.graph[left]:
+                    self.graph[left].pop(item,False)
+        # temporary thing for testing
+        return activity
 
 class PMIMatrix(object):
     def __init__(self,links):
@@ -73,7 +74,12 @@ class PMIMatrix(object):
         """
         for item1,lb1 in linkedBy.iteritems():
             for item2,lb2 in linkedBy.iteritems():
-                self.matrix[item1][item2] = math.log(len(lb1.intersection(lb2))*len(links)/(len(lb1)*len(lb2)),2)
+                if item1 not in self.matrix:
+                    self.matrix[item1] = {}
+                if len(lb1.intersection(lb2)) == 0:
+                    self.matrix[item1][item2] = 0
+                else:
+                    self.matrix[item1][item2] = math.log(len(lb1.intersection(lb2))*len(links)/(len(lb1)*len(lb2)),2)
 
     def getVector(self,o):
         return self.matrix[o]
