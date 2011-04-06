@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block head_title %}category{% endblock %}
+
+{% block content %}
+  <div id="sidebar">
+    <ul>
+      {% for object in objects %}
+      <li>
+        <h2>{{ object.name }}</h2>
+        <img src="http://www.sin-stuff.com/mom/files/gimgs/21_facebook-default-profile-pic.jpg" />
+        <!-- <img src="https://graph.facebook.com/{{ object.id }}/picture"/> -->
+        <ul>
+          {% for link,pages in object.properties.items %}
+          <li>
+            <h3>{{ link }}</h3>
+            <ul>
+              {% for page in pages %}
+              <li>
+                <a href="/p/{{ page.id }}">{{ page.name }}</a>
+              </li>
+              {% endfor %}
+            </ul>
+          </li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div id="results">
+    <h1>Category</h1>
+    <div id="features" class="top_items">
+      <h2>Top Features</h2>
+      <ul>
+        {% for verb,concept,weight in topFea %}
+        <li>
+          {{ verb }}
+          <a href="/p/{{ concept.id }}">{{ concept.name }}</a>
+          | {{ weight }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div id="similarities" class="top_items">
+      <h2>Top Similarities</h2>
+      <ul>
+        {% for concept,weight in topSim %}
+        <li>
+          <a href="/p/{{ concept.id }}">{{ concept.name }}</a>
+          | {{ weight }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div id="predictions" class="top_items">
+      <h2>Top Predictions</h2>
+      <ul>
+        {% for verb,concept,weight in topPre %}
+        <li>
+          {{ verb }}
+          <a href="/p/{{ concept.id }}">{{ concept.name }}</a>
+          | {{ weight }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endblock %}

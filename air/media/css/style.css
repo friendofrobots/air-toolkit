@@ -1,0 +1,95 @@
+body {
+  margin:0;
+  padding:0;
+  font-family: sans-serif;
+}
+
+#header {
+  width:100%;
+  border-bottom: 2px solid black;
+  margin: 0;
+  padding: 0;
+}
+
+#header a {
+  text-decoration: none;
+  color: black;
+}
+#header h1 {
+  margin: 8px;
+}
+
+#content {
+  margin: 0 auto;
+  width:800px;
+}
+
+#tabbar {
+  margin: 4px 0 0 0;
+}
+#tabbar li {
+  display: inline;
+  border: 1px solid black;
+  padding: 4px;
+  margin: 2px;
+}
+#tabbar a {
+  margin:2px;
+}
+
+ul {
+ list-style-type: none;
+ margin:4px;
+ padding:0;
+}
+
+/* explore */
+.objects {
+  float: left;
+  width:400px;
+}
+
+/* object */
+#sidebar {
+  width:216px;
+  float:left;
+  padding:8px;
+}
+
+#results {
+  width:512px;
+  float:left;
+  padding:8px;
+}
+
+#profile-pic {
+  margin: .67em auto 0;
+}
+
+#profile-pic img {
+  width: 188px;
+}
+
+/* compare */
+#right-sidebar {
+  width:216px;
+  float:right;
+  padding:8px;
+}
+
+#comparison {
+  width:320px;
+  float:left;
+}
+
+/* projection */
+#for-comparison h2 {
+  width: 100%;
+  float:left;
+  clear:both;
+}
+
+.profile-likes {
+  width:380px;
+  float:left;
+}

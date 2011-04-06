@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block head_title %}explore{% endblock %}
+
+{% block content %}
+  <form action="/add/" method="post">{% csrf_token %}
+    <div id="metadata" class="objects">
+      <div id="name">
+        Name:<br />
+        <input type="text" name="name" />
+      </div>
+      <div id="gender">
+        <ul>
+          <li>
+            <h3>Gender:</h3>
+          </li>
+          <li>
+            <input type="radio" name="gender" value="male" />
+            male
+          </li>
+          <li>
+            <input type="radio" name="gender" value="female" />
+            female
+          </li>
+        </ul>
+      </div>
+      <div id="hometown">
+        <ul>
+          <li>
+            <h3>Hometown:</h3>
+          </li>
+          {% for hometown in hometowns %}
+          <li>
+            <input type="radio" name="hometown" value="{{ hometown.id }}" />
+            {{ hometown.name }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div id="likes" class="objects">
+      <h2>Likes</h2>
+      <ul>
+        {% for category, likes in likes_by_category.items %}
+        <li>
+          <h3>{{ category }}</h3>
+          <ul>
+            {% for like in likes %}
+            <li>
+              <div class="like">
+                <input type="checkbox" name="likes" value="{{ like.id }}" />
+                {{ like.name }}
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <input type="submit" value="Submit" />
+  </form>
+{% endblock %}

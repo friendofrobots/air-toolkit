@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block head_title %}Compare {{ object1.name }} to {{ object2.name }}{% endblock %}
+
+{% block content %}
+  <div id="sidebar">
+    <div id="profile-pic">
+      <img src="https://graph.facebook.com/{{ object1.id }}/picture?type=large"/>
+    </div>
+    <ul id="properties">
+      {% if object1.gender %}
+      <li>
+        gender : {{ object1.gender.name }}
+      </li>
+      {% endif %}
+      {% if object1.hometown %}
+      <li>
+        hometown : {{ object1.hometown.name }}
+      </li>
+      {% endif %}
+      {% if object1.category %}
+      <li>
+        category : {{ object1.category }}
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+  <div id="comparison">
+    <h2>{{ object1.name }} and {{ object2.name }} are {{ weight }} similar.</h2>
+  </div>
+  <div id="right-sidebar">
+    <div id="profile-pic">
+      <img src="https://graph.facebook.com/{{ object2.id }}/picture?type=large"/>
+    </div>
+    <ul id="properties">
+      {% if object2.gender %}
+      <li>
+        gender : {{ object2.gender.name }}
+      </li>
+      {% endif %}
+      {% if object2.hometown %}
+      <li>
+        hometown : {{ object2.hometown.name }}
+      </li>
+      {% endif %}
+      {% if object2.category %}
+      <li>
+        category : {{ object2.category }}
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+{% endblock %}

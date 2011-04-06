@@ -1,0 +1,90 @@
+# OSX Specific #
+################
+.DS_Store*
+Icon?
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyc
+*.pyo
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases #
+######################
+*.log
+*.sql
+*.sqlite
+*.db
+
+# OS generated files #
+######################
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+
+
+# Emacs generated files #
+#########################
+*~
+\#*\#
+
+# Python Stuff #
+################
+*.py[co]
+
+# virtualenv
+bin
+build
+include
+lib
+share
+.Python
+
+# Packages
+*.egg
+*.egg-info
+dist
+eggs
+parts
+develop-eggs
+.installed.cfg
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+
+# Task Specific #
+#################
+*.graph
+*.pickle
+*.json
+.fb_access_token

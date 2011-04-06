@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block head_title %}Compare {{ object.name }} to ...{% endblock %}
+
+{% block content %}
+  <div id="sidebar">
+    <div id="profile-pic">
+      <img src="https://graph.facebook.com/{{ object.id }}/picture?type=large"/>
+    </div>
+    <ul id="properties">
+      {% if object.gender %}
+      <li>
+        gender : {{ object.gender.name }}
+      </li>
+      {% endif %}
+      {% if object.hometown %}
+      <li>
+        hometown : {{ object.hometown.name }}
+      </li>
+      {% endif %}
+      {% if object.category %}
+      <li>
+        category : {{ object.category }}
+      </li>
+      {% endif %}
+      {% if object.likes %}
+      <li>
+        <h3>likes</h3>
+        <ul>
+          {% for like in object.likes %}
+          <li>
+            <a href="/p/{{ like.id }}">{{ like.name }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endif %}
+  </div>
+  <div id="results">
+    <h2>Compare {{ object.name }} to ...</h2>
+    <h3>profiles</h3>
+    <ul>
+      {% for profile in profiles %}
+      <li>
+        <a href="/compare/{{ object.id }}/{{ profile.id }}">{{ profile.name }}</a>
+        | <a href="/projection/{{ object.id }}/{{ profile.id }}">projection</a>
+      </li>
+      {% endfor %}
+    </ul>
+    <h3>pages</h3>
+    <ul>
+      {% for page in pages %}
+      <li>
+        <a href="/compare/{{ object.id }}/{{ page.id }}">{{ page.name }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

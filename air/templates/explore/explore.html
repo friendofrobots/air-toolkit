@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block head_title %}explore{% endblock %}
+
+{% block content %}
+  {% if user.is_authenticated %}
+  <div id="profiles" class="objects">
+    <h2>Profiles</h2>
+    <ul>
+      {% for profile in profiles %}
+      <li>
+        <div class="profile">
+          <a href="/p/{{ profile.id }}">{{ profile.name }}</a>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div id="pages" class="objects">
+    <h2>Pages</h2>
+    <ul>
+      {% for category, pages in pages_by_category.items %}
+      <li>
+        <h3>{{ category }}</h3>
+        <ul>
+          {% for page in pages %}
+          <li>
+            <div class="page">
+              <a href="/p/{{ page.id }}">{{ page.name }}</a>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+{% endblock %}

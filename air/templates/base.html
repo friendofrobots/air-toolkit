@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}" xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Exploring Divisi - {% block head_title %}{% endblock %}</title>
+    <link rel="stylesheet" href="/media/css/style.css" />
+  </head>
+
+  <body>
+    <div id="header">
+      <h1><a href="/">explore</a></h1>
+      <div style="float:right">
+        {% if user.is_authenticated %}
+        logged in as {{ user }}
+        {% else %}
+        <a href="auth/login">login</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div id="content">
+      <ul id="tabbar">
+        <li><a href="/categories/">categories</a></li>
+        <li><a href="/add/">add object</a></li>
+      </ul>
+      {% block content %}{% endblock %}
+    </div>
+
+  </body>
+</html>

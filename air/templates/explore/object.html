@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block head_title %}{{ object.name }}{% endblock %}
+
+{% block content %}
+  <div id="sidebar">
+    <div id="profile-pic">
+      <img src="https://graph.facebook.com/{{ object.id }}/picture?type=large"/>
+    </div>
+    <ul id="properties">
+      {% for link,pages in properties.items %}
+      <li>
+        <h3>{{ link }}</h3>
+        <ul>
+          {% for page in pages %}
+          <li>
+            <a href="/p/{{ page.id }}">{{ page.name }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div id="results">
+    <h1>{{ object.name }}</h1>
+    <div>
+      <a href="/compare/{{ object.id }}">Compare to...</a>
+    </div>
+    <div id="similarities" class="top_items">
+      <h2>Top Similarities</h2>
+      <ul>
+        {% for concept,weight in topSim %}
+        <li>
+          <a href="/p/{{ concept.id }}">{{ concept.name }}</a>
+          | {{ weight }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div id="predictions" class="top_items">
+      <h2>Top Predictions</h2>
+      <ul>
+        {% for verb,concept,weight in topPre %}
+        <li>
+          {{ verb }}
+          <a href="/p/{{ concept.id }}">{{ concept.name }}</a>
+          | {{ weight }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endblock %}

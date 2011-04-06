@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block head_title %}pages{% endblock %}
+
+{% block content %}
+  {% for page in pages %}
+  <div class="page">
+    <img src="https://graph.facebook.com/{{ page.id }}/picture"/>
+    <a href="/pages/{{ pages.id }}/">{{ page.name }}</a>
+  </div>
+  {% endfor %}
+{% endblock %}
