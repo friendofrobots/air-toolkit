@@ -89,3 +89,4 @@ pip-log.txt
 *.json
 .fb_access_token
 secrets.py
+data/*

@@ -84,9 +84,10 @@ def test(filename):
     p = []
     for v in pmi.matrix:
         [(x,pmi.matrix[v][x]) for x in pmi.matrix[v])]
-        """
+        
     with open('pmi.json','w') as f:
         json.dump(pmi.matrix,f,sort_keys=True, indent=4)
     with open('activity.json','w') as f:
         json.dump(activity,f,sort_keys=True, indent=4)
+        """
     return graph, activity, pmi

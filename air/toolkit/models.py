@@ -1,9 +1,10 @@
 from django.db import models
+import toolkit.models
 
-# Create your models here.
-class FBGraph(models.Model):
-    filename = models.CharField(max_length=100)
-    altered = models.BooleanField()
+class Data(models.Model):
+    profile = models.ForeignKey(FBGraph)
+    graph = models.TextField()
+    pmimatrix = models.TextField(blank=True)
 
     def __unicode__(self):
-        return self.filename
+        return profile.
