@@ -1,4 +1,7 @@
-import airfb, airtoolkit, sys, time#, pygraph.readwrite.dot, pygraph.classes.graph
+import airfb, airtoolkit, sys, time, json
+import rpy2.robjects.lib.ggplot2 as ggplot2
+import rpy2.robjects as ro
+from rpy2.robjects.packages import importr
 
 def downloadPrint(access_token):
     downloader = Downloader()
@@ -52,7 +55,7 @@ def makeGraph(filename):
     print 'rendering'
     gv.render(gvv,'png',graph.getName('me')+'.png')
 
-def getPMI(filename):
+def test(filename):
     graph = airfb.FBGraph()
     graph.load(filename)
     print len(graph.graph),'objects before filtering'
@@ -61,4 +64,29 @@ def getPMI(filename):
     likes = graph.linksOfRel('likes')
     print 'number of likes',len(likes)
     pmi = airtoolkit.PMIMatrix(likes)
+
+    """
+    # The R 'print' function
+    rprint = robjects.globalenv.get("print")
+    stats = importr('stats')
+    grdevices = importr('grDevices')
+    base = importr('base')
+
+    gp = ggplot2.ggplot( llasdfasdfasdf)
+
+    pp = gp + \
+        ggplot2.aes_string(x='wt') + \
+        ggplot2.geom_histogram()
+
+    pp.plot()
+    """
+    """
+    p = []
+    for v in pmi.matrix:
+        [(x,pmi.matrix[v][x]) for x in pmi.matrix[v])]
+        """
+    with open('pmi.json','w') as f:
+        json.dump(pmi.matrix,f,sort_keys=True, indent=4)
+    with open('activity.json','w') as f:
+        json.dump(activity,f,sort_keys=True, indent=4)
     return graph, activity, pmi

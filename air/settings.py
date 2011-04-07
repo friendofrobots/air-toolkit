@@ -1,13 +1,11 @@
 # Django settings for explore project.
 
 import os.path
+import secrets
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-FB_ID = '136124079773371'
-FB_KEY = '8b9e1c4d219596491f644519b42c58b7'
-FB_SECRET = 'b3c66b4777009c64dad3e5be4e82ca6b'
-FB_PERMS = 'user_hometown,friends_hometown,user_likes,friends_likes,offline_access'
+FB_ID, FB_KEY, FB_SECRET, FB_PERMS = secret.getFBSecrets()
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

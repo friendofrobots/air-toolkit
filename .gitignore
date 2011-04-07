@@ -88,3 +88,4 @@ pip-log.txt
 *.pickle
 *.json
 .fb_access_token
+secrets.py
