@@ -1,4 +1,4 @@
-from air.models import FBGraph
+from toolkit.models import Data
 from django.contrib import admin
 
-admin.site.register(FBGraph)
+admin.site.register(Data)

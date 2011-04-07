@@ -11,6 +11,6 @@ urlpatterns = patterns('',
     (r'^media/(?P<path>.*)$', 'django.views.static.serve',
      {'document_root': MEDIA_ROOT}),
 
-    (r'^auth/', include('fbauth.urls')),
+    (r'^login/', include('fbauth.urls')),
     (r'^$', include('air.urls')),
 )

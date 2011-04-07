@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 
-urlpatterns = patterns('air.views',
+urlpatterns = patterns('toolkit.views',
     url(r'^p/(\w+)$', 'object', name='object'),
     url(r'^compare/(\w+)$', 'compareTo', name='compareTo'),
     url(r'^compare/(\w+)/(\w+)$', 'compare', name='compare'),

@@ -5,7 +5,7 @@ import secrets
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-FB_ID, FB_KEY, FB_SECRET, FB_PERMS = secret.getFBSecrets()
+FB_ID, FB_KEY, FB_SECRET, FB_PERMS = secrets.getFBSecrets()
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
