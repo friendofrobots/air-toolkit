@@ -78,7 +78,7 @@ STATICFILES_DIRS = [
 ADMIN_MEDIA_PREFIX = '/admin_media/'
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'atv0grw6@l9*t85g4u3wbi%e)+n^7cp@$)a3-ihdy^j!!imll$'
+SECRET_KEY = secrets.getDjangoKey()
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (

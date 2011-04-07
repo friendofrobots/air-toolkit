@@ -14,7 +14,7 @@ access_token_url = 'https://graph.facebook.com/oauth/access_token'
 
 def login(request):
     args = dict(client_id=settings.FB_ID,
-                redirect_uri='https://127.0.0.1:8000/login',#request.build_absolute_uri(),
+                redirect_uri=request.build_absolute_uri(),
                 scope=settings.FB_PERMS,
                 )
     if request.GET.__contains__("code"):
