@@ -1,10 +1,11 @@
-import airfb, airtoolkit, sys, time, json
-import rpy2.robjects.lib.ggplot2 as ggplot2
+import airfb, airtoolkit, sys, time, json, operator, codecs
+from string import Template
+"""import rpy2.robjects.lib.ggplot2 as ggplot2
 import rpy2.robjects as ro
-from rpy2.robjects.packages import importr
+from rpy2.robjects.packages import importr"""
 
 def downloadPrint(access_token):
-    downloader = Downloader()
+    downloader = airfb.Downloader()
     print 'Starting download'
     downloader.startDownload(access_token)
 
@@ -66,28 +67,15 @@ def test(filename):
     pmi = airtoolkit.PMIMatrix(likes)
 
     """
-    # The R 'print' function
-    rprint = robjects.globalenv.get("print")
-    stats = importr('stats')
-    grdevices = importr('grDevices')
-    base = importr('base')
-
-    gp = ggplot2.ggplot( llasdfasdfasdf)
-
-    pp = gp + \
-        ggplot2.aes_string(x='wt') + \
-        ggplot2.geom_histogram()
-
-    pp.plot()
+    hist plsssss
     """
-    """
-    p = []
-    for v in pmi.matrix:
-        [(x,pmi.matrix[v][x]) for x in pmi.matrix[v])]
-        
-    with open('pmi.json','w') as f:
-        json.dump(pmi.matrix,f,sort_keys=True, indent=4)
-    with open('activity.json','w') as f:
-        json.dump(activity,f,sort_keys=True, indent=4)
-        """
+    print 'writing files'
+    with codecs.open('pmi.json','w','utf-8') as f:
+        p = [sorted([(graph.getName(x),graph.getName(z),y[z]) for z in y if y[z] != 0],key=operator.itemgetter(2), reverse=True) for x,y in pmi.matrix.iteritems()]
+        t = Template(unicode('($x,$y) => $z'))
+        s = unicode("\n\n").join([unicode("\n").join([t.substitute(x=x,y=y,z=z) for x,y,z in l]) for l in p])
+        f.write(s)
+    with codecs.open('activity.json','w','utf-8') as f:
+        a = sorted([(graph.getName(x),y) for x,y in activity.iteritems()],key=operator.itemgetter(1), reverse=True)
+        json.dump(a,f,indent=4)
     return graph, activity, pmi

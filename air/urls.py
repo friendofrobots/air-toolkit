@@ -12,5 +12,5 @@ urlpatterns = patterns('',
      {'document_root': MEDIA_ROOT}),
 
     (r'^login/', include('fbauth.urls')),
-    (r'^$', include('air.urls')),
+    (r'^$', include('toolkit.urls')),
 )

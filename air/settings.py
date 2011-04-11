@@ -2,10 +2,13 @@
 
 import os.path
 import secrets
+import djcelery
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 FB_ID, FB_KEY, FB_SECRET, FB_PERMS = secrets.getFBSecrets()
+
+djcelery.setup_loader()
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -112,4 +115,14 @@ INSTALLED_APPS = (
 
     'toolkit',
     'fbauth',
+    'djcelery',
+    'air_explorer',
 )
+
+# CELERY CONFIG #
+
+BROKER_HOST = "friendlybot"
+BROKER_PORT = 5672
+BROKER_USER = "friendofrobots"
+BROKER_PASSWORD = "asxdfe"
+BROKER_VHOST = "myvhost"

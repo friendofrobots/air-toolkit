@@ -118,6 +118,7 @@ class FBGraph(airtoolkit.Graph):
         self.lookup = {}
         self.lookup['male'] = 'male'
         self.lookup['female'] = 'female'
+        self.lookup['Gender'] = 'Gender'
         self.addLink('male','category','Gender')
         self.addLink('female','category','Gender')
 

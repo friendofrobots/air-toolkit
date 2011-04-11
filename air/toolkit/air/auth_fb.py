@@ -1,13 +1,7 @@
-import os.path
-import json
-import urllib2
-import urllib
-import urlparse
-import BaseHTTPServer
-import webbrowser
+import os.path, json, urllib2, urllib, urlparse, BaseHTTPServer, webbrowser, sys
 
 APP_ID = '136124079773371'
-APP_SECRET = 'b3c66b4777009c64dad3e5be4e82ca6b'
+APP_SECRET = '9b7d677d81d7b04bc1659ac465644b42'
 ENDPOINT = 'graph.facebook.com'
 REDIRECT_URI = 'http://127.0.0.1:8080/'
 ACCESS_TOKEN = None
@@ -25,6 +19,7 @@ def get_url(path, args=None):
     return endpoint+path+'?'+urllib.urlencode(args)
 
 def get(path, args=None):
+    print path, args
     return urllib2.urlopen(get_url(path, args=args)).read()
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -48,10 +43,6 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         open(LOCAL_FILE,'w').write(ACCESS_TOKEN)
         self.wfile.write("You have successfully logged in to facebook. "
                          "You can close this window now.")
-
-def print_status(item, color=u'\033[1;35m'):
-    print color+STATUS_TEMPLATE.format(name=item['from']['name'],
-                                       message=item['message'].strip())
 
 def get_access_token():
     global ACCESS_TOKEN

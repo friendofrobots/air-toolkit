@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block head_title %}pmi info{% endblock %}
+
+{% block content %}
+  <div id="pages" class="objects">
+    <h2>Pages</h2>
+    <ul>
+      {% for object in objects %}
+      <li>
+        <div id="{{ object }}" class="object">
+          <a>{{ lookup[object] }}</a>
+        </div>
+        <div id="{{ object }}-pmis" class="pmis">
+          <ul>
+          </ul>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

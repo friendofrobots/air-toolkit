@@ -43,6 +43,11 @@ ul {
  padding:0;
 }
 
+/* pmis */
+.pmis {
+  display: none;
+}
+
 /* explore */
 .objects {
   float: left;

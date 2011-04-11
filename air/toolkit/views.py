@@ -2,14 +2,41 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
+from django.contrib.auth.models import User
 
-from air.models import FBGraph
-import pickle, types
-from explore.air.divisi import airtoolkit
+import pickle, types, json
+from toolkit.models import Data
+from fbauth.models import Profile
+
+def pmi_all(request, greg=True, template_name="toolkit/pmi.html"):
+    if greg:
+        data = User.objects.get(pk=1).profile_set.all()[0].data_set.all()[0]
+    if request.user.is_authenticated():
+        data = request.user.profile_set.all()[0].data_set.all()[0]
+    # These may not be here yet, check for that
+    print 'loading json'
+    pmi = json.loads(data.pmi_matrix)
+    graph = json.loads(data.filtered_graph)
+    print 'rendering html'
+    print pmi
+    return render_to_response(template_name, {
+                "objects" : pmi.keys()[:100],
+                "lookup" : lookup,
+                }, context_instance=RequestContext(request))
+
+def getPmiVector(request, fbid):
+    """
+    load pmi matrix
+    vector = pmi[fbid]
+    filter our 0s
+    """
+    return HttpResponse(json.dumps(VECTOR),mimetype="application/json")
+
+# OLD STUFF
 
 # Choose a Profile/Page or Categories
 def explore(request, template_name="explore/explore.html"):
-    if !request.user.is_authenticated():
+    if not request.user.is_authenticated():
         return render_to_response(template_name, {
                 "profiles": [],
                 "pages_by_category": {},
