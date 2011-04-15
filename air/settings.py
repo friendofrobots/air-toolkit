@@ -120,9 +120,4 @@ INSTALLED_APPS = (
 )
 
 # CELERY CONFIG #
-
-BROKER_HOST = "friendlybot"
-BROKER_PORT = 5672
-BROKER_USER = "friendofrobots"
-BROKER_PASSWORD = "asxdfe"
-BROKER_VHOST = "myvhost"
+BROKER_HOST, BROKER_PORT, BROKER_USER, BROKER_PASSWORD, BROKER_VHOST = secrets.getCelerySecrets()

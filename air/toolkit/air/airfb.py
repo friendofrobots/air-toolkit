@@ -3,6 +3,21 @@ from celery.task.sets import TaskSet
 from celery.task.http import URL
 import celery, json, facebook, airtoolkit, urllib2, urllib
 
+def startDownload(access_token):
+    graphapi = facebook.GraphAPI(access_token)
+    self.me = graphapi.get_object('me')
+    friendIds = [f['id'] for f in graphapi.get_connections('me','friends')['data']]
+    friendIds.append(self.me['id'])
+    tasks = []
+    for i, fbid in enumerate(friendIds):
+        tasks.append(dlFriends.subtask((graphapi,fbid)))
+        tasks.append(dlInfo.subtask((graphapi,fbid)))
+        tasks.append(dlLikes.subtask((graphapi,fbid)))
+        tasks.append(dlInterests.subtask((graphapi,fbid)))
+    job = TaskSet(tasks)
+    result = job.apply_async()
+    self.result = result
+
 class Downloader(object):
     def startDownload(self, access_token):
         graphapi = facebook.GraphAPI(access_token)

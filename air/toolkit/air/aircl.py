@@ -56,7 +56,7 @@ def makeGraph(filename):
     print 'rendering'
     gv.render(gvv,'png',graph.getName('me')+'.png')
 
-def test(filename):
+def graphfile2pmis(filename):
     graph = airfb.FBGraph()
     graph.load(filename)
     print len(graph.graph),'objects before filtering'
@@ -64,8 +64,10 @@ def test(filename):
     print len(graph.graph),'objects after filtering'
     likes = graph.linksOfRel('likes')
     print 'number of likes',len(likes)
-    pmi = airtoolkit.PMIMatrix(likes)
+    return airtoolkit.PMIMatrix(likes)
+    
 
+def writeFiles(pmi):
     """
     hist plsssss
     """
@@ -75,7 +77,16 @@ def test(filename):
         t = Template(unicode('($x,$y) => $z'))
         s = unicode("\n\n").join([unicode("\n").join([t.substitute(x=x,y=y,z=z) for x,y,z in l]) for l in p])
         f.write(s)
-    with codecs.open('activity.json','w','utf-8') as f:
-        a = sorted([(graph.getName(x),y) for x,y in activity.iteritems()],key=operator.itemgetter(1), reverse=True)
-        json.dump(a,f,indent=4)
     return graph, activity, pmi
+
+def tryCategories(filename):
+    graph = airfb.FBGraph()
+    graph.load(filename)
+    print len(graph.graph),'objects before filtering'
+    activity = graph.filterByActivity(3)
+    print len(graph.graph),'objects after filtering'
+    likes = graph.linksOfRel('likes')
+    print 'number of likes',len(likes)
+    pmi = airtoolkit.PMIMatrix(likes)
+
+    

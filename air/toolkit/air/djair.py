@@ -1,7 +1,7 @@
 import json, airfb, airtoolkit, operator
 from django.contrib.auth.models import User
 from fbauth.models import Profile
-from toolkit.models import Data
+from toolkit import tasks
 
 def createUserFromDataFile(filename, pk, fbid):
     graph = airfb.FBGraph()
@@ -33,3 +33,26 @@ def createUserFromDataFile(filename, pk, fbid):
             'pmi_matrix':pmis,
             })
     
+def downloadPrint(access_token):
+    print 'Starting download'
+    graphapi = facebook.GraphAPI(access_token)
+    me = graphapi.get_object('me')
+    friendIds = [f['id'] for f in graphapi.get_connections('me','friends')['data']]
+    friendIds.append(self.me['id'])
+    chord(tasks..subtask((i, i)) for i in xrange(100))(tsum.subtask()).get()
+"""
+    while (not downloader.ready()):
+        status = downloader.status()
+        r = 1.0 * status[0] / status[1]
+        bars = int(70*r)
+        str_list = ['/']
+        for i in xrange(70):
+            if i < bars:
+                str_list.append('-')
+            else:
+                str_list.append(' ')
+        print ''.join(str_list),'/ ',int(100*r), '%\r',
+        sys.stdout.flush()
+        time.sleep(1)
+    print '/'+''.join(['-' for n in xrange(70)]),'/','100%'
+"""

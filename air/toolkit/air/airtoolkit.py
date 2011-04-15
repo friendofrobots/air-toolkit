@@ -1,3 +1,10 @@
+"""
+airtoolkit.py should hold the functions for calculating the PMI, creating
+categories from seeds and discovering categories.
+
+The trick here is to try to figure out a good way of getting the data into these
+functions in a way that makes sense for a variety of data storage possibilities.
+"""
 import math
 
 class Graph(object):
@@ -96,9 +103,12 @@ class PMIMatrix(object):
         scores = dict([(o,0) for o in self.matrix])
         for o in seed:
             scores[o] = 1
-        for i in xrange(10):
-            self.spreadActivation(scores)
+        for i in xrange(2):
+            self.spreadActivation(i,scores)
         return scores
+
+    def spreadActivation(self,i,scores):
+        for s in scores
 
     def findCategories(self):
         """
@@ -108,3 +118,29 @@ class PMIMatrix(object):
         """
         categories = [{},{}]
         return categories
+
+def calculatePMIs(links):
+    linkedBy = {}
+    for link in links:
+        if link[3] not in linkedBy:
+            linkedBy[link[3]] = set()
+        linkedBy[link[3]].add(link[0]) 
+    """
+    PMI(i1,i2) = log(Pr(i1,i2) / Pr(i1)Pr(i2))
+               = log(num(i1,i2)*totalLinks / num(i1)num(i2))
+    """
+    for item1,lb1 in linkedBy.iteritems():
+        for item2,lb2 in linkedBy.iteritems():
+            if item1 not in self.matrix:
+                self.matrix[item1] = {}
+            if len(lb1.intersection(lb2)) == 0:
+                self.matrix[item1][item2] = 0
+            else:
+                self.matrix[item1][item2] = math.log(len(lb1.intersection(lb2))*len(links)/(len(lb1)*len(lb2)),2)
+
+"""
+for each object, create a set of objects that link to it
+
+for each pair of objects
+calculate pmi by dividing the intersection of the two sets by the product of both sets
+"""
