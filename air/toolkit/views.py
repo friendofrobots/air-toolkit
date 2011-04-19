@@ -5,7 +5,7 @@ from django.template import RequestContext
 from django.contrib.auth.models import User
 
 import pickle, types, json
-from toolkit.models import Data
+from toolkit.models import Entity
 from fbauth.models import Profile
 
 """

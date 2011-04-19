@@ -1,7 +1,8 @@
-import json, airfb, airtoolkit, operator
+import json, airfb, airtoolkit, operator, facebook, sys, time
 from django.contrib.auth.models import User
 from fbauth.models import Profile
 from toolkit import tasks
+from celery.task.sets import TaskSet
 
 def createUserFromDataFile(filename, pk, fbid):
     graph = airfb.FBGraph()
@@ -33,17 +34,18 @@ def createUserFromDataFile(filename, pk, fbid):
             'pmi_matrix':pmis,
             })
     
-def downloadPrint(access_token):
+def download(access_token):
     print 'Starting download'
     graphapi = facebook.GraphAPI(access_token)
     me = graphapi.get_object('me')
     friendIds = [f['id'] for f in graphapi.get_connections('me','friends')['data']]
-    friendIds.append(self.me['id'])
-    chord(tasks..subtask((i, i)) for i in xrange(100))(tsum.subtask()).get()
-"""
-    while (not downloader.ready()):
-        status = downloader.status()
-        r = 1.0 * status[0] / status[1]
+    friendIds.append(me['id'])
+    result = TaskSet(tasks=[tasks.dlUser.subtask((graphapi,fbid)) for fbid in friendIds]).apply_async()
+    return result
+
+def printStatus(result):
+    while (not result.ready()):
+        r = 1.0 * result.completed_count() / result.total
         bars = int(70*r)
         str_list = ['/']
         for i in xrange(70):
@@ -55,4 +57,17 @@ def downloadPrint(access_token):
         sys.stdout.flush()
         time.sleep(1)
     print '/'+''.join(['-' for n in xrange(70)]),'/','100%'
-"""
+
+    return result
+
+def trySaveData(result):
+    r = tasks.saveData.delay((result.join()))
+
+    count = 0
+    while (not r.ready()):
+        print 'loading'+''.join(['.' for x in xrange(count)]), '\r',
+        count += 1
+        if count > 5:
+            count = 0
+        sys.stdout.flush()
+        time.sleep(1)    

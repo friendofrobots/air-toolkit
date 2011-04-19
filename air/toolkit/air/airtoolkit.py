@@ -108,7 +108,8 @@ class PMIMatrix(object):
         return scores
 
     def spreadActivation(self,i,scores):
-        for s in scores
+        for s in scores:
+            win
 
     def findCategories(self):
         """
