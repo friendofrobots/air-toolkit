@@ -59,27 +59,3 @@ def status(request, task_id):
             "total": result.status(),
             }
         }
-
-def pmi_all(request, greg=True, template_name="toolkit/pmi.html"):
-    if greg:
-        data = User.objects.get(pk=1).profile_set.all()[0].data_set.all()[0]
-    if request.user.is_authenticated():
-        data = request.user.profile_set.all()[0].data_set.all()[0]
-    # These may not be here yet, check for that
-    print 'loading json'
-    pmi = json.loads(data.pmi_matrix)
-    graph = json.loads(data.filtered_graph)
-    print 'rendering html'
-    print pmi
-    return render_to_response(template_name, {
-                "objects" : pmi.keys()[:100],
-                "lookup" : lookup,
-                }, context_instance=RequestContext(request))
-
-def getPmiVector(request, fbid):
-    """
-    load pmi matrix
-    vector = pmi[fbid]
-    filter our 0s
-    """
-    return HttpResponse(json.dumps(VECTOR),mimetype="application/json")

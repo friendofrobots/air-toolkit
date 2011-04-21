@@ -1,38 +1,10 @@
-import json, airfb, airtoolkit, operator, facebook, sys, time
+import json, airfb, airtoolkit, operator, facebook, sys, time, itertools
 from django.contrib.auth.models import User
+from django.db.models import Count
 from fbauth.models import Profile
+from toolkit.models import Link,Entity
 from toolkit import tasks
 from celery.task.sets import TaskSet
-
-def createUserFromDataFile(filename, pk, fbid):
-    graph = airfb.FBGraph()
-    graph.load(filename)
-    unfiltereds = json.dumps(graph.graph, ensure_ascii=False)
-    print len(graph.graph),'objects before filtering'
-    activity = graph.filterByActivity(3)
-    print len(graph.graph),'objects after filtering'
-    likes = graph.linksOfRel('likes')
-    print 'number of likes',len(likes)
-    pmi = airtoolkit.PMIMatrix(likes)
-
-    print 'dumping json'
-    filtereds = json.dumps(graph.graph, ensure_ascii=False)
-    lookups = json.dumps(graph.lookup, ensure_ascii=False)
-    p = [(graph.getName(x),
-          sorted([(graph.getName(z),y[z]) for z in y],key=operator.itemgetter(1), reverse=True))
-         for x,y in pmi.matrix.iteritems()]
-    pmis = json.dumps(p,ensure_ascii=False)
-
-    print 'creating django objects'
-    user = User.objects.get(pk=pk)
-    profile = Profile.objects.get(user=user)#, defaults={'fbid':fbid,'name':graph.lookup[fbid]})
-    #profile = Profile.objects.get_or_create(user=user, defaults={'fbid':fbid,'name':graph.lookup[fbid]})
-    data = Data.objects.get_or_create(profile=profile,defaults={
-            'graph':unfiltereds,
-            'lookup':lookups,
-            'filtered_graph':filtereds,
-            'pmi_matrix':pmis,
-            })
     
 def download(access_token):
     print 'Starting download'
@@ -43,7 +15,18 @@ def download(access_token):
     result = TaskSet(tasks=[tasks.dlUser.subtask((graphapi,fbid)) for fbid in friendIds]).apply_async()
     return result
 
-def printStatus(result):
+def printStatus(result,message='loading',done='done.'):
+    count = 0
+    while (not result.ready()):
+        print message+''.join(['.' for x in xrange(count)]), '\r',
+        count += 1
+        if count > 5:
+            count = 0
+        sys.stdout.flush()
+        time.sleep(1)
+    print done
+
+def printSetStatus(result):
     while (not result.ready()):
         r = 1.0 * result.completed_count() / result.total
         bars = int(70*r)
@@ -58,16 +41,14 @@ def printStatus(result):
         time.sleep(1)
     print '/'+''.join(['-' for n in xrange(70)]),'/','100%'
 
-    return result
+def saveData(result):
+    r = tasks.saveUserData.delay((result.join()))
+    printStatus(r,'saving data','saved.')
 
-def trySaveData(result):
-    r = tasks.saveData.delay((result.join()))
-
+def calcPmis():
+    likes = Link.objects.annotate(entity_activity=Count('toEntity__linksTo')).filter(entity_activity__gt=1,relation="likes")
+    pr = tasks.calcPMIs.delay((likes))
     count = 0
-    while (not r.ready()):
-        print 'loading'+''.join(['.' for x in xrange(count)]), '\r',
-        count += 1
-        if count > 5:
-            count = 0
-        sys.stdout.flush()
-        time.sleep(1)    
+    printStatus(pr,'calculating pmis')
+    return pr
+    

@@ -17,6 +17,7 @@ def login(request):
                 redirect_uri=request.build_absolute_uri(),
                 scope=settings.FB_PERMS,
                 )
+    raise Exception
     if request.GET.__contains__("code"):
         args["client_secret"] = settings.FB_SECRET
         args["code"] = request.GET.get("code")

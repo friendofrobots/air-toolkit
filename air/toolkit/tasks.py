@@ -1,4 +1,5 @@
 from celery.decorators import task
+from celery.task.sets import TaskSet
 from toolkit.models import Entity, Link, PMI
 import json, urllib2, urllib, math, facebook
 
@@ -44,29 +45,38 @@ def dlUser(graphapi,fbid):
         return entities, links
     except (ValueError,IOError,facebook.GraphAPIError,urllib2.URLError), exc:
         print exc
-        #dlUser.retry(exc=exc)
+        dlUser.retry(exc=exc)
 
-@task()
-def saveData(join, callback=None):
+@task(ignore_result=True)
+def saveUserData(join, profile, callback=None):
     """
     Creates django objects and saves them
+    TODO: filter for entities with less than 2 like links
     """
     entities = set()
-    [entities.update(e) for (e,l) in join]
-    [Entity.objects.get_or_create(fbid=fbid,name=name) for (fbid, name) in entities]
+    for e,l in join:
+        entities.update(e)
+    for fbid,name in entities:
+        Entity.objects.get_or_create(
+            owner=profile,
+            fbid=fbid,
+            name=name)
     for entity, links in join:
         for link in links:
             try:
-                Link.objects.create(fromEntity=Entity.objects.get(fbid=link[0]),
-                                    relation=link[1],
-                                    weight=link[2],
-                                    toEntity=Entity.objects.get(fbid=link[3]))
+                Link.objects.create(
+                    owner=profile,
+                    fromEntity=Entity.objects.get(fbid=link[0]),
+                    relation=link[1],
+                    weight=link[2],
+                    toEntity=Entity.objects.get(fbid=link[3]))
             except Exception, e:
                 print e
                 print link
                 raise Exception()
-@task()
-def calculatePMIs(links, callback=None):
+
+@task(ignore_result=True)
+def calcPMIs(links, callback=None):
     linkedBy = {}
     for link in links:
         if link.toEntity.fbid not in linkedBy:
@@ -74,7 +84,7 @@ def calculatePMIs(links, callback=None):
         linkedBy[link.toEntity.fbid].add(link.fromEntity.fbid)
 
     """
-    PMI(i1,i2) = log(Pr(i1,i2) / Pr(i1)Pr(i2))
+    Pmi(i1,i2) = log(Pr(i1,i2) / Pr(i1)Pr(i2))
                = log(num(i1,i2)*totalLinks / num(i1)num(i2))
     """
 
@@ -83,13 +93,14 @@ def calculatePMIs(links, callback=None):
       lower id to the one with the higher id (note: ids are strings,
       so the sort is alphabetical in this case)
     """
-    lblist = [(fbid,lb) for fbid,lb in linkedBy.iteritems() if len(lb1) > 1]
-    for fbid1,lb1 in lblist:
-        for fbid2,lb2 in lblist:
-            if fbid1 <= fbid2 and len(lb1.intersection(lb2)) > 0:
-                PMI.objects.create(fromEntity=Entity.objects.get(fbid=fbid1),
-                                   toEntity=Entity.objects.get(fbid=fbid2),
-                                   value=math.log(len(lb1.intersection(lb2))*len(links)/(len(lb1)*len(lb2)),2))
+    for fbid1,lb1 in linkedBy.iteritems():
+        for fbid2,lb2 in linkedBy.iteritems():
+            if fbid1 <= fbid2 and len(lb1.intersection(lb2))>0:
+                PMI.objects.get_or_create(
+                    owner=profile,
+                    fromEntity=Entity.objects.get(fbid=fbid1),
+                    toEntity=Entity.objects.get(fbid=fbid2),
+                    value=math.log(len(lb1.intersection(lb2))*len(links)/(len(lb1)*len(lb2)),2))
 
 def parseInfo(fbid,data):
     entities,links = set(),set()

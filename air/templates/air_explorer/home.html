@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block head_title %}Home{% endblock %}
+
+{% block content %}
+<h1>Welcome!</h1>
+<div id="about">
+  This is a demonstration of the AIR Toolkit.
+</div>  
+{% if user.is_authenticated %}
+<div>
+  <a href="/explore/">Get Started</a>
+</div>
+{% else %}
+<div>
+  <a href="/auth/login">login with facebook</a>
+</div>
+{% endif %}
+  
+{% endblock %}
