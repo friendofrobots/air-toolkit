@@ -17,7 +17,6 @@ def login(request):
                 redirect_uri=request.build_absolute_uri(),
                 scope=settings.FB_PERMS,
                 )
-    raise Exception
     if request.GET.__contains__("code"):
         args["client_secret"] = settings.FB_SECRET
         args["code"] = request.GET.get("code")
@@ -25,25 +24,29 @@ def login(request):
                 access_token_url + "?" +
                 urllib.urlencode(args)).read())
         access_token = response["access_token"][-1]
-        
+
         # Download the user profile
         graph = facebook.GraphAPI(access_token)
         me = graph.get_object('me')
 
         try:
             user = User.objects.get(username=me['id'])
+            user.profile.access_token = access_token
+            user.profile.save()
         except User.DoesNotExist:
             user = User.objects.create_user(me['id'],
                                             '%s@facebook.com' % me['id'],
                                             access_token)
-            user = User.objects.get_or_create(username=me['id'])
             profile = Profile()
             profile.user = user
+            profile.fbid = me['id']
+            profile.name = me['name']
             profile.access_token = access_token
             profile.save()
 
         return HttpResponseRedirect('/')
     elif request.GET.__contains__("error"):
+        raise Exception("got an error from facebook")
         return render_to_response("fbauth/login.html", {
                 "error":request.GET.get("error"),
                 }, context_instance=RequestContext(request))

@@ -1,7 +1,5 @@
-import json, airfb, airtoolkit, operator, facebook, sys, time, itertools
-from django.contrib.auth.models import User
+import json, facebook, sys, time
 from django.db.models import Count
-from fbauth.models import Profile
 from toolkit.models import Link,Entity
 from toolkit import tasks
 from celery.task.sets import TaskSet
@@ -48,7 +46,6 @@ def saveData(result):
 def calcPmis():
     likes = Link.objects.annotate(entity_activity=Count('toEntity__linksTo')).filter(entity_activity__gt=1,relation="likes")
     pr = tasks.calcPMIs.delay((likes))
-    count = 0
     printStatus(pr,'calculating pmis')
     return pr
     

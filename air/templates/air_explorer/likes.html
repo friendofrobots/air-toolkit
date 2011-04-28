@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block head_title %}likes{% endblock %}
+
+{% block head_extra %}
+<script type="text/javascript" src="pmi.json"></script>
+
+{% block content %}
+<ul>
+  {% for page in pages %}
+  <li class="like">
+    <!--<img src="https://graph.facebook.com/{{ like.fbid }}/picture"/>-->
+    <a id="{{ like.fbid }}" class="like">{{ like.name }}</a>
+    <ul id="{{ like.fbid }}-pmis" class="pmis">
+    </ul>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

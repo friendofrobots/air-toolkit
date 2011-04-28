@@ -1,6 +1,7 @@
 from celery.decorators import task
-from celery.task.sets import TaskSet
+from celery.task.sets import TaskSet, subtask
 from toolkit.models import Entity, Link, PMI
+from fbauth.models import Profile
 import json, urllib2, urllib, math, facebook
 
 """
@@ -48,24 +49,35 @@ def dlUser(graphapi,fbid):
         dlUser.retry(exc=exc)
 
 @task(ignore_result=True)
-def saveUserData(join, profile, callback=None):
+def checkTaskSet(taskset_id,profile_fbid,status_id):
+    result = TaskSetResult.restore(task_id)
+    if result.ready():
+        r = saveUserData.delay((result.join(),profile_fbid,status_id))
+        status = DownloadStatus.objects.get(id=status_id)
+        status.stage = 2
+        status.task_id = r.task_id
+        status.save()
+    else:
+        join_taskset.retry(countdown=15, max_retries=None)
+
+@task(ignore_result=True)
+def saveUserData(join, profile_fbid, status_id):
     """
     Creates django objects and saves them
-    TODO: filter for entities with less than 2 like links
     """
     entities = set()
     for e,l in join:
         entities.update(e)
     for fbid,name in entities:
         Entity.objects.get_or_create(
-            owner=profile,
+            owner=Profile.objects.get(fbid=profile_fbid),
             fbid=fbid,
             name=name)
     for entity, links in join:
         for link in links:
             try:
                 Link.objects.create(
-                    owner=profile,
+                    owner=Profile.objects.get(fbid=profile_fbid),
                     fromEntity=Entity.objects.get(fbid=link[0]),
                     relation=link[1],
                     weight=link[2],
@@ -74,9 +86,16 @@ def saveUserData(join, profile, callback=None):
                 print e
                 print link
                 raise Exception()
+    r = calcPMIs.delay((profile_fbid,status_id))
+    status = DownloadStatus.objects.get(id=status_id)
+    status.stage = 3
+    status.task_id = r.task_id
+    status.save()
 
 @task(ignore_result=True)
-def calcPMIs(links, callback=None):
+def calcPMIs(profile_fbid, status_id):
+    likes = Link.objects.annotate(entity_activity=Count('toEntity__linksTo'))
+    .filter(owner=Profile.objects.get(fbid=profile_fbid),entity_activity__gt=1,relation="likes")
     linkedBy = {}
     for link in links:
         if link.toEntity.fbid not in linkedBy:
@@ -87,7 +106,6 @@ def calcPMIs(links, callback=None):
     Pmi(i1,i2) = log(Pr(i1,i2) / Pr(i1)Pr(i2))
                = log(num(i1,i2)*totalLinks / num(i1)num(i2))
     """
-
     """
     pmis are symmetric, so only store the link from the one with the
       lower id to the one with the higher id (note: ids are strings,
@@ -97,10 +115,13 @@ def calcPMIs(links, callback=None):
         for fbid2,lb2 in linkedBy.iteritems():
             if fbid1 <= fbid2 and len(lb1.intersection(lb2))>0:
                 PMI.objects.get_or_create(
-                    owner=profile,
+                    owner=Profile.objects.get(fbid=profile_fbid),
                     fromEntity=Entity.objects.get(fbid=fbid1),
                     toEntity=Entity.objects.get(fbid=fbid2),
                     value=math.log(len(lb1.intersection(lb2))*len(links)/(len(lb1)*len(lb2)),2))
+    status = DownloadStatus.objects.get(id=status_id)
+    status.stage = 4
+    status.task_id = ""
 
 def parseInfo(fbid,data):
     entities,links = set(),set()

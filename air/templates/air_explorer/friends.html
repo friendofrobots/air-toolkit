@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block head_title %}Friends{% endblock %}
+
+{% block content %}
+  {% for friend in friends %}
+  <div class="profile">
+    <img src="https://graph.facebook.com/{{ profile.id }}/picture"/>
+    <a href="/friends/{{ profile.id }}/">{{ profile.name }}</a>
+  </div>
+  {% endfor %}
+{% endblock %}

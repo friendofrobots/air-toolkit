@@ -1,6 +1,17 @@
 from django.db import models
 from fbauth.models import Profile
 
+class DownloadStatus(models.Model):
+    owner = models.ForeignKey(Profile,related_name="downloadStatus")
+    stage = models.IntegerField(choices=(
+            (1,'downloading user data'),
+            (2,'saving user data'),
+            (3,'calculating pmis'),
+            (4,'done')
+            ))
+    lastupdated = models.DateTimeField(auto_now=True)
+    task_id = models.CharField(max_length=200,blank=True)
+
 class Entity(models.Model):
     owner = models.ForeignKey(Profile)
     fbid = models.CharField(max_length=30)
