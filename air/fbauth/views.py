@@ -38,7 +38,7 @@ def login(request):
             user.profile.save()
         except User.DoesNotExist:
             user = User.objects.create_user(me['id'],
-                                            '%s@facebook.com' % me['id'],
+                                            me['name']+'-'+me['id'][-4:]+'-''%s@facebook.com' %,
                                             access_token)
             profile = Profile()
             profile.user = user
