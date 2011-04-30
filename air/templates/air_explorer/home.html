@@ -5,11 +5,16 @@
 {% block content %}
 <h1>Welcome!</h1>
 <div id="about">
-  This is a demonstration of the AIR Toolkit.
+  <p>
+    This page will hold a description of what this website does.
+  </p>
+  <p>
+    For instance: This is a demonstration of the AIR Toolkit.
+  </p>
 </div>  
 {% if user.is_authenticated %}
 <div>
-  <a href="/explore/">Get Started</a>
+  <a href="/likes/">Get Started</a>
 </div>
 {% else %}
 <div>

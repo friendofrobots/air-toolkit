@@ -48,6 +48,21 @@ ul {
   display: none;
 }
 
+/* downloading */
+.stages {
+  display: none;
+}
+
+
+
+
+
+
+
+
+
+
+
 /* explore */
 .objects {
   float: left;
@@ -98,3 +113,4 @@ ul {
   width:380px;
   float:left;
 }
+

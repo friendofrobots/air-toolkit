@@ -2,10 +2,14 @@ from django.shortcuts import render_to_response, get_object_or_404
 import json
 from toolkit.models import Entity, Link, PMI
 
-def home(request, template_name="toolkit/downloading.html"):
-    return render_to_response(template_name, context_instance=RequestContext(request))
+def home(request, template_name="air_explorer/home.html"):
+    profile = request.user.profile.all()[0]
+    ready = not profile.downloadStatus.empty() and profile.downloadStatus.stage == 4
+    return render_to_response(template_name, {
+            'ready' : ready,
+            }, context_instance=RequestContext(request))
 
-def friends(request, template_name="toolkit/friends.html"):
+def friends(request, template_name="air_explorer/friends.html"):
     if request.user.is_authenticated():
         friends = Entity.objects.filter(owner=request.user.profile,linksFrom__relation="likes").distinct()
     else:
@@ -14,8 +18,11 @@ def friends(request, template_name="toolkit/friends.html"):
             'friends' : friends,
             }, context_instance=RequestContext(request))
 
-def likes(request, template_name="toolkit/likes.html"):
+def likes(request, template_name="air_explorer/likes.html"):
     if request.user.is_authenticated():
+        profile = request.user.profile.all()[0]
+        if profile.downloadStatus.empty() or profile.downloadStatus.stage != 4:
+            return HttpResponseRedirect('/d/')
         likes = Link.objects.annotate(entity_activity=Count('toEntity__linksTo'))
         .filter(owner.request.user.profile,entity_activity__gt=1,relation="likes")
     return render_to_response(template_name, {

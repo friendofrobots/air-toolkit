@@ -29,8 +29,11 @@ def login(request):
         graph = facebook.GraphAPI(access_token)
         me = graph.get_object('me')
 
+        raise Exception
         try:
             user = User.objects.get(username=me['id'])
+            user.set_password(access_token)
+            user.save()
             user.profile.access_token = access_token
             user.profile.save()
         except User.DoesNotExist:
@@ -43,6 +46,10 @@ def login(request):
             profile.name = me['name']
             profile.access_token = access_token
             profile.save()
+
+        user = authenticate(username=me['id'],
+                            password=access_token)
+        login(request, user)
 
         return HttpResponseRedirect('/')
     elif request.GET.__contains__("error"):

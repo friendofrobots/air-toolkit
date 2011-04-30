@@ -25,13 +25,16 @@ server:
 redirect to display page
 """
 
-def download(request, template_name="toolkit/downloading.html"):
-    started = True
-    """
-    Display the loading html page.
-    """
+def download(request, template_name="toolkit/download.html"):
+    if request.user.profile.all()[0].downloadStatus.exists():
+        started = True
+        stage = request.user.profile.all()[0].downloadStatus.all()[0].stage
+    else:
+        started = False
+        stage = None
     return render_to_response(template_name, {
                 "started" : started,
+                "stage" : stage,
                 }, context_instance=RequestContext(request))
     
 def startDownload(request):
@@ -40,21 +43,35 @@ def startDownload(request):
     """
     if user.is_authenticated():
         if request.method == 'POST':
-            graphapi = facebook.GraphAPI(access_token)
-            me = graphapi.get_object('me')
-            friendIds = [f['id'] for f in graphapi.get_connections('me','friends')['data']]
-            friendIds.append(me['id'])
-            profile = request.user.profile.all()[0]
-            status = DownloadStatus.objects.create(owner=profile,stage=1)
-            result = TaskSet(tasks=[tasks.dlUser.subtask((graphapi,fbid)) for fbid in friendIds]).apply_async()
-            r = checkTaskSet(result.taskset_id,profile.fbid,status.id)
-            status.task_id = result.taskset_id
-            status.save()
-            response_data = {
-                "stage":1,
-                "completed": result.completed_count(),
-                "total": result.total,
-                }
+            if not request.user.profile.all()[0].download.exists():
+                graphapi = facebook.GraphAPI(access_token)
+                me = graphapi.get_object('me')
+                friendIds = [f['id'] for f in graphapi.get_connections('me','friends')['data']]
+                friendIds.append(me['id'])
+                profile = request.user.profile.all()[0]
+                status = DownloadStatus.objects.create(owner=profile,stage=1)
+                result = TaskSet(tasks=[tasks.dlUser.subtask((graphapi,fbid)) for fbid in friendIds]).apply_async()
+                r = checkTaskSet(result.taskset_id,profile.fbid,status.id)
+                status.task_id = result.taskset_id
+                status.save()
+                response_data = {
+                    "stage":1,
+                    "completed": result.completed_count(),
+                    "total": result.total,
+                    }
+            else:
+                status = request.user.profile.all()[0].downloadStatus.all()[0],
+                response_data = {
+                    "error": "download already started",
+                    "stage" : status.stage
+                    }
+                if stage == 1:
+                    result = TaskSetResult.restore(status.task_id)
+                    response_data['completed'] = result.completed_count()
+                    response_data['total'] = result.total
+                else:
+                    result = AsyncResult(status.task_id)
+                    response_data['state'] = result.state
         else:
             response_data = {
                 "error": "must be a post request"

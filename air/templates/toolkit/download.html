@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block head_title %}Downloading...{% endblock %}
+
+{% if user.is_athenticated %}
+{% block head_extra %}
+<script>
+var started = {{ started }};
+var task_id = {{ task_id }};
+</script>
+<script type="text/javascript" src="/media/js/download.js"></script>
+{% endblock %}
+{% endif %}
+
+{% block content %}
+{% if user.is_authenticated %}
+  <div id="downloading">
+    {% if not started %}
+    <button id="start">Start Download</button>
+    {% endif %}
+    <p id="error"></p>
+    <p id="starting" class="stages">
+      Your download has been started. It takes a while, so you should come
+      back in a bit to check if it's done. Until then, you can feel free to
+      close this page and go on about your day
+    </p>
+    <p id="stage1" class="stages">
+      downloading user data: <span id="count">0</span>/<span id="total">0</span>
+    </p>
+    <p id="stage2" class="stages">
+      saving user data
+    </p>
+    <p id="stage3" class="stages">
+      calculating pmis
+    </p>
+    <p id="stage4" class="stages">
+      You're all done!
+    </p>
+  </div>
+{% else %}
+<div>
+  <a href="/auth/login">login with facebook</a>
+</div>
+{% endblock %}
+
