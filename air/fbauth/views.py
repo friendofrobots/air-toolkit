@@ -12,10 +12,9 @@ from fbauth.models import Profile
 authorize_url = 'https://graph.facebook.com/oauth/authorize'
 access_token_url = 'https://graph.facebook.com/oauth/access_token'
 
-def login(request):
+def fblogin(request):
     args = dict(client_id=settings.FB_ID,
-                redirect_uri=request.build_absolute_uri(),
-                scope=settings.FB_PERMS,
+                redirect_uri='http://'+request.get_host()+request.path,
                 )
     if request.GET.__contains__("code"):
         args["client_secret"] = settings.FB_SECRET
@@ -29,16 +28,16 @@ def login(request):
         graph = facebook.GraphAPI(access_token)
         me = graph.get_object('me')
 
-        raise Exception
         try:
             user = User.objects.get(username=me['id'])
             user.set_password(access_token)
             user.save()
-            user.profile.access_token = access_token
-            user.profile.save()
+            profile = user.profile.all()[0]
+            profile.access_token = access_token
+            profile.save()
         except User.DoesNotExist:
             user = User.objects.create_user(me['id'],
-                                            me['name']+'-'+me['id'][-4:]+'-''%s@facebook.com' %,
+                                            me['name']+'-'+me['id'][-4:]+'@facebook.com',
                                             access_token)
             profile = Profile()
             profile.user = user
@@ -58,6 +57,7 @@ def login(request):
                 "error":request.GET.get("error"),
                 }, context_instance=RequestContext(request))
     else:
+        args['scope'] = settings.FB_PERMS
         return HttpResponseRedirect(authorize_url + "?" +
                                     urllib.urlencode(args))
 

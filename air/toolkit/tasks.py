@@ -94,8 +94,9 @@ def saveUserData(join, profile_fbid, status_id):
 
 @task(ignore_result=True)
 def calcPMIs(profile_fbid, status_id):
-    likes = Link.objects.annotate(entity_activity=Count('toEntity__linksTo'))
-    .filter(owner=Profile.objects.get(fbid=profile_fbid),entity_activity__gt=1,relation="likes")
+    links = Link.objects.annotate(entity_activity=Count('toEntity__linksTo'))
+    likes = links.filter(owner=Profile.objects.get(fbid=profile_fbid),
+                         entity_activity__gt=1,relation="likes")
     linkedBy = {}
     for link in links:
         if link.toEntity.fbid not in linkedBy:
