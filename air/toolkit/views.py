@@ -51,7 +51,7 @@ def startDownload(request):
                 profile = request.user.profile.all()[0]
                 status = DownloadStatus.objects.create(owner=profile,stage=1)
                 result = TaskSet(tasks=[tasks.dlUser.subtask((graphapi,fbid)) for fbid in friendIds]).apply_async()
-                r = checkTaskSet(result.taskset_id,profile.fbid,status.id)
+                r = tasks.checkTaskSet(result.taskset_id,profile.fbid,status.id)
                 status.task_id = result.taskset_id
                 status.save()
                 response_data = {
@@ -114,6 +114,6 @@ def status(request):
         else:
             response_data = {
                 "stage":4,
-                "status": "completed",
+                "state": "completed",
                 }
     return HttpResponse(json.dumps(response_data), mimetype="application/json")
