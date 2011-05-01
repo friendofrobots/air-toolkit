@@ -1,10 +1,15 @@
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render_to_response
+from django.http import HttpResponseRedirect
+from django.template import RequestContext
 import json
 from toolkit.models import Entity, Link, PMI
 
 def home(request, template_name="air_explorer/home.html"):
-    profile = request.user.profile.all()[0]
-    ready = not profile.downloadStatus.empty() and profile.downloadStatus.stage == 4
+    if request.user.is_authenticated():
+        profile = request.user.profile.all()[0]
+        ready = profile.downloadStatus.exists() and profile.downloadStatus.all()[0].stage == 4
+    else:
+        ready = False
     return render_to_response(template_name, {
             'ready' : ready,
             }, context_instance=RequestContext(request))
@@ -21,10 +26,10 @@ def friends(request, template_name="air_explorer/friends.html"):
 def likes(request, template_name="air_explorer/likes.html"):
     if request.user.is_authenticated():
         profile = request.user.profile.all()[0]
-        if profile.downloadStatus.empty() or profile.downloadStatus.stage != 4:
+        if not profile.downloadStatus.exists() or profile.downloadStatus.stage != 4:
             return HttpResponseRedirect('/d/')
-        likes = Link.objects.annotate(entity_activity=Count('toEntity__linksTo'))
-        .filter(owner.request.user.profile,entity_activity__gt=1,relation="likes")
+        links = Link.objects.annotate(entity_activity=Count('toEntity__linksTo'))
+        likes = links.filter(owner.request.user.profile,entity_activity__gt=1,relation="likes")
     return render_to_response(template_name, {
             'friends' : friends,
             }, context_instance=RequestContext(request))
