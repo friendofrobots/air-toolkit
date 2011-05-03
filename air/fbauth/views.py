@@ -62,6 +62,6 @@ def fblogin(request):
                                     urllib.urlencode(args))
 
 @login_required
-def logout(request):
+def fblogout(request):
     logout(request)
     return HttpResponseRedirect('/')

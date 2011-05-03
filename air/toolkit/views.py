@@ -65,7 +65,7 @@ def startDownload(request):
                     "error": "download already started",
                     "stage" : status.stage
                     }
-                if stage == 1:
+                if status.stage == 1:
                     result = TaskSetResult.restore(status.task_id)
                     response_data['completed'] = result.completed_count()
                     response_data['total'] = result.total

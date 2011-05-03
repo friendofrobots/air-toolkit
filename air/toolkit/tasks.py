@@ -39,20 +39,24 @@ def dlUser(graphapi,fbid):
         file = urllib2.urlopen("https://api.facebook.com/method/friends.getMutualFriends?"
                               + urllib.urlencode(args))
         friends = json.load(file)
-        friendEntities, friendLinks = parseFriends(fbid,friends)
-        entities.update(friendEntities)
-        links.update(friendLinks)
+        try:
+            friends["error_code"]
+            dlUser.retry(countdown=15, max_retries=None, throw=False) 
+        except:
+            friendEntities, friendLinks = parseFriends(fbid,friends)
+            entities.update(friendEntities)
+            links.update(friendLinks)
 
-        return entities, links
+            return entities, links
     except (ValueError,IOError,facebook.GraphAPIError,urllib2.URLError), exc:
         print exc
-        dlUser.retry(exc=exc)
+        dlUser.retry(countdown=15, max_retries=None, throw=False)
 
 @task(ignore_result=True)
 def checkTaskSet(taskset_id,profile_fbid,status_id):
     result = TaskSetResult.restore(task_id)
     if result.ready():
-        r = saveUserData.delay((result.join(),profile_fbid,status_id))
+        r = saveUserData.delay(result.join(),profile_fbid,status_id)
         status = DownloadStatus.objects.get(id=status_id)
         status.stage = 2
         status.task_id = r.task_id
@@ -86,7 +90,7 @@ def saveUserData(join, profile_fbid, status_id):
                 print e
                 print link
                 raise Exception()
-    r = calcPMIs.delay((profile_fbid,status_id))
+    r = calcPMIs.delay(profile_fbid,status_id)
     status = DownloadStatus.objects.get(id=status_id)
     status.stage = 3
     status.task_id = r.task_id
