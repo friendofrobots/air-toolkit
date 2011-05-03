@@ -36,7 +36,7 @@ def download(request, template_name="toolkit/download.html"):
                 "started" : started,
                 "stage" : stage,
                 }, context_instance=RequestContext(request))
-    
+
 def startDownload(request):
     """
     Ajax call to start the download

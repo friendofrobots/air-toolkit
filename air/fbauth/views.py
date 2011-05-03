@@ -37,7 +37,7 @@ def fblogin(request):
             profile.save()
         except User.DoesNotExist:
             user = User.objects.create_user(me['id'],
-                                            me['name']+'-'+me['id'][-4:]+'@facebook.com',
+                                            me['id']+'@facebook.com',
                                             access_token)
             profile = Profile()
             profile.user = user
