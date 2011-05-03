@@ -26,14 +26,14 @@ redirect to display page
 """
 
 def download(request, template_name="toolkit/download.html"):
-    if request.user.profile.all()[0].downloadStatus.exists():
-        started = True
-        stage = request.user.profile.all()[0].downloadStatus.all()[0].stage
+    if request.user.is_authenticated():
+        if request.user.profile.all()[0].downloadStatus.exists():
+            stage = request.user.profile.all()[0].downloadStatus.all()[0].stage
+        else:
+            stage = None
     else:
-        started = False
-        stage = None
+        return HttpResponseRedirect('/')
     return render_to_response(template_name, {
-                "started" : started,
                 "stage" : stage,
                 }, context_instance=RequestContext(request))
 
@@ -43,17 +43,18 @@ def startDownload(request):
     """
     if user.is_authenticated():
         if request.method == 'POST':
-            if not request.user.profile.all()[0].download.exists():
-                graphapi = facebook.GraphAPI(access_token)
+            profile = request.user.profile.all()[0]
+            if not profile.download.exists():
+                graphapi = facebook.GraphAPI(profile.access_token)
                 me = graphapi.get_object('me')
                 friendIds = [f['id'] for f in graphapi.get_connections('me','friends')['data']]
                 friendIds.append(me['id'])
-                profile = request.user.profile.all()[0]
-                status = DownloadStatus.objects.create(owner=profile,stage=1)
-                result = TaskSet(tasks=[tasks.dlUser.subtask((graphapi,fbid)) for fbid in friendIds]).apply_async()
-                r = tasks.checkTaskSet(result.taskset_id,profile.fbid,status.id)
-                status.task_id = result.taskset_id
+                subtasks = [tasks.dlUser.subtask((graphapi,fbid)) for fbid in friendIds]
+                result = TaskSet(tasks=subtasks).apply_async()
+                result.save()
+                status = DownloadStatus.objects.create(owner=profile,stage=1,task_id=result.taskset_id)
                 status.save()
+                r = tasks.checkTaskSet(result.taskset_id,profile.fbid,status.id)
                 response_data = {
                     "stage":1,
                     "completed": result.completed_count(),
@@ -84,29 +85,28 @@ def startDownload(request):
 
 def status(request):
     if request.user.is_authenticated():
-        stage = request.user.profile.downloadStatus.stage
-        task_id = request.user.profile.downloadStatus.task_id
+        status = request.user.profile.all()[0].downloadStatus.all()[0]
         """
         I need to execute 3 separate tasks:
         1) Download users with a TaskSet - this should already be started
         2) Save the user data
         3) Calculate and save pmi information
         """
-        if stage==1:
-            result = TaskSetResult.restore(task_id)
+        if status.stage==1:
+            result = TaskSetResult.restore(status.task_id)
             response_data = {
                 "stage":1,
                 "completed": result.completed_count(),
                 "total": result.total,
                 }
-        elif stage==2:
-            result = AsyncResult(task_id)
+        elif status.stage==2:
+            result = AsyncResult(status.task_id)
             response_data = {
                 "stage":2,
                 "state": result.state,
                 }
-        elif stage==3:
-            result = AsyncResult(task_id)
+        elif status.stage==3:
+            result = AsyncResult(status.task_id)
             response_data = {
                 "stage":3,
                 "state": result.state,
@@ -116,4 +116,8 @@ def status(request):
                 "stage":4,
                 "state": "completed",
                 }
+    else:
+        responset_data = {
+            "error": "user must be logged in"
+            }
     return HttpResponse(json.dumps(response_data), mimetype="application/json")

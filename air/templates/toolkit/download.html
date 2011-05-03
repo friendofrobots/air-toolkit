@@ -5,41 +5,38 @@
 {% if user.is_athenticated %}
 {% block head_extra %}
 <script>
-var started = {{ started }};
-var task_id = {{ task_id }};
+var started = {% if stage and stage != 0 %}true;{% else %}false;{% endif %}
 </script>
 <script type="text/javascript" src="/media/js/download.js"></script>
 {% endblock %}
 {% endif %}
 
 {% block content %}
-{% if user.is_authenticated %}
-  <div id="downloading">
-    {% if not started %}
-    <button id="start">Start Download</button>
-    {% endif %}
-    <p id="error"></p>
-    <p id="starting" class="stages">
-      Your download has been started. It takes a while, so you should come
-      back in a bit to check if it's done. Until then, you can feel free to
-      close this page and go on about your day
-    </p>
-    <p id="stage1" class="stages">
-      downloading user data: <span id="count">0</span>/<span id="total">0</span>
-    </p>
-    <p id="stage2" class="stages">
-      saving user data
-    </p>
-    <p id="stage3" class="stages">
-      calculating pmis
-    </p>
-    <p id="stage4" class="stages">
-      You're all done!
-    </p>
-  </div>
-{% else %}
+{% if not stage or stage == 0 %}
 <div>
-  <a href="/auth/login">login with facebook</a>
+  <button id="start">Start Download</button>
+</div>
+{% endif %}
+<div id="downloading" {% if not stage or stage == 0 %}style="display:none;"{% endif %}>
+  <p id="error"></p>
+  <p id="starting" class="stages">
+    Your download has been started. It takes a while, so you should come
+    back in a bit to check if it's done. Until then, you can feel free to
+    close this page and go on about your day. Just come back to this url
+    to check if it's done.
+  </p>
+  <p id="stage1" class="stages" {% if not stage or stage != 1 %}style="display:none;"{% endif %}>
+    downloading user data: <span id="count">0</span>/<span id="total">0</span>
+  </p>
+  <p id="stage2" class="stages" {% if not stage or stage != 2 %}style="display:none;"{% endif %}>
+    saving user data
+  </p>
+  <p id="stage3" class="stages" {% if not stage or stage != 3 %}style="display:none;"{% endif %}>
+    calculating pmis
+  </p>
+  <p id="stage4" class="stages" style="display:none;">
+    You're all done!
+  </p>
 </div>
 {% endblock %}
 

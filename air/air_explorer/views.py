@@ -5,9 +5,11 @@ import json
 from toolkit.models import Entity, Link, PMI
 
 def home(request, template_name="air_explorer/home.html"):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated() and request.user.profile.exists():
         profile = request.user.profile.all()[0]
-        ready = profile.downloadStatus.exists() and profile.downloadStatus.all()[0].stage == 4
+        if not profile.downloadStatus.exists() or profile.downloadStatus.all()[0].stage < 4:
+            return HttpResponseRedirect('/download/')
+        ready = True
     else:
         ready = False
     return render_to_response(template_name, {
@@ -26,17 +28,18 @@ def friends(request, template_name="air_explorer/friends.html"):
 def likes(request, startsWith, template_name="air_explorer/likes.html"):
     if request.user.is_authenticated():
         profile = request.user.profile.all()[0]
-        if not profile.downloadStatus.exists() or profile.downloadStatus.stage != 4:
-            return HttpResponseRedirect('/d/')
+        if not profile.downloadStatus.exists() or profile.downloadStatus.all()[0].stage < 4:
+            return HttpResponseRedirect('/download/')
         links = Link.objects.annotate(entity_activity=Count('toEntity__linksTo'))
         likes = links.filter(owner.request.user.profile,entity_activity__gt=1,relation="likes")
-        if startsWith:
-            likes = likes.filter(name__istartswith=startsWith)
+        if not startsWith:
+            startsWith = 'a'
+        likes = likes.filter(name__istartswith=startsWith)
     return render_to_response(template_name, {
             'likes' : likes,
             }, context_instance=RequestContext(request))
 
-def getPmiVector(request, fbid):
+def pmivector(request, fbid):
     if request.user.is_authenticated():
         vector = [{
                 'fromName':pmi.fromEntity.name,

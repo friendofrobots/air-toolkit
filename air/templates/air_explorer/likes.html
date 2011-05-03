@@ -5,15 +5,64 @@
 {% block head_extra %}
 <script type="text/javascript" src="pmi.json"></script>
 
+{% block tabs %}
+<li><a href="/likes/0">0</a></li>
+<li><a href="/likes/1">1</a></li>
+<li><a href="/likes/2">2</a></li>
+<li><a href="/likes/3">3</a></li>
+<li><a href="/likes/4">4</a></li>
+<li><a href="/likes/5">5</a></li>
+<li><a href="/likes/6">6</a></li>
+<li><a href="/likes/7">7</a></li>
+<li><a href="/likes/8">8</a></li>
+<li><a href="/likes/9">9</a></li>
+<li><a href="/likes/a">A</a></li>
+<li><a href="/likes/b">B</a></li>
+<li><a href="/likes/c">C</a></li>
+<li><a href="/likes/d">D</a></li>
+<li><a href="/likes/e">E</a></li>
+<li><a href="/likes/f">F</a></li>
+<li><a href="/likes/g">G</a></li>
+<li><a href="/likes/h">H</a></li>
+<li><a href="/likes/i">I</a></li>
+<li><a href="/likes/j">J</a></li>
+<li><a href="/likes/k">K</a></li>
+<li><a href="/likes/l">L</a></li>
+<li><a href="/likes/m">M</a></li>
+<li><a href="/likes/n">N</a></li>
+<li><a href="/likes/o">O</a></li>
+<li><a href="/likes/p">P</a></li>
+<li><a href="/likes/q">Q</a></li>
+<li><a href="/likes/r">R</a></li>
+<li><a href="/likes/s">S</a></li>
+<li><a href="/likes/t">T</a></li>
+<li><a href="/likes/u">U</a></li>
+<li><a href="/likes/v">V</a></li>
+<li><a href="/likes/w">W</a></li>
+<li><a href="/likes/x">X</a></li>
+<li><a href="/likes/y">Y</a></li>
+<li><a href="/likes/z">Z</a></li>
+{% endblock %}
+
 {% block content %}
 <ul>
-  {% for page in pages %}
+  {% for like in likes %}
   <li class="like">
-    <!--<img src="https://graph.facebook.com/{{ like.fbid }}/picture"/>-->
-    <a id="{{ like.fbid }}" class="like">{{ like.name }}</a>
+    <img src="https://graph.facebook.com/{{ like.fbid }}/picture" />
+    <h2>{{ like.name }}</h2>
     <ul id="{{ like.fbid }}-pmis" class="pmis">
+      {% for pmi in like.pmiTo.all %}
+      <li>{{ pmi.toEntity.name }} : {{ pmi.value }}</li>
+      {% endfor %}
+      {% for pmi in like.pmiFrom.all %}
+      {% if pmi.fromEntity != like %}
+      <li>{{ pmi.fromEntity.name }} : {{ pmi.value }}</li>
+      {% endif %}
+      {% endfor %}
     </ul>
   </li>
+  {% empty %}
+  <li>No likes starting with that character.</li>
   {% endfor %}
 </ul>
 {% endblock %}
