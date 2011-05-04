@@ -1,4 +1,4 @@
-from toolkit.models import DownloadStatus Entity, Link, PMI, Category, CategoryScore
+from toolkit.models import DownloadStatus, Entity, Link, PMI, Category, CategoryScore
 from django.contrib import admin
 
 admin.site.register(DownloadStatus)

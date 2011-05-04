@@ -15,8 +15,11 @@ class DownloadStatus(models.Model):
 
 class Entity(models.Model):
     owner = models.ForeignKey(Profile)
-    fbid = models.CharField(max_length=30)
+    fbid = models.CharField(max_length=50)
     name = models.CharField(max_length=200)
+
+    def getpmis(self):
+        return PMI.objects.filter(models.Q(toEntity=self) | models.Q(fromEntity=self)).distinct().order_by('-value')
 
     def __unicode__(self):
         return self.name

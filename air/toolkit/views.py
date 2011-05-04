@@ -41,30 +41,34 @@ def startDownload(request):
     """
     Ajax call to start the download
     """
-    if user.is_authenticated():
+    if request.user.is_authenticated():
         if request.method == 'POST':
             profile = request.user.profile.all()[0]
-            if not profile.download.exists():
+            if not profile.downloadStatus.exists():
                 graphapi = facebook.GraphAPI(profile.access_token)
                 me = graphapi.get_object('me')
-                friendIds = [f['id'] for f in graphapi.get_connections('me','friends')['data']]
-                friendIds.append(me['id'])
-                subtasks = [tasks.dlUser.subtask((graphapi,fbid)) for fbid in friendIds]
+                friends = [(f['id'],f['name']) for f in graphapi.get_connections('me','friends')['data']]
+                friends.append((me['id'],me['name']))
+                for friend in friends:
+                    Entity.objects(owner=profile,
+                                   fbid=friend[0],
+                                   name=friend[1])
+                subtasks = [tasks.dlUser.subtask((graphapi,fbid)) for (fbid,name) in friendIds]
                 result = TaskSet(tasks=subtasks).apply_async()
                 result.save()
                 status = DownloadStatus.objects.create(owner=profile,stage=1,task_id=result.taskset_id)
                 status.save()
-                r = tasks.checkTaskSet(result.taskset_id,profile.fbid,status.id)
+                r = tasks.checkTaskSet.delay(result.taskset_id,profile.fbid,status.id)
                 response_data = {
                     "stage":1,
                     "completed": result.completed_count(),
                     "total": result.total,
                     }
             else:
-                status = request.user.profile.all()[0].downloadStatus.all()[0],
+                status = profile.downloadStatus.all()[0],
                 response_data = {
                     "error": "download already started",
-                    "stage" : status.stage
+                    "stage" : status.stage,
                     }
                 if status.stage == 1:
                     result = TaskSetResult.restore(status.task_id)

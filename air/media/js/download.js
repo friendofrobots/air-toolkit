@@ -31,7 +31,7 @@ function getStatus() {
 $(document).ready(function() {
         if (started) {
             getStatus();
-            setInterval(getStatus,3000);
+            setInterval(getStatus,5000);
         }
         $('#start').click(function() {
                 $.post('/download/start/',function(data) {
@@ -46,45 +46,7 @@ $(document).ready(function() {
                         } else {
                             update(data);
                         }
-                        setInterval(getStatus,3000);
+                        setInterval(getStatus,5000);
                 });
         });
 });
-
-
-
-
-
-
-
-$(document).ready(function() {
-    if (started) {
-        $.get('/d/status/', function(data) {
-            
-        });
-    }
-    $('#start').click(function() {
-        $.post('/d/start/',function(data) {
-            if (data['error']) {
-                if (data['stage']) {
-                    start(data)
-                } else {
-                    $('#starting').text(data['error']).show();
-                }
-            } else {
-                start(data);
-            }
-        });
-    });
-});
-
-
-function start(data) {
-    $('#start').hide();
-    $('#starting').show();
-    $('#stage'+data['stage']).show();
-    if (data['stage'] == 1) {
-        $('#completed').data['completed'];
-        $('#total').data['total'];
-    }
-}

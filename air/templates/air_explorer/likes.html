@@ -3,7 +3,8 @@
 {% block head_title %}likes{% endblock %}
 
 {% block head_extra %}
-<script type="text/javascript" src="pmi.json"></script>
+<script type="text/javascript" src="/media/js/pmi.js"></script>
+{% endblock %}
 
 {% block tabs %}
 <li><a href="/likes/0">0</a></li>
@@ -42,27 +43,37 @@
 <li><a href="/likes/x">X</a></li>
 <li><a href="/likes/y">Y</a></li>
 <li><a href="/likes/z">Z</a></li>
+<li><a href="/likes/~">#</a></li>
 {% endblock %}
 
 {% block content %}
+{% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/1">first</a>{% endif %}
+{% if likes.has_previous %}<a href="/likes/{{ startsWith }}/{{ likes.previous_page_number }}">prev</a>{% endif %}
+{% if likes.has_next %}<a href="/likes/{{ startsWith }}/{{ likes.next_page_number }}">next</a>{% endif %}
+{% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/{{ likes.paginator.num_pages }}">last</a>{% endif %}
 <ul>
-  {% for like in likes %}
+  {% for like in likes.object_list %}
   <li class="like">
-    <img src="https://graph.facebook.com/{{ like.fbid }}/picture" />
-    <h2>{{ like.name }}</h2>
-    <ul id="{{ like.fbid }}-pmis" class="pmis">
-      {% for pmi in like.pmiTo.all %}
-      <li>{{ pmi.toEntity.name }} : {{ pmi.value }}</li>
-      {% endfor %}
-      {% for pmi in like.pmiFrom.all %}
-      {% if pmi.fromEntity != like %}
-      <li>{{ pmi.fromEntity.name }} : {{ pmi.value }}</li>
-      {% endif %}
-      {% endfor %}
-    </ul>
+    <h2><img src="https://graph.facebook.com/{{ like.fbid }}/picture" /> {{ like.name }}</h2>
+    <div>
+      <ul id="{{ like.fbid }}-pmis" class="pmis">
+	{% for pmi in like.getpmis %}
+	{% if pmi.toEntity == like %}
+	<li>{{ pmi.fromEntity.name }} : {{ pmi.value }}</li>
+	{% else %}
+	<li>{{ pmi.toEntity.name }} : {{ pmi.value }}</li>
+	{% endif %}
+	{% endfor %}
+      </ul>
+      <span class="show">[+]</span>
+    </div>
   </li>
   {% empty %}
   <li>No likes starting with that character.</li>
   {% endfor %}
 </ul>
+{% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/1">first</a>{% endif %}
+{% if likes.has_previous %}<a href="/likes/{{ startsWith }}/{{ likes.previous_page_number }}">prev</a>{% endif %}
+{% if likes.has_next %}<a href="/likes/{{ startsWith }}/{{ likes.next_page_number }}">next</a>{% endif %}
+{% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/{{ likes.paginator.num_pages }}">last</a>{% endif %}
 {% endblock %}

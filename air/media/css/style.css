@@ -25,33 +25,37 @@ body {
 }
 
 #tabbar {
-  margin: 4px 0 0 0;
+  position:relative;
+  margin: 0;
+  top: -1px;
 }
 #tabbar li {
-  display: inline;
+  display: inline-block;
   border: 1px solid black;
-  padding: 4px;
-  margin: 2px;
+  padding: 1.5px;
+  margin:0;
+  width: 12px;
+  text-align: center;
+  font-size: 11pt;
 }
 #tabbar a {
-  margin:2px;
+  text-decoration:none;
+  color: black;
+  font-weight:bold;
 }
 
 ul {
- list-style-type: none;
- margin:4px;
- padding:0;
+  list-style-type: none;
+  margin:4px;
+  padding:0;
 }
 
 /* pmis */
 .pmis {
-  display: none;
+  display:none;
 }
 
 /* downloading */
-.stages {
-  display: none;
-}
 
 
 

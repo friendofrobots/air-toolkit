@@ -13,5 +13,5 @@ urlpatterns = patterns('',
 
     (r'^auth/', include('fbauth.urls')),
     (r'^download/', include('toolkit.urls')),
-    (r'^$', include('air_explorer.urls')),
+    (r'^', include('air_explorer.urls')),
 )
