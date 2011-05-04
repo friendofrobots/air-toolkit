@@ -17,25 +17,15 @@ def dlUser(graphapi,fbid):
         entities = set()
         links = set()
 
-        # info
-        infoEntities, infoLinks = dlInfo(graphapi,fbid,info)
-        entities.update(infoEntities)
-        links.update(infoLinks)
-
         # likes
-        likeEntities, likeLinks = dlLikes(graphapi,fbid,likes)
+        likeEntities, likeLinks = dlLikes(graphapi,fbid)
         entities.update(likeEntities)
         links.update(likeLinks)
 
         # interests
-        interestEntities, interestLinks = dlInterests(graphapi,fbid,interests)
+        interestEntities, interestLinks = dlInterests(graphapi,fbid)
         entities.update(interestEntities)
         links.update(interestLinks)
-
-        # friends
-        friendEntities, friendLinks = dlFriends(graphapi,fbid,friends)
-        entities.update(friendEntities)
-        links.update(friendLinks)
 
         return entities, links
     except (ValueError,IOError,facebook.GraphAPIError,urllib2.URLError), exc:
@@ -57,16 +47,6 @@ def checkTaskSet(taskset_id,profile_fbid,status_id):
         status.save()
     else:
         checkTaskSet.retry(countdown=15, max_retries=None)
-
-def testsave(profile_fbid,status_id):
-    import pickle
-    with open('join.pickle','r') as f:
-        join = pickle.load(f)
-    r = saveUserData.delay(join,profile_fbid,status_id)
-    status = DownloadStatus.objects.get(id=status_id)
-    status.stage = 2
-    status.task_id = r.task_id
-    status.save()
     
 @task(ignore_result=True)
 def saveUserData(join, profile_fbid, status_id):
@@ -101,7 +81,7 @@ def saveUserData(join, profile_fbid, status_id):
         except Exception, e:
             print e
             print link
-            raise Exception()
+            raise e
     r = calcPMIs.delay(profile_fbid,status_id)
     status = DownloadStatus.objects.get(id=status_id)
     status.stage = 3
@@ -122,8 +102,7 @@ def calcPMIs(profile_fbid, status_id):
     """
     Pmi(i1,i2) = log(Pr(i1,i2) / Pr(i1)Pr(i2))
                = log(num(i1,i2)*totalLinks / num(i1)num(i2))
-    """
-    """
+
     pmis are symmetric, so only store the link from the one with the
       lower id to the one with the higher id (note: ids are strings,
       so the sort is alphabetical in this case)
@@ -152,7 +131,8 @@ def createCategory(profile_fbid, seeds, name):
         nodes with A[i]>F fire next time
     """
     
-def dlInfo(fbid,data):
+    
+def dlInfo(graphapi,fbid):
     data = graphapi.get_object(fbid)
     entities,links = set(),set()
     entities.add((data['id'],data['name']))
@@ -259,7 +239,7 @@ def dlInfo(fbid,data):
             links.update(l)
     return entities, links
 
-def dlLikes(fbid,data):
+def dlLikes(graphapi,fbid):
     data = graphapi.get_connections(fbid,"likes")['data']
     entities,links = set(),set()
     for like in data:
@@ -271,7 +251,7 @@ def dlLikes(fbid,data):
         links.update(l)
     return entities, links
 
-def dlInterests(fbid,data):
+def dlInterests(graphapi,fbid):
     data = graphapi.get_connections(fbid,"interests")['data']
     entities,links = set(),set()
     for interest in data:
@@ -283,7 +263,7 @@ def dlInterests(fbid,data):
         links.update(l)
     return entities, links
 
-def dlFriends(graphapi,fbid,data):
+def dlFriends(graphapi,fbid):
     args = {
         "access_token" : graphapi.access_token,
         "target_uid" : fbid,
@@ -291,15 +271,16 @@ def dlFriends(graphapi,fbid,data):
         }
     file = urllib2.urlopen("https://api.facebook.com/method/friends.getMutualFriends?"
                            + urllib.urlencode(args))
-    friends = json.load(file)
+    data = json.load(file)
     try:
         friends["error_code"]
         raise facebook.GraphAPIError(friends["error_code"],
                                      friends["error_msg"])
-    entities,links = set(),set()
-    for friend in data:
-        links.add((fbid,'isFriendsWith',1,friend))
-    return entities, links
+    except:
+        entities,links = set(),set()
+        for friend in data:
+            links.add((fbid,'isFriendsWith',1,friend))
+        return entities, links
 
 def parseLink(fbid,thingid,name,rel,score,category=None):
     e = set([(thingid,name)])

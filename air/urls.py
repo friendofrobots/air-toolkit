@@ -8,9 +8,6 @@ urlpatterns = patterns('',
     (r'^admin/doc/', include('django.contrib.admindocs.urls')),
     (r'^admin/', include(admin.site.urls)),
 
-    (r'^media/(?P<path>.*)$', 'django.views.static.serve',
-     {'document_root': MEDIA_ROOT}),
-
     (r'^auth/', include('fbauth.urls')),
     (r'^download/', include('toolkit.urls')),
     (r'^', include('air_explorer.urls')),

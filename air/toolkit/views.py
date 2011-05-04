@@ -50,10 +50,10 @@ def startDownload(request):
                 friends = [(f['id'],f['name']) for f in graphapi.get_connections('me','friends')['data']]
                 friends.append((me['id'],me['name']))
                 for friend in friends:
-                    Entity.objects(owner=profile,
-                                   fbid=friend[0],
-                                   name=friend[1])
-                subtasks = [tasks.dlUser.subtask((graphapi,fbid)) for (fbid,name) in friendIds]
+                    Entity.objects.create(owner=profile,
+                                          fbid=friend[0],
+                                          name=friend[1])
+                subtasks = [tasks.dlUser.subtask((graphapi,fbid)) for (fbid,name) in friends]
                 result = TaskSet(tasks=subtasks).apply_async()
                 result.save()
                 status = DownloadStatus.objects.create(owner=profile,stage=1,task_id=result.taskset_id)
