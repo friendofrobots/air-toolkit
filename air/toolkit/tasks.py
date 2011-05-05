@@ -60,13 +60,14 @@ def checkTaskSet(taskset_id,profile_fbid,status_id):
         links = Link.objects.annotate(entity_activity=Count('toEntity__linksTo'))
         likes = links.filter(owner=Profile.objects.get(fbid=profile_fbid),
                              entity_activity__gt=1,relation="likes")
+        numpeople = Entity.objects.filter(linksTo__in=likes).distinct().count()
         linkedBy = {}
         for link in likes:
             if link.toEntity.fbid not in linkedBy:
                 linkedBy[link.toEntity.fbid] = set()
             linkedBy[link.toEntity.fbid].add(link.fromEntity.fbid)
 
-        subtasks = [tasks.calcPMIs.subtask((profile_fbid,linkedBy,fbid,lb)) for (fbid,lb) in linkedBy]
+        subtasks = [tasks.calcPMIs.subtask((profile_fbid,linkedBy,fbid,lb,len(likes))) for (fbid,lb) in linkedBy]
         r = TaskSet(tasks=subtasks).apply_async()
         r2 = tasks.checkPMISet.delay(r.taskset_id,profile.fbid,status.id)
         status = DownloadStatus.objects.get(id=status_id)
@@ -77,22 +78,24 @@ def checkTaskSet(taskset_id,profile_fbid,status_id):
         checkTaskSet.retry(countdown=15, max_retries=None)
 
 @task(ignore_result=True)
-def calcPMIs(profile_fbid, linkedBy, fbid1, lb1):
+def calcPMIs(profile_fbid, linkedBy, fbid1, lb1, numpeople):
     """
     Pmi(i1,i2) = log(Pr(i1,i2) / Pr(i1)Pr(i2))
-               = log(num(i1,i2)*totalLinks / num(i1)num(i2))
+               = log(num(i1,i2)*totalPeople / num(i1)num(i2))
 
     pmis are symmetric, so only store the link from the one with the
       lower id to the one with the higher id (note: ids are strings,
       so the sort is alphabetical in this case)
     """
+    profile = Profile.objects.get(fbid=profile_fbid)
+    fromEntity = Entity.objects.get(fbid=fbid1)
     for fbid2,lb2 in linkedBy.iteritems():
         if fbid1 <= fbid2 and len(lb1.intersection(lb2))>0:
             PMI.objects.get_or_create(
-                owner=Profile.objects.get(fbid=profile_fbid),
-                fromEntity=Entity.objects.get(fbid=fbid1),
+                owner=profile,
+                fromEntity=fromEntity,
                 toEntity=Entity.objects.get(fbid=fbid2),
-                value=math.log(len(lb1.intersection(lb2))*len(links)/(len(lb1)*len(lb2)),2))
+                value=math.log(len(lb1.intersection(lb2))*numpeople/(len(lb1)*len(lb2)),2))
 
 @task(ignore_result=True):
 def checkPMISet(taskset_id,profile_fbid,status_id):
@@ -127,7 +130,7 @@ def createCategory(profile_fbid, category_id, threshold, decayrate, minpmi, maxp
                     node2score = scores.get(entity=node2)
                     pmi = PMI.objects.get(fromEntity=node1,toEntity=node2)
                     weight = (pmi.value-minpmi) / (maxpmi-minpmi)
-                    newValue = node2score.value + (node2score.value*weight*decayrate)
+                    newValue = node2score.value + (node2score.value**decayrate)
                     if newValue > 1:
                         newValue = 1.0
                     node2score.value = newValue

@@ -47,7 +47,7 @@ class PMI(models.Model):
     
 class Category(models.Model):
     owner = models.ForeignKey(Profile)
-    name = models.CharField(max_length=200,unique=True)
+    name = models.CharField(max_length=200)
     seeds = models.ManyToManyField(Entity)
     active = models.OneToOneField(Profile,related_name="activeCategory",blank=True,null=True)
     task_id = models.CharField(max_length=200,blank=True)
