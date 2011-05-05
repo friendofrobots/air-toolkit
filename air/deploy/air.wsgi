@@ -3,7 +3,7 @@ import sys
 
 from os.path import abspath, dirname, join
 from site import addsitedir
-addsitedir(abspath(join(dirname(__file__), "../../lib/python2.6/site-packages"))
+addsitedir(abspath(join(dirname(__file__), "../../lib/python2.6/site-packages")))
 sys.path.insert(0, abspath(join(dirname(__file__), "../../")))
 sys.path.insert(0, abspath(join(dirname(__file__), "../")))
 
