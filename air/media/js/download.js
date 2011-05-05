@@ -2,9 +2,9 @@ function update(data){
     $('#start').hide();
     $('#downloading').show();
     $('#stage'+data['stage']).show();
-    if (data['stage'] == 1) {
-        $('#count').text(data['completed']);
-        $('#total').text(data['total']);
+    if (data['stage'] < 3) {
+        $('#count'+data['stage']).text(data['completed']);
+        $('#total'+data['stage']).text(data['total']);
     }
 }
 function getStatus() {
@@ -19,9 +19,9 @@ function getStatus() {
                 }
             } else if (data['stage']) {
                 update(data);
-                if (data['stage'] == 4) {
+                if (data['stage'] == 3) {
                     setTimeout(function() {
-                            window.location = "http://air.xvm.mit.edu:8000/";
+                            window.location = "http://air.xvm.mit.edu/";
                         },1000);
                 }
             }
