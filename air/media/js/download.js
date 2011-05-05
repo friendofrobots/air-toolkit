@@ -21,7 +21,7 @@ function getStatus() {
                 update(data);
                 if (data['stage'] == 4) {
                     setTimeout(function() {
-                            window.location = "http://air.xvm.mit.edu:8000/";
+                            window.location = "http://air.xvm.mit.edu/";
                         },1000);
                 }
             }
