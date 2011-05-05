@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block head_title %}Categories{% endblock %}
+
+{% block head_extra %}
+<script>
+var started = {% if active and active.task_id %}true;{% else %}false;{% endif %}
+</script>
+<script type="text/javascript" src="/media/js/categories.js"></script>
+{% endblock %}
+
+{% block content %}
+<ul id="categories">
+  {% if active %}
+  <li id="active">
+    <h3>{{ active.name }}</h3>
+    <div id="working" {% if not active.task_id %}style="display:none;"{% endif %}>
+      Category creation has been started. We'll redirect when we're done, or you can just come back later.
+    </div>
+  </li>
+  {% for category in categories %}
+  {% if category != active %}
+  <li><h3><a href="/category/{{ category.id }}">{{ category.name }}</a></h3></li>
+  {% endif %}
+  {% endfor %}
+</ul>
+{% endblock %}

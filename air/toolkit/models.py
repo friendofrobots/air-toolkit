@@ -6,9 +6,8 @@ class DownloadStatus(models.Model):
     stage = models.IntegerField(choices=(
             (0,'not yet started'),
             (1,'downloading user data'),
-            (2,'saving user data'),
-            (3,'calculating pmis'),
-            (4,'done')
+            (2,'calculating pmis'),
+            (3,'done')
             ), default=0)
     lastupdated = models.DateTimeField(auto_now=True)
     task_id = models.CharField(max_length=200,blank=True)
@@ -48,16 +47,20 @@ class PMI(models.Model):
     
 class Category(models.Model):
     owner = models.ForeignKey(Profile)
-    name = models.CharField(max_length=200,unique=True)
+    name = models.CharField(max_length=200)
+    seeds = models.ManyToManyField(Entity)
+    active = models.OneToOneField(Profile,related_name="activeCategory",blank=True,null=True)
+    task_id = models.CharField(max_length=200,blank=True)
 
     def __unicode__(self):
         return self.name
 
 class CategoryScore(models.Model):
     owner = models.ForeignKey(Profile)
-    category = models.ForeignKey(Category)
-    entity = models.ForeignKey(Entity)
-    value = models.FloatField()
+    category = models.ForeignKey(Category,related_name="scores")
+    entity = models.ForeignKey(Entity,related_name="categoryScore")
+    value = models.FloatField(default=0.0)
+    fired = models.BoolField(default=False)
 
     def __unicode__(self):
         return self.category.name + ': ' + self.entity.name + ' - ' + unicode(self.value)

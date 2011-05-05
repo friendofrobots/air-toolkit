@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block head_title %}Category: {{ category.name }}{% endblock %}
+
+{% block content %}
+{% if scores.has_other_pages %}<a href="/category/{{ category.id }}/1">first</a>{% endif %}
+{% if scores.has_previous %}<a href="/category/{{ category.id }}/{{ scores.previous_page_number }}">prev</a>{% endif %}
+{% if scores.has_next %}<a href="/category/{{ category.id }}/{{ scores.next_page_number }}">next</a>{% endif %}
+{% if scores.has_other_pages %}<a href="/category/{{ category.id }}/{{ scores.paginator.num_pages }}">last</a>{% endif %}
+<h2>{{ category.name }}</h2>
+<ul>
+  {% for score in scores.object_list %}
+  <li class="score">{{ score.entity.name }} : {{ score.value }}</li>
+  {% endfor %}
+</ul>
+{% if scores.has_other_pages %}<a href="/category/{{ category.id }}/1">first</a>{% endif %}
+{% if scores.has_previous %}<a href="/category/{{ category.id }}/{{ scores.previous_page_number }}">prev</a>{% endif %}
+{% if scores.has_next %}<a href="/category/{{ category.id }}/{{ scores.next_page_number }}">next</a>{% endif %}
+{% if scores.has_other_pages %}<a href="/category/{{ category.id }}/{{ scores.paginator.num_pages }}">last</a>{% endif %}
+
+{% endblock %}

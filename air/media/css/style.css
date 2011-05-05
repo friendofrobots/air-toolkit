@@ -55,66 +55,24 @@ ul {
   display:none;
 }
 
-/* downloading */
-
-
-
-
-
-
-
-
-
-
-
-/* explore */
-.objects {
-  float: left;
-  width:400px;
+.add-seed {
+  font-size: 50%;
+  color: #00FF00;
 }
 
-/* object */
-#sidebar {
-  width:216px;
-  float:left;
-  padding:8px;
+.delete-seed {
+  font-size: 50%;
+  color: #FF0000;
 }
 
-#results {
-  width:512px;
-  float:left;
-  padding:8px;
+.seed-id {
+  display:none;
 }
 
-#profile-pic {
-  margin: .67em auto 0;
+#category {
+  border : 2px solid black;
+  width: 200px;
+  position: fixed;
+  top: 40px;
+  left: 5px;
 }
-
-#profile-pic img {
-  width: 188px;
-}
-
-/* compare */
-#right-sidebar {
-  width:216px;
-  float:right;
-  padding:8px;
-}
-
-#comparison {
-  width:320px;
-  float:left;
-}
-
-/* projection */
-#for-comparison h2 {
-  width: 100%;
-  float:left;
-  clear:both;
-}
-
-.profile-likes {
-  width:380px;
-  float:left;
-}
-

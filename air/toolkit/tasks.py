@@ -1,7 +1,7 @@
-from django.db.models import Count
+from django.db.models import Count, Q
 from celery.decorators import task
 from celery.result import TaskSetResult
-from toolkit.models import DownloadStatus, Entity, Link, PMI
+from toolkit.models import DownloadStatus, Entity, Link, PMI, Category, CategoryScore
 from fbauth.models import Profile
 import json, urllib2, urllib, math, facebook
 
@@ -11,7 +11,7 @@ Then I need to run through and process the PMI information, ideally in
 a task format so I can give progress on it.
 """
 
-@task()
+@task(ignore_result=True)
 def dlUser(graphapi,fbid):
     try:
         entities = set()
@@ -27,7 +27,28 @@ def dlUser(graphapi,fbid):
         entities.update(interestEntities)
         links.update(interestLinks)
 
-        return entities, links
+        for fbid,name in entities:
+            if len(str(fbid)) > 50:
+                fbid = str(fbid)[:50]
+            if len(name) > 180:
+                name = name[:180]
+            Entity.objects.get_or_create(
+                owner=Profile.objects.get(fbid=profile_fbid),
+                fbid=fbid,
+                name=name)
+
+        for link in links:
+            if len(str(link[0])) > 50:
+                link = (str(link[0])[:50],link[1],link[2],link[3])
+            if len(str(link[3])) > 50:
+                link = (link[0],link[1],link[2],str(link[3])[:50])
+            Link.objects.create(
+                owner=Profile.objects.get(fbid=profile_fbid),
+                fromEntity=Entity.objects.get(fbid=link[0]),
+                relation=link[1],
+                weight=link[2],
+                toEntity=Entity.objects.get(fbid=link[3]))
+
     except (ValueError,IOError,facebook.GraphAPIError,urllib2.URLError), exc:
         print exc
         dlUser.retry(countdown=15, max_retries=None, throw=False)
@@ -36,102 +57,101 @@ def dlUser(graphapi,fbid):
 def checkTaskSet(taskset_id,profile_fbid,status_id):
     result = TaskSetResult.restore(taskset_id)
     if result.ready():
-        import pickle
-        join = result.join()
-        with open('join.pickle','w') as f:
-            pickle.dump(join,f)
-        r = saveUserData.delay(join,profile_fbid,status_id)
+        links = Link.objects.annotate(entity_activity=Count('toEntity__linksTo'))
+        likes = links.filter(owner=Profile.objects.get(fbid=profile_fbid),
+                             entity_activity__gt=1,relation="likes")
+        numpeople = Entity.objects.filter(linksTo__in=likes).distinct().count()
+        linkedBy = {}
+        for link in likes:
+            if link.toEntity.fbid not in linkedBy:
+                linkedBy[link.toEntity.fbid] = set()
+            linkedBy[link.toEntity.fbid].add(link.fromEntity.fbid)
+
+        subtasks = [tasks.calcPMIs.subtask((profile_fbid,linkedBy,fbid,lb,len(likes))) for (fbid,lb) in linkedBy]
+        r = TaskSet(tasks=subtasks).apply_async()
+        r2 = tasks.checkPMISet.delay(r.taskset_id,profile.fbid,status.id)
         status = DownloadStatus.objects.get(id=status_id)
         status.stage = 2
         status.task_id = r.task_id
         status.save()
     else:
         checkTaskSet.retry(countdown=15, max_retries=None)
-    
-@task(ignore_result=True)
-def saveUserData(join, profile_fbid, status_id):
-    """
-    Creates django objects and saves them
-    """
-    entities,links = set(),set()
-    for e,l in join:
-        entities.update(e)
-        links.update(l)
-    for fbid,name in entities:
-        if len(str(fbid)) > 50:
-            fbid = str(fbid)[:50]
-        if len(name) > 180:
-            name = name[:180]
-        Entity.objects.get_or_create(
-            owner=Profile.objects.get(fbid=profile_fbid),
-            fbid=fbid,
-            name=name)
-    for link in links:
-        if len(str(link[0])) > 50:
-            link = (str(link[0])[:50],link[1],link[2],link[3])
-        if len(str(link[3])) > 50:
-            link = (link[0],link[1],link[2],str(link[3])[:50])
-        try:
-            Link.objects.create(
-                owner=Profile.objects.get(fbid=profile_fbid),
-                fromEntity=Entity.objects.get(fbid=link[0]),
-                relation=link[1],
-                weight=link[2],
-                toEntity=Entity.objects.get(fbid=link[3]))
-        except Exception, e:
-            print e
-            print link
-            raise e
-    r = calcPMIs.delay(profile_fbid,status_id)
-    status = DownloadStatus.objects.get(id=status_id)
-    status.stage = 3
-    status.task_id = r.task_id
-    status.save()
 
 @task(ignore_result=True)
-def calcPMIs(profile_fbid, status_id):
-    links = Link.objects.annotate(entity_activity=Count('toEntity__linksTo'))
-    likes = links.filter(owner=Profile.objects.get(fbid=profile_fbid),
-                         entity_activity__gt=1,relation="likes")
-    linkedBy = {}
-    for link in likes:
-        if link.toEntity.fbid not in linkedBy:
-            linkedBy[link.toEntity.fbid] = set()
-        linkedBy[link.toEntity.fbid].add(link.fromEntity.fbid)
-
+def calcPMIs(profile_fbid, linkedBy, fbid1, lb1, numpeople):
     """
     Pmi(i1,i2) = log(Pr(i1,i2) / Pr(i1)Pr(i2))
-               = log(num(i1,i2)*totalLinks / num(i1)num(i2))
+               = log(num(i1,i2)*totalPeople / num(i1)num(i2))
 
     pmis are symmetric, so only store the link from the one with the
       lower id to the one with the higher id (note: ids are strings,
       so the sort is alphabetical in this case)
     """
-    for fbid1,lb1 in linkedBy.iteritems():
-        for fbid2,lb2 in linkedBy.iteritems():
-            if fbid1 <= fbid2 and len(lb1.intersection(lb2))>0:
-                PMI.objects.get_or_create(
-                    owner=Profile.objects.get(fbid=profile_fbid),
-                    fromEntity=Entity.objects.get(fbid=fbid1),
-                    toEntity=Entity.objects.get(fbid=fbid2),
-                    value=math.log(len(lb1.intersection(lb2))*len(links)/(len(lb1)*len(lb2)),2))
-    status = DownloadStatus.objects.get(id=status_id)
-    status.stage = 4
-    status.task_id = ""
-    status.save()
+    profile = Profile.objects.get(fbid=profile_fbid)
+    fromEntity = Entity.objects.get(fbid=fbid1)
+    for fbid2,lb2 in linkedBy.iteritems():
+        if fbid1 <= fbid2 and len(lb1.intersection(lb2))>0:
+            PMI.objects.get_or_create(
+                owner=profile,
+                fromEntity=fromEntity,
+                toEntity=Entity.objects.get(fbid=fbid2),
+                value=math.log(len(lb1.intersection(lb2))*numpeople/(len(lb1)*len(lb2)),2))
+
+@task(ignore_result=True):
+def checkPMISet(taskset_id,profile_fbid,status_id):
+    result = TaskSetResult.restore(taskset_id)
+    if result.ready():
+        status = DownloadStatus.objects.get(id=status_id)
+        status.stage = 3
+        status.task_id = ""
+        status.save()
+    else:
+        checkTaskSet.retry(countdown=15, max_retries=None)
 
 @task(ignore_result=True)
-def createCategory(profile_fbid, seeds, name):
+def createCategory(profile_fbid, category_id, threshold, decayrate, minpmi, maxpmi):
     """
     F is firing threshold, D is decay factor, W is link weight
-    set A[i] to zero besides seeds
     for each unfired node [i] where A[i]>F:
         For each link [i,j] adjust A[j] = A[j] + (A[i]*W[i,j]*D)
         (cap at 1, mark all fired so they don't fire again)
         nodes with A[i]>F fire next time
     """
+    profile = Profile.objects.get(fbid=profile_fbid)
+    category = Category.objects.get(id=category_id)
     
-    
+    scores = CategoryScore.objects.filter(category=category)
+    scores.filter(entity__in=category.seeds).update(value=1.0)
+    toFire = scores.filter(fired=False,value__gt=threshold):
+    while toFire:
+        for node1 in toFire:
+            for node2 in Entity.filter(pmiTo__fromEntity=node1):
+                if node1 != node2:
+                    node2score = scores.get(entity=node2)
+                    pmi = PMI.objects.get(fromEntity=node1,toEntity=node2)
+                    weight = (pmi.value-minpmi) / (maxpmi-minpmi)
+                    newValue = node2score.value + (node2score.value**decayrate)
+                    if newValue > 1:
+                        newValue = 1.0
+                    node2score.value = newValue
+                    node2score.save()
+            for node2 in Entity.filter(pmiFrom__toEntity=node1):
+                if node1 != node2:
+                    node2score = scores.get(entity=node2)
+                    pmi = PMI.objects.get(fromEntity=node2,toEntity=node1)
+                    newValue = node2score.value + (node2score.value*pmi.value*d)
+                    if newValue > 1:
+                        newValue = 1.0
+                    node2score.value = newValue
+                    node2score.save()
+            node1.fired = True
+            node1.save()
+    category.task_id = ""
+    category.active = False
+    category.save()
+                                                
+            
+
 def dlInfo(graphapi,fbid):
     data = graphapi.get_object(fbid)
     entities,links = set(),set()

@@ -7,6 +7,7 @@
 {% endblock %}
 
 {% block tabs %}
+<!-- TODO: change this to a second level tab bar -->
 <li><a href="/likes/0">0</a></li>
 <li><a href="/likes/1">1</a></li>
 <li><a href="/likes/2">2</a></li>
@@ -54,7 +55,10 @@
 <ul>
   {% for like in likes.object_list %}
   <li class="like">
-    <h2><img src="https://graph.facebook.com/{{ like.fbid }}/picture" /> {{ like.name }}</h2>
+    <h2>
+      <img src="https://graph.facebook.com/{{ like.fbid }}/picture" /> {{ like.name }}
+      {% if category and not category.task_id %}{% if like in category %}<span class="delete-seed">[-]</span>{% else %}<span class="add-seed">[+]</span>{% endif %}<span class="seed-id">{{ like.fbid }}</span>{% endif %}
+    </h2>
     <div>
       <ul id="{{ like.fbid }}-pmis" class="pmis">
 	{% for pmi in like.getpmis %}
@@ -76,4 +80,28 @@
 {% if likes.has_previous %}<a href="/likes/{{ startsWith }}/{{ likes.previous_page_number }}">prev</a>{% endif %}
 {% if likes.has_next %}<a href="/likes/{{ startsWith }}/{{ likes.next_page_number }}">next</a>{% endif %}
 {% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/{{ likes.paginator.num_pages }}">last</a>{% endif %}
+
+{% if not category %}
+<form action="#" method="post">
+  <input type="button">start category</input>
+</form>
+{% endif %}
+
+{% if category and not category.task_id%}
+<div id="category">
+  <h2>{{ category.name }}</h2>
+  <ul id="seeds">
+    {% for seed in category.seeds %}
+    <li>
+      <h3>
+        {{ seed.name }} <span class="delete-seed">[x]</span><span class="seed-id">{{ seed.fbid }}</span>
+      </h3>
+    </li>
+    {% endfor %}
+  </ul>
+  <form action="/category/" method="post">
+    <input type="button" class="donebutton">done</input>
+  </form>
+</div>
+{% endif %}
 {% endblock %}

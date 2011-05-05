@@ -26,15 +26,12 @@ var started = {% if stage and stage != 0 %}true;{% else %}false;{% endif %}
     to check if it's done.
   </p>
   <p id="stage1" class="stages" {% if not stage or stage != 1 %}style="display:none;"{% endif %}>
-    downloading user data: <span id="count">0</span>/<span id="total">0</span>
+    downloading user data: <span id="count1">0</span>/<span id="total1">0</span>
   </p>
   <p id="stage2" class="stages" {% if not stage or stage != 2 %}style="display:none;"{% endif %}>
-    saving user data
+    calculating pmis: <span id="count2">0</span>/<span id="total2">0</span> (this one will take a bit longer)
   </p>
-  <p id="stage3" class="stages" {% if not stage or stage != 3 %}style="display:none;"{% endif %}>
-    calculating pmis
-  </p>
-  <p id="stage4" class="stages" style="display:none;">
+  <p id="stage3" class="stages" style="display:none;">
     You're all done!
   </p>
 </div>
