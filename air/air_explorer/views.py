@@ -3,18 +3,21 @@ from django.http import HttpResponseRedirect
 from django.template import RequestContext
 from django.db.models import Count, Q
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 import json
 from toolkit.models import Entity, Link, PMI
 from toolkit import tasks
 from celery.result import AsyncResult
 
 def home(request, template_name="air_explorer/home.html"):
-    if request.user.is_authenticated() and request.user.profile.exists():
-        profile = request.user.profile.all()[0]
-        if not profile.downloadStatus.exists() or profile.downloadStatus.all()[0].stage < 4:
-            return HttpResponseRedirect('/download/')
-        ready = True
+    if request.user.is_authenticated():
+        try:
+            status = request.user.profile.downloadStatus
+            if status.stage < 4:
+                return redirect('download')
+            ready = True
+        except:
+            return redirect('download')
     else:
         ready = False
     return render_to_response(template_name, {
@@ -25,16 +28,20 @@ def friends(request, template_name="air_explorer/friends.html"):
     if request.user.is_authenticated():
         friends = Entity.objects.filter(owner=request.user.profile,linksFrom__relation="likes").distinct()
     else:
-        return HttpResponseRedirect('/')
+        return redirect('home')
     return render_to_response(template_name, {
             'friends' : friends,
             }, context_instance=RequestContext(request))
 
 def likes(request, startsWith=None, page=1, template_name="air_explorer/likes.html"):
     if request.user.is_authenticated():
-        profile = request.user.profile.all()[0]
-        if not profile.downloadStatus.exists() or profile.downloadStatus.all()[0].stage < 4:
-            return HttpResponseRedirect('/download/')
+        profile = request.user.profile
+        try:
+            status = profile.downloadStatus
+            if status.stage <4:
+                return redirect('download')
+        except:
+            return redirect('download')
         if startsWith == None:
             startsWith = 'a'
         objects = Entity.objects.filter(owner=profile,linksTo__relation="likes").distinct()
@@ -50,7 +57,9 @@ def likes(request, startsWith=None, page=1, template_name="air_explorer/likes.ht
             like_page = paginator.page(paginator.num_pages)
 
         if request.method == 'POST':
-            if not profile.activeCategory:
+            try:
+                category = profile.activeCategory
+            except:
                 category = Category.objects.create(owner=profile,
                                                    name=request.POST.get('name','tempcategoryname'),
                                                    active=profile)
@@ -65,17 +74,17 @@ def likes(request, startsWith=None, page=1, template_name="air_explorer/likes.ht
                 'category' : category,
                 }, context_instance=RequestContext(request))
     else:
-        return HttpResponseRedirect('/')
+        return redirect('home')
 
-def addSeed(request, fbid):
+def addSeed(request, seed_id):
     if request.user.is_authenticated():
         if request.method == 'POST':
-            profile = request.user.profile.all()[0]
+            profile = request.user.profile
             if profile.activeCategory:
-                seed = Entity.objects.get(fbid=fbid)
+                seed = Entity.objects.get(id=seed_id)
                 profile.activeCategory.seeds.add(seed)
                 response_datat = {
-                    "id":fbid,
+                    "id":seed_id,
                     "name":name,
                     }
             else:
@@ -92,18 +101,19 @@ def addSeed(request, fbid):
             }
     return HttpResponse(json.dumps(response_data),mimetype="application/json")
 
-def deleteSeed(request, fbid):
+def deleteSeed(request, seed_id):
     if request.user.is_authenticated():
         if request.method == 'POST':
-            profile = request.user.profile.all()[0]
-            if profile.activeCategory:
-                seed = Entity.objects.get(fbid=fbid)
-                profile.activeCategory.seeds.remove(seed)
+            profile = request.user.profile
+            try:
+                active = profile.activeCategory
+                seed = Entity.objects.get(id=seed_id)
+                active.seeds.remove(seed)
                 response_data = {
-                    "id":fbid,
+                    "id":seed_id,
                     "name":name,
                     }
-            else:
+            except:
                 response_data = {
                     "error":"start a category first"
                     }
@@ -119,27 +129,29 @@ def deleteSeed(request, fbid):
 
 def categories(request, template_name="air_explorer/categories.html"):
     if request.user.is_authenticated():
-        profile = request.user.profile.all()[0]
-        if profile.activeCategory:
+        profile = request.user.profile
+        try:
             active = profile.activeCategory
-        else:
+        except:
             active = None
         if request.method == 'POST':
             objects = Entity.objects.filter(owner=profile,linksTo__relation="likes").distinct()
             likes = objects.annotate(entity_activity=Count('linksTo')).filter(entity_activity__gt=1)
             for like in likes:
-                CategoryScore.create(owner=profile,
-                                     category=active,
-                                     entity=like)
-            result = tasks.createCategory.delay(profile.fbid,
+                CategoryScore.objects.create(owner=profile,
+                                             category=active,
+                                             entity=like)
+            result = tasks.createCategory.delay(profile.id,
                                                 active.id,
                                                 request.POST.get('threshold',0.5),
-                                                request.POST.get('decayrate',0.5))
+                                                request.POST.get('decayrate',0.5),
+                                                minpmi,
+                                                maxpmi)
             active.task_id = result.task_id
             active.save()
         categories = Category.objects.filter(owner=profile)
     else:
-        return HttpResponseRedirect('/')
+        return redirect('home')
     return render_to_response(template_name, {
             'categories' : categories,
             'active' : active,
@@ -147,7 +159,7 @@ def categories(request, template_name="air_explorer/categories.html"):
 
 def category(request, category_id, page=1, template_name="air_explorer/category.html"):
     if request.user.is_authenticated():
-        profile = request.user.profile.all()[0]
+        profile = request.user.profile
         category = get_object_or_404(Category,id=category_id)
         scores = category.scores.all().order_by('-value')
         paginator = Paginator(scores,25)
@@ -156,7 +168,7 @@ def category(request, category_id, page=1, template_name="air_explorer/category.
         except (EmptyPage, InvalidPage):
             score_page = paginator.page(paginator.num_pages)
     else:
-        return HttpResponseRedirect('/')
+        return redirect('home')
     return render_to_response(template_name, {
             'category' : category,
             'scores' : score_page,
@@ -164,8 +176,8 @@ def category(request, category_id, page=1, template_name="air_explorer/category.
     
 def categoryStatus(request):
     if request.user.is_authenticated():
-        profile = request.user.profile.all()[0]
-        if profile.activeCategory:
+        profile = request.user.profile
+        try:
             if profile.activeCategory.task_id:
                 result = AsyncResult(status.task_id)
                 response_data = {
@@ -181,7 +193,7 @@ def categoryStatus(request):
                     "id": profile.activeCategory.id,
                     "name": profile.activeCategory.name,
                     }
-        else:
+        except:
             response_data = {
                 "error" : "no active category"
                 }

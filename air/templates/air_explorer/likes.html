@@ -57,10 +57,10 @@
   <li class="like">
     <h2>
       <img src="https://graph.facebook.com/{{ like.fbid }}/picture" /> {{ like.name }}
-      {% if category and not category.task_id %}{% if like in category %}<span class="delete-seed">[-]</span>{% else %}<span class="add-seed">[+]</span>{% endif %}<span class="seed-id">{{ like.fbid }}</span>{% endif %}
+      {% if category and not category.task_id %}{% if like in category %}<span class="delete-seed">[-]</span>{% else %}<span class="add-seed">[+]</span>{% endif %}<span class="seed-id">{{ like.id }}</span>{% endif %}
     </h2>
     <div>
-      <ul id="{{ like.fbid }}-pmis" class="pmis">
+      <ul id="{{ like.id }}-pmis" class="pmis">
 	{% for pmi in like.getpmis %}
 	{% if pmi.toEntity == like %}
 	<li>{{ pmi.fromEntity.name }} : {{ pmi.value }}</li>
@@ -82,7 +82,7 @@
 {% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/{{ likes.paginator.num_pages }}">last</a>{% endif %}
 
 {% if not category %}
-<form action="#" method="post">
+<form method="post">
   <input type="button">start category</input>
 </form>
 {% endif %}
@@ -94,7 +94,7 @@
     {% for seed in category.seeds %}
     <li>
       <h3>
-        {{ seed.name }} <span class="delete-seed">[x]</span><span class="seed-id">{{ seed.fbid }}</span>
+        {{ seed.name }} <span class="delete-seed">[x]</span><span class="seed-id">{{ seed.id }}</span>
       </h3>
     </li>
     {% endfor %}

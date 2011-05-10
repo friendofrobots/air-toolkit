@@ -1,0 +1,41 @@
+{% extends "reflect/app_base.html" %}
+
+{% block head_title %}Categories{% endblock %}
+
+{% block sidebar %}
+<ul id="tabs">
+  {% for cat in categories %}
+  <li class="tab">
+    <a href="/reflect/category/{{ cat.id }}">{{ cat.name }}</a>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}
+
+{% block content %}
+<h2>{{ category.name }}</h2>
+<ul class="scores">
+  {% for score in category.getTop %}
+  <li class="score">
+    <img src="https://graph.facebook.com/{{ score.entity.fbid }}/picture" />
+    {{ score.entity.name }}
+  </li>
+  {% endfor %}
+</ul>
+{% comment %}
+I haven't imlemented these yet! Gasp!
+<ul class="profiles">
+  {% for profile in category.getTopPeople %}
+  <li class="profile">
+    <img src="https://graph.facebook.com/{{ profile.fbid }}/picture" />
+    {{ profile.name }}
+  </li>
+  {% endfor %}
+</ul>
+{% endcomment %}
+<form>
+  <input type="text" style="display:none">{{ category.id }}</input>
+  <input type="text">{{ category.name }}</input>
+  <input type="submit">Change Name</input>
+</form>
+{% endblock %}

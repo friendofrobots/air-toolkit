@@ -1,0 +1,55 @@
+{% extends "reflect/app_base.html" %}
+
+{% block head_title %}Home{% endblock %}
+
+{% if user.is_athenticated %}
+{% block head_extra %}
+<script>
+var started = {% if status and status.stage != 0 %}true;{% else %}false;{% endif %}
+var redirect = true;
+</script>
+<script type="text/javascript" src="/media/js/download.js"></script>
+{% endblock %}
+{% endif %}
+
+{% block content %}
+<h1>Welcome!</h1>
+<div id="about">
+  <p>
+    This page will hold a description of what this website does.
+    For instance: This is an app for looking at the way your identity
+    is represented on Facebook.
+  </p>
+</div>
+
+{% if not status %}
+<div>
+  <button id="start">Start Download</a>
+</div>
+{% endif %}
+<div id="downloading" {% if not status or status.stage == 0 or status.stage == 4 %}style="display:none;"{% endif %}>
+  <p id="error"></p>
+  <p id="starting" class="stages">
+    Your download has been started. It takes a while, so you should come
+    back in a bit to check if it's done. Until then, you can feel free to
+    close this page and go on about your day. Just come back to this url
+    to check if it's done.
+  </p>
+  <p id="stage1" class="stages" {% if not status or status.stage != 1 %}style="display:none;"{% endif %}>
+    downloading user data: <span id="count1">0</span>/<span id="total1">0</span>
+  </p>
+  <p id="stage2" class="stages" {% if not status or status.stage != 2 %}style="display:none;"{% endif %}>
+    calculating pmis: <span id="count2">0</span>/<span id="total2">0</span> (this one will take a bit longer)
+  </p>
+  <p id="stage2" class="stages" {% if not status or status.stage != 3 %}style="display:none;"{% endif %}>
+    finding categories
+  </p>
+  <p id="stage3" class="stages" style="display:none;">
+    You're all done!
+  </p>
+</div>
+<div id="getstarted" {% if not status or status.stage < 4 %}style="display:none;"{% endif %}>
+  <a href="/reflect/categories/">Get Started</a>
+</div>
+  
+{% endblock %}

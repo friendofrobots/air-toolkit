@@ -1,8 +1,9 @@
 from django.db import models
+from django.db.models import Count
 from fbauth.models import Profile
 
 class DownloadStatus(models.Model):
-    owner = models.ForeignKey(Profile,related_name="downloadStatus")
+    owner = models.OneToOneField(Profile,related_name="downloadStatus")
     stage = models.IntegerField(choices=(
             (0,'not yet started'),
             (1,'downloading user data'),
@@ -17,8 +18,20 @@ class Entity(models.Model):
     fbid = models.CharField(max_length=50)
     name = models.CharField(max_length=200)
 
+    # Like methods
     def getpmis(self):
         return PMI.objects.filter(models.Q(toEntity=self) | models.Q(fromEntity=self)).distinct().order_by('-value')
+
+    def topCategory(self):
+        try:
+            topscore = self.scores.order_by('-value')[0]
+        except:
+            topscore = None
+        return topscore.category
+
+    # Profile methods
+    def likes(self):
+        return self.linksTo.filter(relation="likes")
 
     def __unicode__(self):
         return self.name
@@ -48,9 +61,17 @@ class PMI(models.Model):
 class Category(models.Model):
     owner = models.ForeignKey(Profile)
     name = models.CharField(max_length=200)
-    seeds = models.ManyToManyField(Entity)
+    seeds = models.ManyToManyField(Entity,blank=True)
     active = models.OneToOneField(Profile,related_name="activeCategory",blank=True,null=True)
     task_id = models.CharField(max_length=200,blank=True)
+
+    def getTop(self,num=10):
+        return self.scores.order_by('-value')[:num]
+
+    def getTopPeople(self,num=10):
+        # I might actually want to calculate membership gradience for each
+        # entity ahead of time
+        return num
 
     def __unicode__(self):
         return self.name
@@ -60,7 +81,7 @@ class CategoryScore(models.Model):
     category = models.ForeignKey(Category,related_name="scores")
     entity = models.ForeignKey(Entity,related_name="categoryScore")
     value = models.FloatField(default=0.0)
-    fired = models.BoolField(default=False)
+    fired = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.category.name + ': ' + self.entity.name + ' - ' + unicode(self.value)

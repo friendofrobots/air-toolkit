@@ -1,6 +1,6 @@
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.contrib.auth.models import User
 
@@ -27,12 +27,12 @@ redirect to display page
 
 def download(request, template_name="toolkit/download.html"):
     if request.user.is_authenticated():
-        if request.user.profile.all()[0].downloadStatus.exists():
-            stage = request.user.profile.all()[0].downloadStatus.all()[0].stage
-        else:
+        try:
+            stage = request.user.profile.downloadStatus.stage
+        except:
             stage = None
     else:
-        return HttpResponseRedirect('/')
+        return redirect('home')
     return render_to_response(template_name, {
                 "stage" : stage,
                 }, context_instance=RequestContext(request))
@@ -43,8 +43,24 @@ def startDownload(request):
     """
     if request.user.is_authenticated():
         if request.method == 'POST':
-            profile = request.user.profile.all()[0]
-            if not profile.downloadStatus.exists():
+            profile = request.user.profile
+            try:
+                status = profile.downloadStatus
+                if status.stage < 3:
+                    result = TaskSetResult.restore(status.task_id)
+                    response_data = {
+                        "error": "download already started",
+                        "stage" : status.stage,
+                        "completed" : result.completed_count(),
+                        "total" : result.total,
+                        }
+                else:
+                    reponse_data = {
+                        "error": "download already finished",
+                        "stage" : status.stage,
+                        "state" : "completed",
+                        }
+            except:
                 graphapi = facebook.GraphAPI(profile.access_token)
                 me = graphapi.get_object('me')
                 friends = [(f['id'],f['name']) for f in graphapi.get_connections('me','friends')['data']]
@@ -53,30 +69,17 @@ def startDownload(request):
                     Entity.objects.create(owner=profile,
                                           fbid=friend[0],
                                           name=friend[1])
-                subtasks = [tasks.dlUser.subtask((graphapi,fbid)) for (fbid,name) in friends]
+                subtasks = [tasks.dlUser.subtask((profile.id,graphapi,fbid)) for (fbid,name) in friends]
                 result = TaskSet(tasks=subtasks).apply_async()
-                result.save()
                 status = DownloadStatus.objects.create(owner=profile,stage=1,task_id=result.taskset_id)
                 status.save()
-                r = tasks.checkTaskSet.delay(result.taskset_id,profile.fbid,status.id)
+                result.save()
+                r = tasks.checkTaskSet.delay(result.taskset_id,profile.id,status.id)
                 response_data = {
                     "stage":1,
                     "completed": result.completed_count(),
                     "total": result.total,
                     }
-            else:
-                status = profile.downloadStatus.all()[0],
-                result = TaskSetResult.restore(status.task_id)
-                response_data = {
-                    "error": "download already started",
-                    "stage" : status.stage,
-                    "completed" : result.completed_count(),
-                    "total" : result.total,
-                    }
-                if status.stage == 1:
-                else:
-                    result = AsyncResult(status.task_id)
-                    response_data['state'] = result.state
         else:
             response_data = {
                 "error": "must be a post request"
@@ -89,7 +92,7 @@ def startDownload(request):
 
 def status(request):
     if request.user.is_authenticated():
-        status = request.user.profile.all()[0].downloadStatus.all()[0]
+        status = request.user.profile.downloadStatus
         """
         I need to execute 2 separate tasks:
         1) Download and save (set) - this should already be started

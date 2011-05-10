@@ -93,6 +93,8 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'air.urls'
 
+LOGIN_URL = '/auth/login/'
+
 TEMPLATE_DIRS = (
     os.path.join(PROJECT_ROOT, "templates"),
 )
@@ -106,10 +108,12 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'django.contrib.admin',
 
+    'djcelery',
+    'south',
     'toolkit',
     'fbauth',
-    'djcelery',
     'air_explorer',
+    'reflect',
 )
 
 # CELERY CONFIG #

@@ -9,6 +9,7 @@ urlpatterns = patterns('',
     (r'^admin/', include(admin.site.urls)),
 
     (r'^auth/', include('fbauth.urls')),
-    (r'^download/', include('toolkit.urls')),
+    (r'^t/', include('toolkit.urls')),
+    (r'^reflect/', include('reflect.urls')),
     (r'^', include('air_explorer.urls')),
 )

@@ -2,9 +2,9 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect
 from django.conf import settings
 from django.template import RequestContext
+from django.shortcuts import redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
 
 import urllib, urllib2, cgi, facebook
 from fbauth.models import Profile
@@ -12,7 +12,7 @@ from fbauth.models import Profile
 authorize_url = 'https://graph.facebook.com/oauth/authorize'
 access_token_url = 'https://graph.facebook.com/oauth/access_token'
 
-def fblogin(request):
+def fblogin(request, redirect="/"):
     args = dict(client_id=settings.FB_ID,
                 redirect_uri='http://'+request.get_host()+request.path,
                 )
@@ -32,7 +32,7 @@ def fblogin(request):
             user = User.objects.get(username=me['id'])
             user.set_password(access_token)
             user.save()
-            profile = user.profile.all()[0]
+            profile = user.profile
             profile.access_token = access_token
             profile.save()
         except User.DoesNotExist:
@@ -50,7 +50,7 @@ def fblogin(request):
                             password=access_token)
         login(request, user)
 
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect(redirect)
     elif request.GET.__contains__("error"):
         raise Exception("got an error from facebook")
         return render_to_response("fbauth/login.html", {
@@ -61,7 +61,6 @@ def fblogin(request):
         return HttpResponseRedirect(authorize_url + "?" +
                                     urllib.urlencode(args))
 
-@login_required
 def fblogout(request):
     logout(request)
-    return HttpResponseRedirect('/')
+    return redirect('home')

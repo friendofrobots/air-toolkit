@@ -20,9 +20,13 @@ function getStatus() {
             } else if (data['stage']) {
                 update(data);
                 if (data['stage'] == 3) {
-                    setTimeout(function() {
-                            window.location = "http://air.xvm.mit.edu/";
-                        },1000);
+		    if (redirect) {
+			setTimeout(function() {
+				window.location = "http://air.xvm.mit.edu/";
+			    },1000);
+		    } else {
+			$('#getstarted').show();
+		    }
                 }
             }
         });
