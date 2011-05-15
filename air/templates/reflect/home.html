@@ -13,43 +13,68 @@ var redirect = true;
 {% endif %}
 
 {% block content %}
-<h1>Welcome!</h1>
-<div id="about">
-  <p>
-    This page will hold a description of what this website does.
-    For instance: This is an app for looking at the way your identity
-    is represented on Facebook.
-  </p>
-</div>
+<div id="intro">
+  <h1>AIR Profile Visualizer</h1>
+  <div id="about">
+    <img id="mirror" src="/media/img/mirror.png" />
+    <div id="blurb">
+      <p>
+	Your Facebook profile can be thought of as a reflection of your
+	online identity with your likes representing yourself to others.
+	Our application aims to categorize “likes” by the frequency they
+	appear together on you and your friend’s pages.
+      </p>
+      <p>You will be first prompted to allow the application to download
+	your “likes” in addition to your friends' “likes.” Once finished
+	downloading, the application will display categories from the
+	information, prompting the you to name the categories shown. After
+	naming the categories, the application will show you your profile
+	and how it fits into your named categories.
+      </p>
+    </div>
+  </div>
 
-{% if not status %}
-<div>
-  <button id="start">Start Download</a>
-</div>
-{% endif %}
-<div id="downloading" {% if not status or status.stage == 0 or status.stage == 4 %}style="display:none;"{% endif %}>
-  <p id="error"></p>
-  <p id="starting" class="stages">
-    Your download has been started. It takes a while, so you should come
-    back in a bit to check if it's done. Until then, you can feel free to
-    close this page and go on about your day. Just come back to this url
-    to check if it's done.
-  </p>
-  <p id="stage1" class="stages" {% if not status or status.stage != 1 %}style="display:none;"{% endif %}>
-    downloading user data: <span id="count1">0</span>/<span id="total1">0</span>
-  </p>
-  <p id="stage2" class="stages" {% if not status or status.stage != 2 %}style="display:none;"{% endif %}>
-    calculating pmis: <span id="count2">0</span>/<span id="total2">0</span> (this one will take a bit longer)
-  </p>
-  <p id="stage2" class="stages" {% if not status or status.stage != 3 %}style="display:none;"{% endif %}>
-    finding categories
-  </p>
-  <p id="stage3" class="stages" style="display:none;">
-    You're all done!
-  </p>
-</div>
-<div id="getstarted" {% if not status or status.stage < 4 %}style="display:none;"{% endif %}>
-  <a href="/reflect/categories/">Get Started</a>
+  {% if not status %}
+  <div>
+    <button class="button" id="start">Start Download</button>
+  </div>
+  {% endif %}
+  {% comment %}
+  <div id="downloading" {% if not status or status.stage == 0 or status.stage == 4 %}style="display:none;"{% endif %}>
+    <p id="error"></p>
+    <p id="starting" class="stages">
+      Your download has been started. It takes a while, so you should come
+      back in a bit to check if it's done. Until then, you can feel free to
+      close this page and go on about your day. Just come back to this url
+      to check if it's done.
+    </p>
+    <p id="stage1" class="stages" {% if not status or status.stage != 1 %}style="display:none;"{% endif %}>
+      downloading user data: <span id="count1">0</span>/<span id="total1">0</span>
+    </p>
+    <p id="stage2" class="stages" {% if not status or status.stage != 2 %}style="display:none;"{% endif %}>
+      calculating pmis: <span id="count2">0</span>/<span id="total2">0</span> (this one will take a bit longer)
+    </p>
+    <p id="stage2" class="stages" {% if not status or status.stage != 3 %}style="display:none;"{% endif %}>
+      finding categories
+    </p>
+    <p id="stage3" class="stages" style="display:none;">
+      You're all done!
+    </p>
+  </div>
+  {% endcomment %}
+  {% if status and status.stage != 4 %}
+  <div id="christine">
+    <p>
+      psssst! Christine! Click this link, it should finish your download.
+      You don't have to stick around for it. Just send me an email when you click it.
+    </p>
+    <button class="button">Finish Download</button>
+  </div>
+  {% endif %}
+
+  <div id="getstarted" {% if not status or status.stage != 4 %}style="display:none;"{% endif %}>
+    <a class="button" href="/reflect/categories/">Get Started</a>
+  </div>
 </div>
   
 {% endblock %}

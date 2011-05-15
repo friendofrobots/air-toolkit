@@ -1,5 +1,5 @@
 from django.shortcuts import render_to_response
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.db.models import Count, Q
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
@@ -51,11 +51,12 @@ def likes(request, startsWith=None, page=1, template_name="air_explorer/likes.ht
         else:
             likes = likes.filter(entity_activity__gt=1,name__istartswith=startsWith).order_by('name')
         paginator = Paginator(likes,25)
+        
         try:
             like_page = paginator.page(page)
         except (EmptyPage, InvalidPage):
             like_page = paginator.page(paginator.num_pages)
-
+        
         if request.method == 'POST':
             try:
                 category = profile.activeCategory
@@ -75,6 +76,19 @@ def likes(request, startsWith=None, page=1, template_name="air_explorer/likes.ht
                 }, context_instance=RequestContext(request))
     else:
         return redirect('home')
+
+def like_pmis(request, like_id):
+    if request.user.is_authenticated():
+        profile = request.user.profile
+        like = get_object_or_404(Entity,id=like_id)
+        response_data = {
+            "pmis": [[pmi.fromEntity.name,pmi.value] if pmi.toEntity == like else [pmi.toEntity.name,pmi.value] for pmi in like.getpmis()]
+            }
+    else:
+        response_data = {
+            "error": "user must be logged in"
+            }
+    return HttpResponse(json.dumps(response_data),mimetype="application/json")
 
 def addSeed(request, seed_id):
     if request.user.is_authenticated():
@@ -202,4 +216,3 @@ def categoryStatus(request):
             "error": "user must be logged in"
             }
     return HttpResponse(json.dumps(response_data), mimetype="application/json")
-

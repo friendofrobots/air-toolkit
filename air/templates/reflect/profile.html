@@ -5,42 +5,48 @@
 {% block head_extra %}
 <script>
 var mapping = {
-  {% for like in entity.likes %}
-  "{{ like.id }}" : {{ like.topCategory.id }},
-  {% endfor %}
-  "done" : true
+  {{ mapping|safe }}
 }
 </script>
-<script type="text/javascript" src="/media/js/categories.js"></script>
-{% endblock %}
-
-{% block sidebar %}
-<img src="https://graph.facebook.com/{{ entity.fbid }}/picture?type=large" />
-<ul id="tabs">
-  {% for cat in categories %}
-  <li class="tab" id="{{ cat.id }}">
-    <a>{{ cat.name }}</a>
-  </li>
-  {% endfor %}
-</ul>
+<script type="text/javascript" src="/media/js/r_profile.js"></script>
 {% endblock %}
 
 {% block content %}
-<h2>{{ entity.name }}</h2>
-<ul class="info">
-  {% for facebook_category, likes in facebook_categories %}
-  <li class="category">
-    <h2>{{ facebook_category.name }}</h2>
-    <ul class="category_likes">
-      {% for like in likes %}
-      <li class="like" id="{{ like.id }}">
-	<img src="https://graph.facebook.com/{{ like.fbid }}/picture" />
-	{{ like.name }}
-	<div class="filter"></div>
-      </li>
-      {% endfor %}
-    </ul>
-  </li>
-  {% endfor %}
-</ul>
+<div id="sidebar">
+  <img id="profile_img" src="https://graph.facebook.com/{{ entity.fbid }}/picture?type=large" />
+  <ul id="tabs">
+    {% for cat in categories %}
+    <li class="tab" id="{{ cat.id }}">
+      <a>{{ cat.name }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div id="rightContent">
+  <h2>{{ entity.name }}</h2>
+  <ul class="info">
+    {% for facebook_category, likes in facebook_categories.items %}
+    <li class="category">
+      <h2>{{ facebook_category }}</h2>
+      <ul class="category_likes">
+	{% for like in likes %}
+	<li class="like" id="{{ like.id }}">
+	  <div class="image-holder">
+	    <img src="https://graph.facebook.com/{{ like.fbid }}/picture?type=normal" />
+	  </div>
+	  <div class="title-holder">
+	    {{ like.name }}
+	  </div>
+	  <div class="filter"></div>
+	</li>
+	{% endfor %}
+      </ul>
+    </li>
+    {% endfor %}
+  </ul>
+  <div id="nav">
+    <a href="/reflect/categories/">Back to Categories</a>
+  </div>
+</div>
 {% endblock %}

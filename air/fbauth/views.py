@@ -12,7 +12,7 @@ from fbauth.models import Profile
 authorize_url = 'https://graph.facebook.com/oauth/authorize'
 access_token_url = 'https://graph.facebook.com/oauth/access_token'
 
-def fblogin(request, redirect="/"):
+def fblogin(request, redirect='/'):
     args = dict(client_id=settings.FB_ID,
                 redirect_uri='http://'+request.get_host()+request.path,
                 )

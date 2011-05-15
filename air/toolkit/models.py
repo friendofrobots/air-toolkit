@@ -8,7 +8,8 @@ class DownloadStatus(models.Model):
             (0,'not yet started'),
             (1,'downloading user data'),
             (2,'calculating pmis'),
-            (3,'done')
+            (3,'finding categories'),
+            (4,'done')
             ), default=0)
     lastupdated = models.DateTimeField(auto_now=True)
     task_id = models.CharField(max_length=200,blank=True)
@@ -24,14 +25,15 @@ class Entity(models.Model):
 
     def topCategory(self):
         try:
-            topscore = self.scores.order_by('-value')[0]
+            topscore = self.categoryScore.order_by('-value')[0]
+            category_id = topscore.category_id
         except:
-            topscore = None
-        return topscore.category
+            category_id = None
+        return category_id
 
     # Profile methods
     def likes(self):
-        return self.linksTo.filter(relation="likes")
+        return self.linksFrom.filter(relation="likes")
 
     def __unicode__(self):
         return self.name
@@ -65,7 +67,7 @@ class Category(models.Model):
     active = models.OneToOneField(Profile,related_name="activeCategory",blank=True,null=True)
     task_id = models.CharField(max_length=200,blank=True)
 
-    def getTop(self,num=10):
+    def getTop(self,num=12):
         return self.scores.order_by('-value')[:num]
 
     def getTopPeople(self,num=10):

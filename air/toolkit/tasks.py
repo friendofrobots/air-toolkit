@@ -36,6 +36,21 @@ def test(profile_id):
                     toEntity=Entity.objects.get(id=entity_id2),
                     value=math.log(len(lb1.intersection(lb2))*numpeople/(len(lb1)*len(lb2)),2))
 
+def testDl(profile_id):
+    profile = Profile.objects.get(id=profile_id)
+    status = profile.downloadStatus
+    graphapi = facebook.GraphAPI(profile.access_token)
+    me = graphapi.get_object('me')
+    friends = [(f['id'],f['name']) for f in graphapi.get_connections('me','friends')['data']]
+    friends.append((me['id'],me['name']))
+    
+    stillempty = Entity.objects.filter(owner=profile,linksFrom__isnull=True,id__lte=12577)
+    for (n,friend) in stillempty:
+        print "downloading", n, friend.name
+        dlUser(profile_id,graphapi,friend.fbid)
+        
+        
+
 @task(ignore_result=True)
 def dlUser(profile_id,graphapi,fbid):
     try:
@@ -70,9 +85,9 @@ def dlUser(profile_id,graphapi,fbid):
                 link = (link[0],link[1],link[2],str(link[3])[:50])
             Link.objects.get_or_create(
                 owner=profile,
-                fromEntity=Entity.objects.get(fbid=link[0]),
+                fromEntity=Entity.objects.get(owner=profile,fbid=link[0]),
                 relation=link[1],
-                toEntity=Entity.objects.get(fbid=link[3]),
+                toEntity=Entity.objects.get(owner=profile,fbid=link[3]),
                 defaults={'weight':link[2]})
 
     except (ValueError,IOError,facebook.GraphAPIError,urllib2.URLError), exc:
@@ -134,10 +149,18 @@ def checkPMISet(taskset_id,profile_id,status_id):
     else:
         checkTaskSet.retry(countdown=15, max_retries=None)
 
-def testCategory(profile_id, category_id):
+def testCategory(profile_id, category_id, new=False):
     category = Category.objects.get(id=category_id)
+    profile = Profile.objects.get(id=profile_id)
+    if new:
+        objects = Entity.objects.filter(owner=profile,linksTo__relation="likes").distinct()
+        likes = objects.annotate(entity_activity=Count('linksTo')).filter(entity_activity__gt=1)
+        for like in likes:
+            CategoryScore.objects.create(owner=profile,
+                                         category=category,
+                                         entity=like)
     category.scores.update(value=0.0,fired=False)
-    agg = PMI.objects.aggregate(Min('value'),Max('value'))
+    agg = PMI.objects.filter(owner=profile_id).aggregate(Min('value'),Max('value'))
     createCategory(profile_id, category_id, .4,.3,agg['value__min'],agg['value__max'])
 
 @task(ignore_result=True)

@@ -61,21 +61,16 @@
     </h2>
     <div>
       <ul id="{{ like.id }}-pmis" class="pmis">
-	{% for pmi in like.getpmis %}
-	{% if pmi.toEntity == like %}
-	<li>{{ pmi.fromEntity.name }} : {{ pmi.value }}</li>
-	{% else %}
-	<li>{{ pmi.toEntity.name }} : {{ pmi.value }}</li>
-	{% endif %}
-	{% endfor %}
       </ul>
       <span class="show">[+]</span>
+      <span class="pmi-id" style="display:none">{{ like.id }}</span>
     </div>
   </li>
   {% empty %}
   <li>No likes starting with that character.</li>
   {% endfor %}
 </ul>
+
 {% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/1">first</a>{% endif %}
 {% if likes.has_previous %}<a href="/likes/{{ startsWith }}/{{ likes.previous_page_number }}">prev</a>{% endif %}
 {% if likes.has_next %}<a href="/likes/{{ startsWith }}/{{ likes.next_page_number }}">next</a>{% endif %}

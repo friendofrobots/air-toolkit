@@ -2,40 +2,54 @@
 
 {% block head_title %}Categories{% endblock %}
 
-{% block sidebar %}
-<ul id="tabs">
-  {% for cat in categories %}
-  <li class="tab">
-    <a href="/reflect/category/{{ cat.id }}">{{ cat.name }}</a>
-  </li>
-  {% endfor %}
-</ul>
+{% block head_extra %}
+<script type="text/javascript" src="/media/js/r_categories.js"></script>
 {% endblock %}
 
 {% block content %}
-<h2>{{ category.name }}</h2>
-<ul class="scores">
-  {% for score in category.getTop %}
-  <li class="score">
-    <img src="https://graph.facebook.com/{{ score.entity.fbid }}/picture" />
-    {{ score.entity.name }}
-  </li>
-  {% endfor %}
-</ul>
-{% comment %}
-I haven't imlemented these yet! Gasp!
-<ul class="profiles">
-  {% for profile in category.getTopPeople %}
-  <li class="profile">
-    <img src="https://graph.facebook.com/{{ profile.fbid }}/picture" />
-    {{ profile.name }}
-  </li>
-  {% endfor %}
-</ul>
-{% endcomment %}
-<form>
-  <input type="text" style="display:none">{{ category.id }}</input>
-  <input type="text">{{ category.name }}</input>
-  <input type="submit">Change Name</input>
-</form>
+<div id="sidebar">
+  <h2>Categories</h2>
+  <ul id="tabs">
+    {% for cat in categories %}
+    <li class="tab {% if cat == category %}active{% endif %}">
+      <a href="/reflect/categories/{{ cat.id }}">{{ cat.name }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div id="rightContent">
+  <h2>{{ category.name }}</h2>
+  <ul id="likes">
+    {% for score in category.getTop %}
+    <li class="like">
+      <div class="image-holder">
+	<img src="https://graph.facebook.com/{{ score.entity.fbid }}/picture?type=normal" />
+      </div>
+      <div class="title-holder">
+	{{ score.entity.name }}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% comment %}
+  I haven't imlemented these yet! Gasp!
+  <ul class="profiles">
+    {% for profile in category.getTopPeople %}
+    <li class="profile">
+      <img src="https://graph.facebook.com/{{ profile.fbid }}/picture" />
+      {{ profile.name }}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endcomment %}
+  <form>
+    <input id="category_id" type="text" style="display:none" value="{{ category.id }}" />
+    <input id="rename" type="text" value="{{ category.name }}" />
+    <a id="changeName" class="button">Name this Category?</a>
+  </form>
+  <div id="nav">
+    <a href="/reflect/profile/">On to Profile</a>
+  </div>
+</div>
 {% endblock %}
