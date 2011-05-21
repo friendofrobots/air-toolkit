@@ -12,14 +12,14 @@
   <ul id="tabs">
     {% for cat in categories %}
     <li class="tab {% if cat == category %}active{% endif %}">
-      <a href="/reflect/categories/{{ cat.id }}">{{ cat.name }}</a>
+      <a href="/reflect/categories/{{ cat.id }}" id="cat-{{ cat.id }}">{{ cat.name }}</a>
     </li>
     {% endfor %}
   </ul>
 </div>
 
 <div id="rightContent">
-  <h2>{{ category.name }}</h2>
+  <h2 id="cat-title">{{ category.name }}</h2>
   <ul id="likes">
     {% for score in category.getTop %}
     <li class="like">

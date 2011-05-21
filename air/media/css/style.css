@@ -4,9 +4,26 @@ body {
   font-family: sans-serif;
 }
 
+ul {
+  list-style-type: none;
+  margin:4px;
+  padding:0;
+}
+
+button, .button {
+  border: 2px solid #000;
+  border-radius: 12px;
+  background-color: #FFF;
+  font-weight: bold;
+  cursor: pointer;
+}
+button:hover, .button:hover {
+  background-color: #CCC;
+}
+
 #header {
   width:100%;
-  border-bottom: 2px solid black;
+  bottom: 2px solid black;
   margin: 0;
   padding: 0;
 }
@@ -44,12 +61,6 @@ body {
   font-weight:bold;
 }
 
-ul {
-  list-style-type: none;
-  margin:4px;
-  padding:0;
-}
-
 /* pmis */
 .pmis {
   display:none;
@@ -58,11 +69,13 @@ ul {
 .add-seed {
   font-size: 50%;
   color: #00FF00;
+  cursor: pointer;
 }
 
 .delete-seed {
   font-size: 50%;
   color: #FF0000;
+  cursor: pointer;
 }
 
 .seed-id {
@@ -71,8 +84,47 @@ ul {
 
 #category {
   border : 2px solid black;
-  width: 200px;
+  width: 250px;
   position: fixed;
-  top: 40px;
+  top: 100px;
   left: 5px;
+  padding: 10px;
+}
+
+#category h2 {
+  text-align: center;
+  margin: 4px;
+}
+
+#creation-options {
+  display:none;
+  font-size:75%;
+}
+#creation-options li:first-child {
+  display:none;
+}
+#creation-options li {
+  padding: 3px;
+}
+#creation-options label {
+  float:left;
+  text-align:right;
+  width:80px;
+  display:block;
+  margin: 0 0 5px 0;
+  padding: 3px 5px;
+}
+#creation-options .floatField {
+  padding:1px 3px;
+  text-align: right;
+}
+#category fieldset {
+  border-width:1px 0 0 0;
+}
+#category legend {
+  font-size:80%;
+  cursor: pointer;
+}
+#category-done {
+  text-align: right;
 }

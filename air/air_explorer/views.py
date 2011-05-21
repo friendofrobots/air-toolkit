@@ -5,7 +5,8 @@ from django.db.models import Count, Q
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.shortcuts import get_object_or_404, redirect
 import json
-from toolkit.models import Entity, Link, PMI
+from toolkit.models import Entity, Link, PMI, Category, CategoryScore
+from toolkit.forms import CategoryCreateForm
 from toolkit import tasks
 from celery.result import AsyncResult
 
@@ -23,6 +24,18 @@ def home(request, template_name="air_explorer/home.html"):
     return render_to_response(template_name, {
             'ready' : ready,
             }, context_instance=RequestContext(request))
+
+def download(request, template_name="air_explorer/download.html"):
+    if request.user.is_authenticated():
+        try:
+            stage = request.user.profile.downloadStatus.stage
+        except:
+            stage = None
+    else:
+        return redirect('home')
+    return render_to_response(template_name, {
+                "stage" : stage,
+                }, context_instance=RequestContext(request))
 
 def friends(request, template_name="air_explorer/friends.html"):
     if request.user.is_authenticated():
@@ -56,90 +69,34 @@ def likes(request, startsWith=None, page=1, template_name="air_explorer/likes.ht
             like_page = paginator.page(page)
         except (EmptyPage, InvalidPage):
             like_page = paginator.page(paginator.num_pages)
-        
+
         if request.method == 'POST':
             try:
                 category = profile.activeCategory
+                createForm = CategoryCreateForm({ 'id':category.id })
+                # should probably throw some sort of error here too...
             except:
                 category = Category.objects.create(owner=profile,
                                                    name=request.POST.get('name','tempcategoryname'),
                                                    active=profile)
                 if category.name == 'tempcategoryname':
-                    category.name = 'category'+str(category.id)
+                    category.name = 'Category '+str(category.id)
                     category.save()
         else:
-            category = None
+            try:
+                category = profile.activeCategory
+                createForm = CategoryCreateForm(initial={'category_id':category.id})
+            except:
+                category = None
+                createForm = None
         return render_to_response(template_name, {
                 'startsWith': startsWith,
                 'likes' : like_page,
                 'category' : category,
+                'createForm' : createForm,
                 }, context_instance=RequestContext(request))
     else:
         return redirect('home')
-
-def like_pmis(request, like_id):
-    if request.user.is_authenticated():
-        profile = request.user.profile
-        like = get_object_or_404(Entity,id=like_id)
-        response_data = {
-            "pmis": [[pmi.fromEntity.name,pmi.value] if pmi.toEntity == like else [pmi.toEntity.name,pmi.value] for pmi in like.getpmis()]
-            }
-    else:
-        response_data = {
-            "error": "user must be logged in"
-            }
-    return HttpResponse(json.dumps(response_data),mimetype="application/json")
-
-def addSeed(request, seed_id):
-    if request.user.is_authenticated():
-        if request.method == 'POST':
-            profile = request.user.profile
-            if profile.activeCategory:
-                seed = Entity.objects.get(id=seed_id)
-                profile.activeCategory.seeds.add(seed)
-                response_datat = {
-                    "id":seed_id,
-                    "name":name,
-                    }
-            else:
-                response_data = {
-                    "error":"start a category first"
-                    }
-        else:
-            response_data = {
-                "error": "must be a post request"
-                }
-    else:
-        response_data = {
-            "error": "user must be logged in"
-            }
-    return HttpResponse(json.dumps(response_data),mimetype="application/json")
-
-def deleteSeed(request, seed_id):
-    if request.user.is_authenticated():
-        if request.method == 'POST':
-            profile = request.user.profile
-            try:
-                active = profile.activeCategory
-                seed = Entity.objects.get(id=seed_id)
-                active.seeds.remove(seed)
-                response_data = {
-                    "id":seed_id,
-                    "name":name,
-                    }
-            except:
-                response_data = {
-                    "error":"start a category first"
-                    }
-        else:
-            response_data = {
-                "error": "must be a post request"
-                }
-    else:
-        response_data = {
-            "error": "user must be logged in"
-            }
-    return HttpResponse(json.dumps(response_data),mimetype="application/json")
 
 def categories(request, template_name="air_explorer/categories.html"):
     if request.user.is_authenticated():
@@ -187,32 +144,3 @@ def category(request, category_id, page=1, template_name="air_explorer/category.
             'category' : category,
             'scores' : score_page,
             }, context_instance=RequestContext(request))
-    
-def categoryStatus(request):
-    if request.user.is_authenticated():
-        profile = request.user.profile
-        try:
-            if profile.activeCategory.task_id:
-                result = AsyncResult(status.task_id)
-                response_data = {
-                    "stage":1,
-                    "state": result.state,
-                    "id": profile.activeCategory.id,
-                    "name": profile.activeCategory.name,
-                    }
-            else:
-                response_data = {
-                    "stage":2,
-                    "state": "completed",
-                    "id": profile.activeCategory.id,
-                    "name": profile.activeCategory.name,
-                    }
-        except:
-            response_data = {
-                "error" : "no active category"
-                }
-    else:
-        response_data = {
-            "error": "user must be logged in"
-            }
-    return HttpResponse(json.dumps(response_data), mimetype="application/json")

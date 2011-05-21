@@ -54,10 +54,10 @@
 {% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/{{ likes.paginator.num_pages }}">last</a>{% endif %}
 <ul>
   {% for like in likes.object_list %}
-  <li class="like">
+  <li class="like" id="like-{{ like.id }}">
     <h2>
       <img src="https://graph.facebook.com/{{ like.fbid }}/picture" /> {{ like.name }}
-      {% if category and not category.task_id %}{% if like in category %}<span class="delete-seed">[-]</span>{% else %}<span class="add-seed">[+]</span>{% endif %}<span class="seed-id">{{ like.id }}</span>{% endif %}
+      {% if category and not category.task_id %}{% if like in category.seeds.all %}<span class="delete-seed">[x]</span>{% else %}<span class="add-seed">[+]</span>{% endif %}<span class="seed-id">{{ like.id }}</span>{% endif %}
     </h2>
     <div>
       <ul id="{{ like.id }}-pmis" class="pmis">
@@ -78,24 +78,32 @@
 
 {% if not category %}
 <form method="post">
-  <input type="button">start category</input>
+  <input type="submit" value="start category"></input>
 </form>
 {% endif %}
 
-{% if category and not category.task_id%}
+{% if category and not category.task_id %}
 <div id="category">
   <h2>{{ category.name }}</h2>
   <ul id="seeds">
-    {% for seed in category.seeds %}
-    <li>
+    {% for seed in category.seeds.all %}
+    <li id="seed-{{ seed.id }}">
       <h3>
         {{ seed.name }} <span class="delete-seed">[x]</span><span class="seed-id">{{ seed.id }}</span>
       </h3>
     </li>
     {% endfor %}
   </ul>
-  <form action="/category/" method="post">
-    <input type="button" class="donebutton">done</input>
+  <form method="post">
+    <fieldset id="toggle-creation-options">
+      <legend>Show Options</legend>
+      <ul id="creation-options">
+	{{ createForm.as_ul }}
+      </ul>
+    </fieldset>
+    <div id="category-done">
+      <input type="submit" class="button" id="donebutton" value="Start Creation" {% if not category.seeds.all %}disabled="disabled"{% endif %}></input>
+    </div>
   </form>
 </div>
 {% endif %}

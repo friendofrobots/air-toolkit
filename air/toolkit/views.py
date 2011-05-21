@@ -8,7 +8,7 @@ import json, facebook
 from celery.result import AsyncResult, TaskSetResult
 from celery.task.sets import TaskSet
 from toolkit import tasks
-from toolkit.models import Entity, Link, PMI, DownloadStatus
+from toolkit.models import Entity, Link, PMI, DownloadStatus, Category, CategoryScore
 from fbauth.models import Profile
 
 """
@@ -24,18 +24,6 @@ server:
   run category discovery
 redirect to display page
 """
-
-def download(request, template_name="toolkit/download.html"):
-    if request.user.is_authenticated():
-        try:
-            stage = request.user.profile.downloadStatus.stage
-        except:
-            stage = None
-    else:
-        return redirect('home')
-    return render_to_response(template_name, {
-                "stage" : stage,
-                }, context_instance=RequestContext(request))
 
 def startDownload(request):
     """
@@ -122,3 +110,117 @@ def status(request):
             "error": "user must be logged in"
             }
     return HttpResponse(json.dumps(response_data), mimetype="application/json")
+
+def like_pmis(request, like_id):
+    if request.user.is_authenticated():
+        profile = request.user.profile
+        like = get_object_or_404(Entity,id=like_id)
+        response_data = {
+            "pmis": [[pmi.fromEntity.name,pmi.value] if pmi.toEntity == like else [pmi.toEntity.name,pmi.value] for pmi in like.getpmis()]
+            }
+    else:
+        response_data = {
+            "error": "user must be logged in"
+            }
+    return HttpResponse(json.dumps(response_data),mimetype="application/json")
+
+def addSeed(request, seed_id):
+    if request.user.is_authenticated():
+        if request.method == 'POST':
+            profile = request.user.profile
+            if profile.activeCategory:
+                seed = Entity.objects.get(id=seed_id)
+                profile.activeCategory.seeds.add(seed)
+                response_data = {
+                    "id":seed_id,
+                    "name":seed.name,
+                    }
+            else:
+                response_data = {
+                    "error":"start a category first"
+                    }
+        else:
+            response_data = {
+                "error": "must be a post request"
+                }
+    else:
+        response_data = {
+            "error": "user must be logged in"
+            }
+    return HttpResponse(json.dumps(response_data),mimetype="application/json")
+
+def deleteSeed(request, seed_id):
+    if request.user.is_authenticated():
+        if request.method == 'POST':
+            profile = request.user.profile
+            try:
+                active = profile.activeCategory
+                seed = Entity.objects.get(id=seed_id)
+                active.seeds.remove(seed)
+                response_data = {
+                    "id":seed_id,
+                    "name":seed.name,
+                    }
+            except:
+                response_data = {
+                    "error":"start a category first"
+                    }
+        else:
+            response_data = {
+                "error": "must be a post request"
+                }
+    else:
+        response_data = {
+            "error": "user must be logged in"
+            }
+    return HttpResponse(json.dumps(response_data),mimetype="application/json")
+    
+def categoryStatus(request):
+    if request.user.is_authenticated():
+        profile = request.user.profile
+        try:
+            if profile.activeCategory.task_id:
+                result = AsyncResult(status.task_id)
+                response_data = {
+                    "stage":1,
+                    "state": result.state,
+                    "id": profile.activeCategory.id,
+                    "name": profile.activeCategory.name,
+                    }
+            else:
+                response_data = {
+                    "stage":2,
+                    "state": "completed",
+                    "id": profile.activeCategory.id,
+                    "name": profile.activeCategory.name,
+                    }
+        except:
+            response_data = {
+                "error" : "no active category"
+                }
+    else:
+        response_data = {
+            "error": "user must be logged in"
+            }
+    return HttpResponse(json.dumps(response_data), mimetype="application/json")
+
+def rename(request):
+    if request.user.is_authenticated():
+        if request.method == "POST":
+            category = Category.objects.get(id=request.POST.get("category_id"))
+            category.name = request.POST.get("name",category.name)
+            category.save()
+            response_data = {
+                "success":True,
+                "id":category.id,
+                "name":category.name,
+                }
+        else:
+            response_data = {
+                "error":"must be post",
+                }
+    else:
+        response_data = {
+            "error":"not logged in",
+            }
+    return HttpResponse(json.dumps(response_data),mimetype="application/json")

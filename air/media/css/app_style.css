@@ -109,6 +109,7 @@ a {
   font-size: 200%;
   background-color: #DDD;
   padding: 4px;
+  margin-top: 4px;
 }
 
 #likes {
@@ -117,8 +118,9 @@ a {
 
 .like {
   width:100px;
+  height:140px;
   float:left;
-  margin: 2px;
+  margin: 2px 6px;
   border: 1px solid #B3B3B3;
   overflow:hidden;
 }
@@ -129,9 +131,10 @@ a {
 }
 
 .title-holder {
-  font-size:10pt;
+  font-size:70%;
   text-align:center;
   height: 30px;
+  padding: 4px;
 }
 
 #rename {
@@ -147,10 +150,14 @@ a {
 }
 
 #nav {
-  margin:10px;
+  margin:20px 25px 10px 0;
+  float: right;
+  border: 2px solid #41759F;
+  padding: 4px 10px;
 }
 #nav a {
-  text-decoration:underline;
+  font-weight:bold;
+  color: #000;
 }
 
 #category {
@@ -161,21 +168,22 @@ a {
   left: 5px;
 }
 
-.category h2 {
+.category h3 {
   margin:4px;
-  font-size:100%;
   font-weight: normal;
-  background-color: #DDD;
+  background-color: #EEE;
   padding: 4px;
+  border-top: 1px solid #CCC;
 }
 
 .filter {
   display : none;
   background-color : rgba(255,255,255,0.9);
-  position: absolute;
+  position: relative;
+  bottom: 140px;
   z-index:10;
   width:102px;
-  height:140px;
+  height:144px;
 }
 
 #profile_img {

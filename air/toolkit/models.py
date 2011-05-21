@@ -33,7 +33,8 @@ class Entity(models.Model):
 
     # Profile methods
     def likes(self):
-        return self.linksFrom.filter(relation="likes")
+        counted = self.linksFrom.filter(relation="likes").annotate(entity_activity=Count('toEntity__linksTo'))
+        return counted.filter(entity_activity__gt=1)
 
     def __unicode__(self):
         return self.name

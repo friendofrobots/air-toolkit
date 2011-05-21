@@ -13,7 +13,10 @@ var mapping = {
 
 {% block content %}
 <div id="sidebar">
+  {% comment %}
   <img id="profile_img" src="https://graph.facebook.com/{{ entity.fbid }}/picture?type=large" />
+  {% endcomment %}
+  <img id="profile_img" src="/media/img/silhouette.png" />
   <ul id="tabs">
     {% for cat in categories %}
     <li class="tab" id="{{ cat.id }}">
@@ -26,9 +29,9 @@ var mapping = {
 <div id="rightContent">
   <h2>{{ entity.name }}</h2>
   <ul class="info">
-    {% for facebook_category, likes in facebook_categories.items %}
+    {% for facebook_category, likes in facebook_categories %}
     <li class="category">
-      <h2>{{ facebook_category }}</h2>
+      <h3>{{ facebook_category }}</h3>
       <ul class="category_likes">
 	{% for like in likes %}
 	<li class="like" id="{{ like.id }}">

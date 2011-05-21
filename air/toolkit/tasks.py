@@ -161,10 +161,10 @@ def testCategory(profile_id, category_id, new=False):
                                          entity=like)
     category.scores.update(value=0.0,fired=False)
     agg = PMI.objects.filter(owner=profile_id).aggregate(Min('value'),Max('value'))
-    createCategory(profile_id, category_id, .4,.3,agg['value__min'],agg['value__max'])
+    createCategory(profile_id, category_id, .6,.4,.3,agg['value__min'],agg['value__max'])
 
 @task(ignore_result=True)
-def createCategory(profile_id, category_id, threshold, decayrate, minpmi, maxpmi):
+def createCategory(profile_id, category_id, startvalue, threshold, decayrate, minpmi, maxpmi):
     """
     F is firing threshold, D is decay factor, W is link weight
     for each unfired node [i] where A[i]>F:
@@ -176,7 +176,7 @@ def createCategory(profile_id, category_id, threshold, decayrate, minpmi, maxpmi
     category = Category.objects.get(id=category_id)
     
     scores = category.scores
-    scores.filter(entity__in=category.seeds.all()).update(value=0.6)
+    scores.filter(entity__in=category.seeds.all()).update(value=startvalue)
     toFire = scores.filter(fired=False,value__gte=threshold)
     # going back and forth between nodes and score, need to clear this up
     count = category.scores.count()

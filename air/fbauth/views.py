@@ -12,7 +12,7 @@ from fbauth.models import Profile
 authorize_url = 'https://graph.facebook.com/oauth/authorize'
 access_token_url = 'https://graph.facebook.com/oauth/access_token'
 
-def fblogin(request, redirect='/'):
+def fblogin(request, redirectTo='home'):
     args = dict(client_id=settings.FB_ID,
                 redirect_uri='http://'+request.get_host()+request.path,
                 )
@@ -50,7 +50,7 @@ def fblogin(request, redirect='/'):
                             password=access_token)
         login(request, user)
 
-        return HttpResponseRedirect(redirect)
+        return redirect(redirectTo)
     elif request.GET.__contains__("error"):
         raise Exception("got an error from facebook")
         return render_to_response("fbauth/login.html", {

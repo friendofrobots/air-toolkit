@@ -15,7 +15,7 @@ def home(request, template_name="reflect/home.html"):
             status = None
     else:
         # This doesn't work, I need to figure out how to redirect properly
-        return redirect('login')
+        return redirect('login_redirect','r_home')
     return render_to_response(template_name, {
             'status' : status,
             }, context_instance=RequestContext(request))
@@ -23,9 +23,9 @@ def home(request, template_name="reflect/home.html"):
 def categories(request, category_id=None, template_name="reflect/categories.html"):
     if request.user.is_authenticated():
         profile = request.user.profile
-        categories = Category.objects.filter(owner=profile)
+        categories = Category.objects.filter(owner=profile).order_by('id')
         if not category_id:
-            category = Category.objects.filter(owner=profile)[0]
+            category = categories[0]
         else:
             category = get_object_or_404(Category,id=category_id)
     else:
@@ -33,28 +33,7 @@ def categories(request, category_id=None, template_name="reflect/categories.html
     return render_to_response(template_name, {
             'category' : category,
             'categories' : categories,
-            }, context_instance=RequestContext(request))
-
-def rename(request):
-    if request.user.is_authenticated():
-        if request.method == "POST":
-            category = Category.objects.get(id=request.POST.get("category_id"))
-            category.name = request.POST.get("name",category.name)
-            category.save
-            response_data = {
-                "success":True,
-                "name":category.name,
-                }
-        else:
-            response_data = {
-                "error":"must be post",
-                }
-    else:
-        response_data = {
-            "error":"not logged in",
-            }
-    return HttpResponse(json.dumps(response_data),mimetype="application/json")
-    
+            }, context_instance=RequestContext(request))    
 
 def profile(request, entity_id=None, template_name="reflect/profile.html"):
     if request.user.is_authenticated():
@@ -67,29 +46,30 @@ def profile(request, entity_id=None, template_name="reflect/profile.html"):
             entity = Entity.objects.get(fbid=profile.fbid)
         else:
             entity = get_object_or_404(Entity,id=entity_id)
-        categories = Category.objects.filter(owner=profile)
-        likeLinks = entity.linksFrom.filter(relation="likes")
+        categories = Category.objects.filter(owner=profile).order_by('id')
+        likeLinks = entity.likes()
         likes = Entity.objects.filter(linksTo__in=likeLinks).distinct()
 
-        category_links = Link.objects.filter(owner=profile,relation='category')
         fbcategories = {}
         for like in likes:
-            fbcat_link = category_links.filter(fromEntity=like)[0]
+            fbcat_link = like.linksFrom.filter(relation="category")[0]
             if fbcat_link.toEntity.name not in fbcategories:
                 fbcategories[fbcat_link.toEntity.name] = []
             fbcategories[fbcat_link.toEntity.name].append(like)
+        facebook_categories = fbcategories.items()
+        facebook_categories.sort(key=lambda x : len(x[1]))
+        facebook_categories.reverse()
 
-        mapping = ["'"+str(like.toEntity_id)+"':"+str(like.toEntity.topCategory()) for like in entity.likes()]
+        mapping = ["'"+str(like.id)+"':"+str(like.topCategory()) for like in likes]
         # I don't want to call topCategory() twice, so I'm checking for None on a second stage
         mapping = ','.join([s for s in mapping if s[-1] != 'e'] )
-        mapping = []
                 
     else:
         return redirect('r_home')
     return render_to_response(template_name, {
             'entity' : entity,
             'categories':categories,
-            'facebook_categories':fbcategories,
+            'facebook_categories':facebook_categories,
             'mapping':mapping,
             }, context_instance=RequestContext(request))
 
