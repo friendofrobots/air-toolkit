@@ -20,8 +20,8 @@ function getStatus() {
 }
 
 $(document).ready(function() {
-    if (started) {
-        getStatus();
-        setInterval(getStatus,5000);
-    }
+    //if (started) {
+    //  getStatus();
+    //    setInterval(getStatus,5000);
+    //}
 });

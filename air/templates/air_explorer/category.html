@@ -2,20 +2,58 @@
 
 {% block head_title %}Category: {{ category.name }}{% endblock %}
 
+{% block head_extra %}
+<script type="text/javascript" src="/media/js/category.js"></script>
+{% endblock %}
+
 {% block content %}
-{% if scores.has_other_pages %}<a href="/category/{{ category.id }}/1">first</a>{% endif %}
-{% if scores.has_previous %}<a href="/category/{{ category.id }}/{{ scores.previous_page_number }}">prev</a>{% endif %}
-{% if scores.has_next %}<a href="/category/{{ category.id }}/{{ scores.next_page_number }}">next</a>{% endif %}
-{% if scores.has_other_pages %}<a href="/category/{{ category.id }}/{{ scores.paginator.num_pages }}">last</a>{% endif %}
-<h2>{{ category.name }}</h2>
-<ul>
-  {% for score in scores.object_list %}
-  <li class="score">{{ score.entity.name }} : {{ score.value }}</li>
-  {% endfor %}
-</ul>
-{% if scores.has_other_pages %}<a href="/category/{{ category.id }}/1">first</a>{% endif %}
-{% if scores.has_previous %}<a href="/category/{{ category.id }}/{{ scores.previous_page_number }}">prev</a>{% endif %}
-{% if scores.has_next %}<a href="/category/{{ category.id }}/{{ scores.next_page_number }}">next</a>{% endif %}
-{% if scores.has_other_pages %}<a href="/category/{{ category.id }}/{{ scores.paginator.num_pages }}">last</a>{% endif %}
+{% include "tabbar.html" %}
+
+<div class="page-nav">
+  {% if scores.has_other_pages %}<a href="/category/{{ category.id }}/1">first</a>{% endif %}
+  {% if scores.has_previous %}<a href="/category/{{ category.id }}/{{ scores.previous_page_number }}">prev</a>{% endif %}
+  {% if scores.has_next %}<a href="/category/{{ category.id }}/{{ scores.next_page_number }}">next</a>{% endif %}
+  {% if scores.has_other_pages %}<a href="/category/{{ category.id }}/{{ scores.paginator.num_pages }}">last</a>{% endif %}
+</div>
+
+<div id="category">
+  <h2 id="category-title">{{ category.name }}</h2>
+  <div id="category-info">
+    <ul id="seeds">
+      {% for seed in category.seeds.all %}
+      <li>{{ seed.name }}</li>
+      {% endfor %}
+    </ul>
+    <ul id="parameters">
+      <li><div class="label">Start Value :</div> <div class="value">{{ category.startvalue }}</div></li>
+      <li><div class="label">Threshold :</div> <div class="value">{{ category.threshold }}</div></li>
+      <li><div class="label">Decay Rate :</div> <div class="value">{{ category.decayrate }}</div></li>
+    </ul>
+  <ul id="likes">
+    {% for score in scores.object_list %}
+    <li class="like">
+      <div class="image-holder">
+	<img src="https://graph.facebook.com/{{ score.entity.fbid }}/picture?type=normal" />
+      </div>
+      <div class="title-holder">
+	{{ score.entity.name }}
+      </div>
+      <div class="value-bar">
+	<div class="filled-bar"></div>
+      </div>
+      <div class="value-num">
+	{{ score.value }}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="page-nav">
+  {% if scores.has_other_pages %}<a href="/category/{{ category.id }}/1">first</a>{% endif %}
+  {% if scores.has_previous %}<a href="/category/{{ category.id }}/{{ scores.previous_page_number }}">prev</a>{% endif %}
+  {% if scores.has_next %}<a href="/category/{{ category.id }}/{{ scores.next_page_number }}">next</a>{% endif %}
+  {% if scores.has_other_pages %}<a href="/category/{{ category.id }}/{{ scores.paginator.num_pages }}">last</a>{% endif %}
+</div>
 
 {% endblock %}

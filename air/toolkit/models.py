@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Count
 from fbauth.models import Profile
+import json,pickle
 
 class DownloadStatus(models.Model):
     owner = models.OneToOneField(Profile,related_name="downloadStatus")
@@ -20,8 +21,12 @@ class Entity(models.Model):
     name = models.CharField(max_length=200)
 
     # Like methods
+    def likedBy(self):
+        # Caution: returns a set instead of a QuerySet
+        return set([link.fromEntity for link in self.linksTo.filter(relation="likes").select_related()])
+
     def getpmis(self):
-        return PMI.objects.filter(models.Q(toEntity=self) | models.Q(fromEntity=self)).distinct().order_by('-value')
+        return PMI.objects.filter(models.Q(toEntity=self) | models.Q(fromEntity=self)).distinct().select_related().order_by('-value')
 
     def topCategory(self):
         try:
@@ -33,8 +38,9 @@ class Entity(models.Model):
 
     # Profile methods
     def likes(self):
+        # Caution: returns a set of links, not entities
         counted = self.linksFrom.filter(relation="likes").annotate(entity_activity=Count('toEntity__linksTo'))
-        return counted.filter(entity_activity__gt=1)
+        return counted.filter(entity_activity__gt=1).select_related()
 
     def __unicode__(self):
         return self.name
@@ -67,6 +73,11 @@ class Category(models.Model):
     seeds = models.ManyToManyField(Entity,blank=True)
     active = models.OneToOneField(Profile,related_name="activeCategory",blank=True,null=True)
     task_id = models.CharField(max_length=200,blank=True)
+    status = models.TextField(blank=True)
+    startvalue = models.FloatField(default=0.6)
+    threshold = models.FloatField(default=0.4)
+    decayrate = models.FloatField(default=0.3)
+    
 
     def getTop(self,num=12):
         return self.scores.order_by('-value')[:num]
@@ -75,6 +86,21 @@ class Category(models.Model):
         # I might actually want to calculate membership gradience for each
         # entity ahead of time
         return num
+
+    def addNumToStatus(self,num):
+        if not self.status:
+            self.status = pickle.dumps([])
+        newstatus = pickle.loads(str(self.status))
+        newstatus.append(num)
+        self.status = pickle.dumps(newstatus)
+        self.save()
+
+    def getStatus(self):
+        if self.status:
+            status = pickle.loads(str(self.status))
+        else:
+            status = []
+        return status
 
     def __unicode__(self):
         return self.name

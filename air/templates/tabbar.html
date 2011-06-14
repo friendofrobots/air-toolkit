@@ -1,0 +1,22 @@
+<ul id="tabbar">
+  <li>
+    <a href="{% url likes %}">Likes</a>
+  </li>
+  <li>
+    <a href="{% url categories %}">Categories</a>
+  </li>
+  <li>
+    <a href="{% url friends %}">Friends</a>
+  </li>
+  <li>
+    <a href="{% url r_home %}" target="_blank">Reflect</a>
+  </li>
+  {% if not active and likes or not active and categories %}
+  <li id="new_tab">
+    <form action="{% url categoryNewRedirect path %}" method="post" >
+      <input type="submit" class="fakelink" value="New Category"></input>
+    </form>
+  </li>
+  {% endif %}
+  {% block tabs %}{% endblock %}
+</ul>

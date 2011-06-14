@@ -24,17 +24,14 @@ def test(profile_id):
             linkedBy[link.toEntity.id] = set()
         linkedBy[link.toEntity.id].add(link.fromEntity.id)
 
-    for (n, (entity_id1,lb1)) in enumerate(linkedBy.iteritems()):
-        profile = Profile.objects.get(id=profile_id)
-        fromEntity = Entity.objects.get(id=entity_id1)
-        print fromEntity.name, n,'/',len(linkedBy)
-        for entity_id2,lb2 in linkedBy.iteritems():
-            if entity_id1 <= entity_id2 and len(lb1.intersection(lb2))>0:
-                PMI.objects.get_or_create(
-                    owner=profile,
-                    fromEntity=fromEntity,
-                    toEntity=Entity.objects.get(id=entity_id2),
-                    value=math.log(len(lb1.intersection(lb2))*numpeople/(len(lb1)*len(lb2)),2))
+    subtasks = [calcPMIs.subtask((profile_id,linkedBy,entity_id,lb,numpeople)) for (entity_id,lb) in linkedBy.iteritems()]
+    r = TaskSet(tasks=subtasks).apply_async()
+    r2 = tasks.checkPMISet.delay(r.taskset_id,profile.id,status.id)
+    status = DownloadStatus.objects.get(id=status_id)
+    status.stage = 2
+    status.task_id = r.task_id
+    status.save()
+
 
 def testDl(profile_id):
     profile = Profile.objects.get(id=profile_id)
@@ -149,39 +146,48 @@ def checkPMISet(taskset_id,profile_id,status_id):
     else:
         checkTaskSet.retry(countdown=15, max_retries=None)
 
-def testCategory(profile_id, category_id, new=False):
-    category = Category.objects.get(id=category_id)
+def testCategory(profile_id, category_id):
+    return createCategory.delay(profile_id,category_id,.6,.4,.3)
+
+@task(ignore_result=True)
+def createCategory(profile_id, category_id,
+                   startvalue, threshold, decayrate):
     profile = Profile.objects.get(id=profile_id)
-    if new:
+    category = Category.objects.get(id=category_id)
+    if not category.scores.exists():
         objects = Entity.objects.filter(owner=profile,linksTo__relation="likes").distinct()
         likes = objects.annotate(entity_activity=Count('linksTo')).filter(entity_activity__gt=1)
         for like in likes:
             CategoryScore.objects.create(owner=profile,
                                          category=category,
                                          entity=like)
+    category.startvalue = startvalue
+    category.threshold = threshold
+    category.decayrate = decayrate
+    category.status = ""
+    category.save()
     category.scores.update(value=0.0,fired=False)
-    agg = PMI.objects.filter(owner=profile_id).aggregate(Min('value'),Max('value'))
-    createCategory(profile_id, category_id, .6,.4,.3,agg['value__min'],agg['value__max'])
-
-@task(ignore_result=True)
-def createCategory(profile_id, category_id, startvalue, threshold, decayrate, minpmi, maxpmi):
+    if not profile.maxpmi and profile.minpmi:
+        agg = PMI.objects.filter(owner=profile_id).aggregate(Min('value'),Max('value'))
+        minpmi, maxpmi = agg['value__min'],agg['value__max']
+    else:
+        minpmi, maxpmi = profile.minpmi,profile.maxpmi
     """
+    Spreading Activation Algorithm:
     F is firing threshold, D is decay factor, W is link weight
     for each unfired node [i] where A[i]>F:
         For each link [i,j] adjust A[j] = A[j] + (A[i]*W[i,j]*D)
         (cap at 1, mark all fired so they don't fire again)
         nodes with A[i]>F fire next time
     """
-    profile = Profile.objects.get(id=profile_id)
-    category = Category.objects.get(id=category_id)
-    
-    scores = category.scores
-    scores.filter(entity__in=category.seeds.all()).update(value=startvalue)
-    toFire = scores.filter(fired=False,value__gte=threshold)
+    category.scores.filter(entity__in=category.seeds.all()).update(value=startvalue)
+    toFire = category.scores.filter(fired=False,value__gte=threshold)
     # going back and forth between nodes and score, need to clear this up
-    count = category.scores.count()
     while toFire:
-        print toFire.count(), '/', count, 'firing this round.', 'decay is',decayrate
+        if toFire.count() > 150:
+            category.addNumToStatus(str(toFire.count())+', got too big so I had to quit')
+            break
+        category.addNumToStatus(toFire.count())
         for score1 in toFire:
             for node2 in Entity.objects.filter(pmiTo__fromEntity=score1.entity):
                 if score1.entity != node2:
@@ -205,13 +211,11 @@ def createCategory(profile_id, category_id, startvalue, threshold, decayrate, mi
                     node2score.save()
             score1.fired = True
             score1.save()
-        toFire = scores.filter(fired=False,value__gte=threshold)
+        toFire = category.scores.filter(fired=False,value__gte=threshold)
         decayrate = decayrate**2
     category.task_id = ""
     category.active = None
     category.save()
-                                                
-            
 
 def dlInfo(graphapi,fbid):
     data = graphapi.get_object(fbid)

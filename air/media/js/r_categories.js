@@ -10,4 +10,9 @@ $(document).ready(function() {
 	    }
 	});
     });
+    $('#rename').keypress(function(event) {
+	if (event.which == '13') {
+	    $("#changeName").click();
+	}
+    });
 });

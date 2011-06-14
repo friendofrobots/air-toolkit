@@ -7,8 +7,9 @@ from django.contrib.auth.models import User
 import json, facebook
 from celery.result import AsyncResult, TaskSetResult
 from celery.task.sets import TaskSet
-from toolkit import tasks
 from toolkit.models import Entity, Link, PMI, DownloadStatus, Category, CategoryScore
+from toolkit import tasks
+from toolkit.forms import CategoryCreateForm
 from fbauth.models import Profile
 
 """
@@ -25,6 +26,7 @@ server:
 redirect to display page
 """
 
+## Download Views ##
 def startDownload(request):
     """
     Ajax call to start the download
@@ -111,10 +113,14 @@ def status(request):
             }
     return HttpResponse(json.dumps(response_data), mimetype="application/json")
 
-def like_pmis(request, like_id):
+## Entity Views ##
+def entityLikedBy(request, entity_id):
+    return HttpResponse(json.dumps(response_data),mimetype="application/json")
+
+def like_pmis(request, entity_id):
     if request.user.is_authenticated():
         profile = request.user.profile
-        like = get_object_or_404(Entity,id=like_id)
+        like = get_object_or_404(Entity,id=entity_id)
         response_data = {
             "pmis": [[pmi.fromEntity.name,pmi.value] if pmi.toEntity == like else [pmi.toEntity.name,pmi.value] for pmi in like.getpmis()]
             }
@@ -128,14 +134,15 @@ def addSeed(request, seed_id):
     if request.user.is_authenticated():
         if request.method == 'POST':
             profile = request.user.profile
-            if profile.activeCategory:
+            try:
+                active = profile.activeCategory
                 seed = Entity.objects.get(id=seed_id)
-                profile.activeCategory.seeds.add(seed)
+                active.seeds.add(seed)
                 response_data = {
                     "id":seed_id,
                     "name":seed.name,
                     }
-            else:
+            except Category.DoesNotExist:
                 response_data = {
                     "error":"start a category first"
                     }
@@ -161,7 +168,7 @@ def deleteSeed(request, seed_id):
                     "id":seed_id,
                     "name":seed.name,
                     }
-            except:
+            except Category.DoesNotExist:
                 response_data = {
                     "error":"start a category first"
                     }
@@ -174,27 +181,104 @@ def deleteSeed(request, seed_id):
             "error": "user must be logged in"
             }
     return HttpResponse(json.dumps(response_data),mimetype="application/json")
-    
-def categoryStatus(request):
+
+def newCategory(request, redirect_uri=None):
     if request.user.is_authenticated():
-        profile = request.user.profile
-        try:
-            if profile.activeCategory.task_id:
-                result = AsyncResult(status.task_id)
+        if request.method == 'POST':
+            profile = request.user.profile
+            try:
+                category = profile.activeCategory
+                createForm = CategoryCreateForm({ 'id':category.id })
+                if redirect_uri:
+                    if redirect_uri[0] != '/':
+                        redirect_uri = '/'+redirect_uri
+                    return redirect(redirect_uri)
+                else:
+                    response_data = {
+                        "error":"another category is currently active"
+                    }
+            except Category.DoesNotExist:
+                category = Category.objects.create(owner=profile,
+                                                   name=request.POST.get('name','tempcategoryname'),
+                                                   active=profile)
+                if category.name == 'tempcategoryname':
+                    category.name = 'Category '+unicode(category.id)
+                    category.save()
+                createForm = CategoryCreateForm({ 'id':category.id })
+                if redirect_uri:
+                    if redirect_uri[0] != '/':
+                        redirect_uri = '/'+redirect_uri
+                    return redirect(redirect_uri)
+                else:
+                    response_data = {
+                        "success": "true"
+                        }
+        else:
+            response_data = {
+                "error": "must be a post request"
+                }
+    else:
+        response_data = {
+            "error": "user must be logged in"
+            }
+    return HttpResponse(json.dumps(response_data),mimetype="application/json")
+
+def startCategoryCreation(request):
+    if request.user.is_authenticated():
+        if request.method == 'POST':
+            form = CategoryCreateForm(request.POST)
+            if form.is_valid():
+                profile = request.user.profile
+                category = Category.objects.get(id=form.cleaned_data['category_id'])
+                startvalue = form.cleaned_data['startvalue']
+                threshold = form.cleaned_data['threshold']
+                decayrate = form.cleaned_data['decayrate']
+                result = tasks.createCategory.delay(profile.id,
+                                                    category.id,
+                                                    startvalue,
+                                                    threshold,
+                                                    decayrate)
+                category.task_id = result.task_id
+                category.save()
                 response_data = {
                     "stage":1,
-                    "state": result.state,
-                    "id": profile.activeCategory.id,
-                    "name": profile.activeCategory.name,
+                    "status": category.getStatus(),
+                    "id": category.id,
+                    "name": category.name,
                     }
             else:
                 response_data = {
-                    "stage":2,
-                    "state": "completed",
-                    "id": profile.activeCategory.id,
-                    "name": profile.activeCategory.name,
+                    "error": form.errors
                     }
-        except:
+        else:
+            response_data = {
+                "error":"must be a post request"
+                }
+    else:
+        response_data = {
+            "error": "user must be logged in"
+            }
+    return HttpResponse(json.dumps(response_data), mimetype="application/json")
+    
+    
+def categoryStatus(request, category_id):
+    if request.user.is_authenticated():
+        profile = request.user.profile
+        try:
+            category = Category.objects.get(id=category_id)
+            if category.task_id:
+                response_data = {
+                    "status": category.getStatus(),
+                    "id": category.id,
+                    "name": category.name,
+                    }
+            else:
+                response_data = {
+                    "status": "completed",
+                    "id": category.id,
+                    "name": category.name,
+                    }
+        except Category.DoesNotExist:
             response_data = {
                 "error" : "no active category"
                 }
@@ -224,3 +308,19 @@ def rename(request):
             "error":"not logged in",
             }
     return HttpResponse(json.dumps(response_data),mimetype="application/json")
+
+def categoryReset(request,category_id):
+    if request.user.is_authenticated():
+        profile = request.user.profile
+        if request.method == "POST":
+            try:
+                profile.activeCategory
+            except Category.DoesNotExist:
+                category = Category.objects.get(id=category_id)
+                category.active = profile
+                category.task_id = ""
+                category.status = ""
+                category.save()
+        return redirect('categories')
+    else:
+        return redirect('home')

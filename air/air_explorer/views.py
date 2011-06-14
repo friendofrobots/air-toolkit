@@ -22,6 +22,7 @@ def home(request, template_name="air_explorer/home.html"):
     else:
         ready = False
     return render_to_response(template_name, {
+            'path' : request.path,
             'ready' : ready,
             }, context_instance=RequestContext(request))
 
@@ -34,8 +35,9 @@ def download(request, template_name="air_explorer/download.html"):
     else:
         return redirect('home')
     return render_to_response(template_name, {
-                "stage" : stage,
-                }, context_instance=RequestContext(request))
+            'path' : request.path,
+            "stage" : stage,
+            }, context_instance=RequestContext(request))
 
 def friends(request, template_name="air_explorer/friends.html"):
     if request.user.is_authenticated():
@@ -43,6 +45,7 @@ def friends(request, template_name="air_explorer/friends.html"):
     else:
         return redirect('home')
     return render_to_response(template_name, {
+            'path' : request.path,
             'friends' : friends,
             }, context_instance=RequestContext(request))
 
@@ -70,29 +73,20 @@ def likes(request, startsWith=None, page=1, template_name="air_explorer/likes.ht
         except (EmptyPage, InvalidPage):
             like_page = paginator.page(paginator.num_pages)
 
-        if request.method == 'POST':
-            try:
-                category = profile.activeCategory
-                createForm = CategoryCreateForm({ 'id':category.id })
-                # should probably throw some sort of error here too...
-            except:
-                category = Category.objects.create(owner=profile,
-                                                   name=request.POST.get('name','tempcategoryname'),
-                                                   active=profile)
-                if category.name == 'tempcategoryname':
-                    category.name = 'Category '+str(category.id)
-                    category.save()
-        else:
-            try:
-                category = profile.activeCategory
-                createForm = CategoryCreateForm(initial={'category_id':category.id})
-            except:
-                category = None
-                createForm = None
+        try:
+            active = profile.activeCategory
+            createForm = CategoryCreateForm(initial={'category_id' : active.id,
+                                                     'startvalue' : active.startvalue,
+                                                     'threshold' : active.threshold,
+                                                     'decayrate' : active.decayrate,})
+        except Category.DoesNotExist:
+            active = None
+            createForm = None
         return render_to_response(template_name, {
+                'path' : request.path,
                 'startsWith': startsWith,
                 'likes' : like_page,
-                'category' : category,
+                'active' : active,
                 'createForm' : createForm,
                 }, context_instance=RequestContext(request))
     else:
@@ -103,27 +97,13 @@ def categories(request, template_name="air_explorer/categories.html"):
         profile = request.user.profile
         try:
             active = profile.activeCategory
-        except:
+        except Category.DoesNotExist:
             active = None
-        if request.method == 'POST':
-            objects = Entity.objects.filter(owner=profile,linksTo__relation="likes").distinct()
-            likes = objects.annotate(entity_activity=Count('linksTo')).filter(entity_activity__gt=1)
-            for like in likes:
-                CategoryScore.objects.create(owner=profile,
-                                             category=active,
-                                             entity=like)
-            result = tasks.createCategory.delay(profile.id,
-                                                active.id,
-                                                request.POST.get('threshold',0.5),
-                                                request.POST.get('decayrate',0.5),
-                                                minpmi,
-                                                maxpmi)
-            active.task_id = result.task_id
-            active.save()
-        categories = Category.objects.filter(owner=profile)
+        categories = Category.objects.filter(owner=profile).order_by('-id')
     else:
         return redirect('home')
     return render_to_response(template_name, {
+            'path' : request.path,
             'categories' : categories,
             'active' : active,
             }, context_instance=RequestContext(request))
@@ -132,8 +112,8 @@ def category(request, category_id, page=1, template_name="air_explorer/category.
     if request.user.is_authenticated():
         profile = request.user.profile
         category = get_object_or_404(Category,id=category_id)
-        scores = category.scores.all().order_by('-value')
-        paginator = Paginator(scores,25)
+        scores = category.scores.filter(value__gt=0).order_by('-value','entity__fbid')
+        paginator = Paginator(scores,24)
         try:
             score_page = paginator.page(page)
         except (EmptyPage, InvalidPage):
@@ -141,6 +121,7 @@ def category(request, category_id, page=1, template_name="air_explorer/category.
     else:
         return redirect('home')
     return render_to_response(template_name, {
+            'path' : request.path,
             'category' : category,
             'scores' : score_page,
             }, context_instance=RequestContext(request))

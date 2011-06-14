@@ -3,98 +3,121 @@
 {% block head_title %}likes{% endblock %}
 
 {% block head_extra %}
+<script>
+var started = {% if active and active.task_id %}true{% else %}false{% endif %};
+</script>
 <script type="text/javascript" src="/media/js/pmi.js"></script>
 {% endblock %}
 
-{% block tabs %}
-<!-- TODO: change this to a second level tab bar -->
-<li><a href="/likes/0">0</a></li>
-<li><a href="/likes/1">1</a></li>
-<li><a href="/likes/2">2</a></li>
-<li><a href="/likes/3">3</a></li>
-<li><a href="/likes/4">4</a></li>
-<li><a href="/likes/5">5</a></li>
-<li><a href="/likes/6">6</a></li>
-<li><a href="/likes/7">7</a></li>
-<li><a href="/likes/8">8</a></li>
-<li><a href="/likes/9">9</a></li>
-<li><a href="/likes/a">A</a></li>
-<li><a href="/likes/b">B</a></li>
-<li><a href="/likes/c">C</a></li>
-<li><a href="/likes/d">D</a></li>
-<li><a href="/likes/e">E</a></li>
-<li><a href="/likes/f">F</a></li>
-<li><a href="/likes/g">G</a></li>
-<li><a href="/likes/h">H</a></li>
-<li><a href="/likes/i">I</a></li>
-<li><a href="/likes/j">J</a></li>
-<li><a href="/likes/k">K</a></li>
-<li><a href="/likes/l">L</a></li>
-<li><a href="/likes/m">M</a></li>
-<li><a href="/likes/n">N</a></li>
-<li><a href="/likes/o">O</a></li>
-<li><a href="/likes/p">P</a></li>
-<li><a href="/likes/q">Q</a></li>
-<li><a href="/likes/r">R</a></li>
-<li><a href="/likes/s">S</a></li>
-<li><a href="/likes/t">T</a></li>
-<li><a href="/likes/u">U</a></li>
-<li><a href="/likes/v">V</a></li>
-<li><a href="/likes/w">W</a></li>
-<li><a href="/likes/x">X</a></li>
-<li><a href="/likes/y">Y</a></li>
-<li><a href="/likes/z">Z</a></li>
-<li><a href="/likes/~">#</a></li>
-{% endblock %}
-
 {% block content %}
-{% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/1">first</a>{% endif %}
-{% if likes.has_previous %}<a href="/likes/{{ startsWith }}/{{ likes.previous_page_number }}">prev</a>{% endif %}
-{% if likes.has_next %}<a href="/likes/{{ startsWith }}/{{ likes.next_page_number }}">next</a>{% endif %}
-{% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/{{ likes.paginator.num_pages }}">last</a>{% endif %}
+{% include "tabbar.html" %}
+
+<ul id="page-tabs">
+  <li><a href="/likes/0">0</a></li>
+  <li><a href="/likes/1">1</a></li>
+  <li><a href="/likes/2">2</a></li>
+  <li><a href="/likes/3">3</a></li>
+  <li><a href="/likes/4">4</a></li>
+  <li><a href="/likes/5">5</a></li>
+  <li><a href="/likes/6">6</a></li>
+  <li><a href="/likes/7">7</a></li>
+  <li><a href="/likes/8">8</a></li>
+  <li><a href="/likes/9">9</a></li>
+  <li><a href="/likes/a">A</a></li>
+  <li><a href="/likes/b">B</a></li>
+  <li><a href="/likes/c">C</a></li>
+  <li><a href="/likes/d">D</a></li>
+  <li><a href="/likes/e">E</a></li>
+  <li><a href="/likes/f">F</a></li>
+  <li><a href="/likes/g">G</a></li>
+  <li><a href="/likes/h">H</a></li>
+  <li><a href="/likes/i">I</a></li>
+  <li><a href="/likes/j">J</a></li>
+  <li><a href="/likes/k">K</a></li>
+  <li><a href="/likes/l">L</a></li>
+  <li><a href="/likes/m">M</a></li>
+  <li><a href="/likes/n">N</a></li>
+  <li><a href="/likes/o">O</a></li>
+  <li><a href="/likes/p">P</a></li>
+  <li><a href="/likes/q">Q</a></li>
+  <li><a href="/likes/r">R</a></li>
+  <li><a href="/likes/s">S</a></li>
+  <li><a href="/likes/t">T</a></li>
+  <li><a href="/likes/u">U</a></li>
+  <li><a href="/likes/v">V</a></li>
+  <li><a href="/likes/w">W</a></li>
+  <li><a href="/likes/x">X</a></li>
+  <li><a href="/likes/y">Y</a></li>
+  <li><a href="/likes/z">Z</a></li>
+  <li><a href="/likes/~">#</a></li>
+</ul>
+
+<div class="page-nav">
+  {% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/1">first</a>{% endif %}
+  {% if likes.has_previous %}<a href="/likes/{{ startsWith }}/{{ likes.previous_page_number }}">prev</a>{% endif %}
+  {% if likes.has_next %}<a href="/likes/{{ startsWith }}/{{ likes.next_page_number }}">next</a>{% endif %}
+  {% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/{{ likes.paginator.num_pages }}">last</a>{% endif %}
+</div>
 <ul>
   {% for like in likes.object_list %}
   <li class="like" id="like-{{ like.id }}">
     <h2>
-      <img src="https://graph.facebook.com/{{ like.fbid }}/picture" /> {{ like.name }}
-      {% if category and not category.task_id %}{% if like in category.seeds.all %}<span class="delete-seed">[x]</span>{% else %}<span class="add-seed">[+]</span>{% endif %}<span class="seed-id">{{ like.id }}</span>{% endif %}
+      <img src="https://graph.facebook.com/{{ like.fbid }}/picture" />
+      {{ like.name }}
+      {% if active and not active.task_id %}
+      {% if like in active.seeds.all %}
+      <span class="delete-seed">[x]</span>
+      {% else %}
+      <span class="add-seed">[+]</span>
+      {% endif %}
+      <span class="seed-id">{{ like.id }}</span>
+      {% endif %}
     </h2>
-    <div>
-      <ul id="{{ like.id }}-pmis" class="pmis">
-      </ul>
-      <span class="show">[+]</span>
-      <span class="pmi-id" style="display:none">{{ like.id }}</span>
-    </div>
+    <fieldset class="pmi-fieldset">
+      <legend>Show PMIs</legend>
+      <div class="pmi-box">
+	<ul id="{{ like.id }}-pmis" class="pmis">
+	</ul>
+	<span class="hide">[-]</span>
+	<span class="pmi-id">{{ like.id }}</span>
+      </div>
+    </fieldset>
   </li>
   {% empty %}
   <li>No likes starting with that character.</li>
   {% endfor %}
 </ul>
 
-{% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/1">first</a>{% endif %}
-{% if likes.has_previous %}<a href="/likes/{{ startsWith }}/{{ likes.previous_page_number }}">prev</a>{% endif %}
-{% if likes.has_next %}<a href="/likes/{{ startsWith }}/{{ likes.next_page_number }}">next</a>{% endif %}
-{% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/{{ likes.paginator.num_pages }}">last</a>{% endif %}
+<div class="page-nav">
+  {% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/1">first</a>{% endif %}
+  {% if likes.has_previous %}<a href="/likes/{{ startsWith }}/{{ likes.previous_page_number }}">prev</a>{% endif %}
+  {% if likes.has_next %}<a href="/likes/{{ startsWith }}/{{ likes.next_page_number }}">next</a>{% endif %}
+  {% if likes.has_other_pages %}<a href="/likes/{{ startsWith }}/{{ likes.paginator.num_pages }}">last</a>{% endif %}
+</div>
 
-{% if not category %}
+{% if not active %}
 <form method="post">
   <input type="submit" value="start category"></input>
 </form>
 {% endif %}
 
-{% if category and not category.task_id %}
-<div id="category">
-  <h2>{{ category.name }}</h2>
+{% if active %}
+<div id="category-sidebar">
+  <h2>{{ active.name }}</h2>
   <ul id="seeds">
-    {% for seed in category.seeds.all %}
+    {% for seed in active.seeds.all %}
     <li id="seed-{{ seed.id }}">
       <h3>
-        {{ seed.name }} <span class="delete-seed">[x]</span><span class="seed-id">{{ seed.id }}</span>
+        {{ seed.name }}
+	{% if not active.task_id %}
+	<span class="delete-seed">[x]</span>
+	{% endif %}
+	<span class="seed-id">{{ seed.id }}</span>
       </h3>
     </li>
     {% endfor %}
   </ul>
-  <form method="post">
+  <form id="creation-form" method="post" {% if active.task_id %}style="display:none"{% endif %}>
     <fieldset id="toggle-creation-options">
       <legend>Show Options</legend>
       <ul id="creation-options">
@@ -102,9 +125,26 @@
       </ul>
     </fieldset>
     <div id="category-done">
-      <input type="submit" class="button" id="donebutton" value="Start Creation" {% if not category.seeds.all %}disabled="disabled"{% endif %}></input>
+      <input type="submit" class="button" id="start-creation" value="Start Creation" {% if not active.seeds.all %}disabled="disabled"{% endif %}></input>
     </div>
   </form>
+  <div id="creation-status" {% if not active.task_id %}style="display:none;"{% endif %}>
+    <p>
+      Creating {{ active.name }}...
+    </p>
+    <div id="creation-error">
+    </div>
+    <div id="creation-rounds">
+    </div>
+  </div>
+  <div id="creation-done" style="display:none;">
+    <p>
+      {{ active.name }} Created.
+    </p>
+    <p>
+      <a href="{% url categories %}" class="button">View Categories</a>
+    </p>
+  </div>
 </div>
 {% endif %}
 {% endblock %}

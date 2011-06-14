@@ -137,6 +137,10 @@ a {
   padding: 4px;
 }
 
+.like-id {
+  display:none;
+}
+
 #rename {
   border: 2px solid black;
   font-size: 200%;

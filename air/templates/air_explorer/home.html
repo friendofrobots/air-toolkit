@@ -3,6 +3,8 @@
 {% block head_title %}Home{% endblock %}
 
 {% block content %}
+{% include "tabbar.html" %}
+
 <h1>Welcome!</h1>
 <div id="about">
   <p>
@@ -13,12 +15,12 @@
   </p>
 </div>  
 {% if ready %}
-<div>
-  <a href="/likes/">Get Started</a>
+<div >
+  <a class="button" href="/likes/">Get Started</a>
 </div>
 {% else %}
 <div>
-  <a href="/auth/login">login with facebook</a>
+  <a class="button" href="/auth/login">login with facebook</a>
 </div>
 {% endif %}
   

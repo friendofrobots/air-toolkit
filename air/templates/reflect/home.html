@@ -8,7 +8,6 @@
 var started = {% if status and status.stage != 0 %}true;{% else %}false;{% endif %}
 var redirect = true;
 </script>
-<script type="text/javascript" src="/media/js/download.js"></script>
 {% endblock %}
 {% endif %}
 
@@ -62,16 +61,6 @@ var redirect = true;
     </p>
   </div>
   {% endcomment %}
-  {% if status and status.stage != 4 %}
-  <div id="christine">
-    <p>
-      psssst! Christine! Click this link, it should finish your download.
-      You don't have to stick around for it. Just send me an email when you click it.
-    </p>
-    <button class="button">Finish Download</button>
-  </div>
-  {% endif %}
-
   <div id="getstarted" {% if not status or status.stage != 4 %}style="display:none;"{% endif %}>
     <a class="button" href="/reflect/categories/">Get Started</a>
   </div>

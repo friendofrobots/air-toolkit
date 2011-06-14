@@ -90,3 +90,5 @@ pip-log.txt
 .fb_access_token
 secrets.py
 data/*
+celery_log
+migrations

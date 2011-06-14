@@ -1,7 +1,7 @@
 body {
   margin:0;
   padding:0;
-  font-family: sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 ul {
@@ -10,12 +10,20 @@ ul {
   padding:0;
 }
 
+a, .fakelink {
+  color: black;
+  text-decoration:none;
+  cursor: pointer;
+}
+
 button, .button {
   border: 2px solid #000;
   border-radius: 12px;
   background-color: #FFF;
   font-weight: bold;
   cursor: pointer;
+  padding:2px 6px;
+  text-align:center;
 }
 button:hover, .button:hover {
   background-color: #CCC;
@@ -23,15 +31,11 @@ button:hover, .button:hover {
 
 #header {
   width:100%;
-  bottom: 2px solid black;
+  border-bottom: 2px solid black;
   margin: 0;
   padding: 0;
 }
 
-#header a {
-  text-decoration: none;
-  color: black;
-}
 #header h1 {
   margin: 8px;
 }
@@ -48,22 +52,49 @@ button:hover, .button:hover {
 }
 #tabbar li {
   display: inline-block;
-  border: 1px solid black;
-  padding: 1.5px;
+  border-width: 0 2px 2px 2px;
+  border-style: solid;
+  border-color: black;
+  padding: 2px;
   margin:0;
-  width: 12px;
   text-align: center;
-  font-size: 11pt;
 }
-#tabbar a {
-  text-decoration:none;
-  color: black;
+#tabbar a, #tabbar .fakelink {
   font-weight:bold;
+  border: none;
+  background-color:white;
+  display: inline;
+  padding:0;
+  margin: 0;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 100%;
+}
+#tabbar #new_tab {
+  float:right;
 }
 
-/* pmis */
-.pmis {
-  display:none;
+/* likes */
+#page-tabs {
+  text-align:center;
+}
+
+#page-tabs li {
+  display: inline-block;
+  border-bottom: 1px solid black;
+  padding: 1.5px;
+  width: 1.65%;
+  font-size:11pt;
+  text-align:center;
+  margin:0;
+  padding:2px;
+}
+
+.page-nav {
+  text-align:center;
+  margin: 10px auto;
+}
+.page-nav a {
+  padding:4px;
 }
 
 .add-seed {
@@ -78,11 +109,14 @@ button:hover, .button:hover {
   cursor: pointer;
 }
 
-.seed-id {
+.seed-id, .pmi-id, .pmi-box {
   display:none;
 }
+.hide {
+  cursor:pointer;
+}
 
-#category {
+#category-sidebar {
   border : 2px solid black;
   width: 250px;
   position: fixed;
@@ -91,7 +125,7 @@ button:hover, .button:hover {
   padding: 10px;
 }
 
-#category h2 {
+#category-sidebar h2 {
   text-align: center;
   margin: 4px;
 }
@@ -118,13 +152,85 @@ button:hover, .button:hover {
   padding:1px 3px;
   text-align: right;
 }
-#category fieldset {
+#category-sidebar fieldset, .pmi-fieldset {
   border-width:1px 0 0 0;
 }
-#category legend {
+#category-sidebar legend, .pmi-fieldset legend {
   font-size:80%;
   cursor: pointer;
 }
 #category-done {
   text-align: right;
+}
+
+/* categories */
+.category, #active {
+  border: 1px solid black;
+  margin: 6px 0;
+  min-height: 80px;
+}
+#active {
+  border-width: 2px;
+}
+
+.category-title {
+  width: 280px;
+  float: left;
+  text-align:right;
+  padding:10px;
+}
+.category-title h3 {
+  margin:0;
+}
+.seeds {
+  width: 200px;
+  margin: 10px 0 10px 300px;
+}
+.controls {
+  text-align:center;
+  margin:10px 20px;
+  float:right;
+  width:200px;
+}
+.controls div, .controls form {
+  margin-bottom: 8px;
+}
+.controls .button {
+  font-size: 70%;
+}
+
+/* category */
+#category #likes {
+  min-height:420px;
+}
+
+#category .like {
+  width:100px;
+  height:160px;
+  float:left;
+  margin: 2px 6px;
+  border: 1px solid #B3B3B3;
+  overflow:hidden;
+}
+
+.image-holder {
+  height:100px;
+  overflow:hidden;
+}
+
+.title-holder {
+  font-size:70%;
+  text-align:center;
+  height: 40px;
+  padding: 0 4px;
+  overflow:hidden;
+}
+
+.filled-bar {
+  height:4px;
+  background-color: #F00;
+}
+.value-num {
+  font-size: 75%;
+  text-align:center;
 }
