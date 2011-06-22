@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block head_title %}Like: {{ like.name }}{% endblock %}
+
+{% block head_extra %}
+<script>
+var started = {% if active and active.task_id %}true{% else %}false{% endif %};
+</script>
+<script type="text/javascript" src="/media/js/pmi.js"></script>
+{% endblock %}
+
+{% block content %}
+{% include "tabbar.html" %}
+
+<div id="title">
+  <h1 id="like-title">{{ like.name }}</h1>
+</div>
+
+{% url like_start like.id as page_url%}
+{% include "air_explorer/pages.html" %}
+
+{% if not active %}
+<form method="post">
+  <input type="submit" value="start category"></input>
+</form>
+{% endif %}
+
+{% if active %}
+{% include "air_explorer/category_sidebar.html" %}
+{% endif %}
+{% endblock %}

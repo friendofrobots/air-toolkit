@@ -45,6 +45,7 @@ button:hover, .button:hover {
   width:800px;
 }
 
+/* General */
 #tabbar {
   position:relative;
   margin: 0;
@@ -73,6 +74,36 @@ button:hover, .button:hover {
   float:right;
 }
 
+#title {
+  width: 750px;
+  padding:10px;
+  margin: 0 auto;
+}
+#title h1 {
+  margin: 8px;
+}
+
+.page-nav {
+  text-align:center;
+  margin: 2px auto;
+  width:690px;
+  position:relative;
+  height:26px;
+}
+.page-nav a {
+  display:inline-block;
+  padding:4px;
+  width:30px;
+}
+.left-nav {
+  position:absolute;
+  left:2px;
+}
+.right-nav {
+  position:absolute;
+  right:2px;
+}
+
 /* likes */
 #page-tabs {
   text-align:center;
@@ -89,22 +120,17 @@ button:hover, .button:hover {
   padding:2px;
 }
 
-.page-nav {
-  text-align:center;
-  margin: 10px auto;
+.like img {
+  vertical-align:middle;
 }
-.page-nav a {
-  padding:4px;
+.like h2 {
+  display:inline;
 }
-
 .add-seed {
-  font-size: 50%;
   color: #00FF00;
   cursor: pointer;
 }
-
 .delete-seed {
-  font-size: 50%;
   color: #FF0000;
   cursor: pointer;
 }
@@ -199,18 +225,43 @@ button:hover, .button:hover {
   font-size: 70%;
 }
 
+
 /* category */
-#category #likes {
-  min-height:420px;
+#category-info {
+  min-height:55px;
+  padding:10px;
+  border: 1px solid black;
+}
+#category-info ul {
+  width:320px;
+  margin:0 20px;
+  display: inline-block;
+}
+#category-info #parameters {
+  float:right;
+}
+#category-info #parameters div {
+  display:inline-block;
+}
+#category-info #parameters .label {
+  width:200px;
+  margin-right: 10px;
+  text-align:right;
+}
+/* pages */
+#subject #objects {
+  width:635px;
+  margin:10px auto;
 }
 
-#category .like {
+#subject .object {
   width:100px;
-  height:160px;
-  float:left;
-  margin: 2px 6px;
+  display:inline-block;
+  margin: 2px 0;
   border: 1px solid #B3B3B3;
   overflow:hidden;
+  position: relative;
+  vertical-align:top;
 }
 
 .image-holder {
@@ -233,4 +284,14 @@ button:hover, .button:hover {
 .value-num {
   font-size: 75%;
   text-align:center;
+}
+
+.like-controls {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background-color: #FFF;
+  padding: 2px;
+  border-left: solid 1px #B3B3B3;
+  border-bottom: solid 1px #B3B3B3;
 }

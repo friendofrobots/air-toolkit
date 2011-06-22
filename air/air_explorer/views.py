@@ -39,14 +39,53 @@ def download(request, template_name="air_explorer/download.html"):
             "stage" : stage,
             }, context_instance=RequestContext(request))
 
-def friends(request, template_name="air_explorer/friends.html"):
+def friends(request, page=1, template_name="air_explorer/friends.html"):
     if request.user.is_authenticated():
-        friends = Entity.objects.filter(owner=request.user.profile,linksFrom__relation="likes").distinct()
+        profile = request.user.profile
+        try:
+            status = profile.downloadStatus
+            if status.stage <4:
+                return redirect('download')
+        except:
+            return redirect('download')
+        friends = Entity.objects.filter(owner=profile,linksFrom__relation="likes").distinct().order_by('name')
+        paginator = Paginator(friends,96)
+        
+        try:
+            friend_page = paginator.page(page)
+        except (EmptyPage, InvalidPage):
+            friend_page = paginator.page(paginator.num_pages)
+
+        return render_to_response(template_name, {
+                'path' : request.path,
+                'page' : friend_page,
+                }, context_instance=RequestContext(request))
+    else:
+        return redirect('home')
+
+def friend(request, entity_id, page=1, template_name="air_explorer/friend.html"):
+    if request.user.is_authenticated():
+        profile = request.user.profile
+        entity = get_object_or_404(Entity,id=entity_id)
+        likelinks = entity.likes()
+        likes = Entity.objects.filter(linksTo__in=likelinks)
+        try:
+            active = profile.activeCategory
+            createForm = CategoryCreateForm(initial={'category_id' : active.id,
+                                                     'startvalue' : active.startvalue,
+                                                     'threshold' : active.threshold,
+                                                     'decayrate' : active.decayrate,})
+        except Category.DoesNotExist:
+            active = None
+            createForm = None
     else:
         return redirect('home')
     return render_to_response(template_name, {
             'path' : request.path,
-            'friends' : friends,
+            'friend' : entity,
+            'likes' : likes,
+            'active' : active,
+            'createForm' : createForm,
             }, context_instance=RequestContext(request))
 
 def likes(request, startsWith=None, page=1, template_name="air_explorer/likes.html"):
@@ -66,7 +105,7 @@ def likes(request, startsWith=None, page=1, template_name="air_explorer/likes.ht
             likes = likes.filter(entity_activity__gt=1,name__iregex=r'\A\W').order_by('name')
         else:
             likes = likes.filter(entity_activity__gt=1,name__istartswith=startsWith).order_by('name')
-        paginator = Paginator(likes,25)
+        paginator = Paginator(likes,24)
         
         try:
             like_page = paginator.page(page)
@@ -85,12 +124,41 @@ def likes(request, startsWith=None, page=1, template_name="air_explorer/likes.ht
         return render_to_response(template_name, {
                 'path' : request.path,
                 'startsWith': startsWith,
-                'likes' : like_page,
+                'page' : like_page,
                 'active' : active,
                 'createForm' : createForm,
                 }, context_instance=RequestContext(request))
     else:
         return redirect('home')
+
+def like(request, entity_id, page=1, template_name="air_explorer/like.html"):
+    if request.user.is_authenticated():
+        profile = request.user.profile
+        entity = get_object_or_404(Entity,id=entity_id)
+        paginator = Paginator(entity.getpmis(),24)
+        try:
+            pmi_page = paginator.page(page)
+        except (EmptyPage, InvalidPage):
+            pmi_page = paginator.page(paginator.num_pages)
+
+        try:
+            active = profile.activeCategory
+            createForm = CategoryCreateForm(initial={'category_id' : active.id,
+                                                     'startvalue' : active.startvalue,
+                                                     'threshold' : active.threshold,
+                                                     'decayrate' : active.decayrate,})
+        except Category.DoesNotExist:
+            active = None
+            createForm = None
+    else:
+        return redirect('home')
+    return render_to_response(template_name, {
+            'path' : request.path,
+            'like' : entity,
+            'page' : pmi_page,
+            'active' : active,
+            'createForm' : createForm,
+            }, context_instance=RequestContext(request))
 
 def categories(request, template_name="air_explorer/categories.html"):
     if request.user.is_authenticated():
@@ -123,5 +191,5 @@ def category(request, category_id, page=1, template_name="air_explorer/category.
     return render_to_response(template_name, {
             'path' : request.path,
             'category' : category,
-            'scores' : score_page,
+            'page' : score_page,
             }, context_instance=RequestContext(request))

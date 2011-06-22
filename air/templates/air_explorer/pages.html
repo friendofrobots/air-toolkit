@@ -1,0 +1,106 @@
+<div class="page-nav">
+  <div class="left-nav">
+    {% if page.has_other_pages %}<a href="{{ page_url }}1">first</a>{% endif %}
+    {% if page.has_previous %}<a href="{{ page_url }}{{ page.previous_page_number }}">prev</a>{% endif %}
+  </div>
+  <div class="right-nav">
+    {% if page.has_next %}<a href="{{ page_url }}{{ page.next_page_number }}">next</a>{% endif %}
+    {% if page.has_other_pages %}<a href="{{ page_url }}{{ page.paginator.num_pages }}">last</a>{% endif %}
+  </div>
+</div>
+
+<div id="subject">
+  <ul id="objects">
+    {% for object in page.object_list %}
+    <li class="object">
+      <a href="{% if object.entity %}{% url like_start object.entity.id %}{% else %}{% if object.toEntity %}{% if object.toEntity == like %}{% url like_start object.fromEntity.id %}{% else %}{% url like_start object.toEntity.id %}{% endif %}{% else %}{% url like_start object.id %}{% endif %}{% endif %}">
+	<div class="image-holder">
+	  {% if object.entity %}
+	  <img src="https://graph.facebook.com/{{ object.entity.fbid }}/picture?type=normal" />
+	  {% else %}{% if object.toEntity %}{% if object.toEntity == like %}
+	  <img src="https://graph.facebook.com/{{ object.fromEntity.fbid }}/picture?type=normal" />
+	  {% else %}
+	  <img src="https://graph.facebook.com/{{ object.toEntity.fbid }}/picture?type=normal" />
+	  {% endif %}{% else %}
+	  <img src="https://graph.facebook.com/{{ object.fbid }}/picture?type=normal" />
+	  {% endif %}{% endif %}
+	</div>
+	<div class="title-holder">
+	  {% if object.entity %}
+	  {{ object.entity.name }}
+	  {% else %}{% if object.toEntity %}{% if object.toEntity == like %}
+	  {{ object.fromEntity.name }}
+	  {% else %}
+	  {{ object.toEntity.name }}
+	  {% endif %}{% else %}
+	  {{ object.name }}
+	  {% endif %}{% endif %}
+	</div>
+	{% if object.normalized_value %}
+	<div class="value-bar">
+	  <div class="filled-bar"></div>
+	</div>
+	<div class="value-num">
+	  {{ object.normalized_value }}
+	</div>
+	{% endif %}
+      </a>
+      {% if active and not active.task_id %}
+      <div class="like-controls">
+	{% if object.entity %}
+	{% if object.entity in active.seeds.all %}
+	<span class="delete-seed">[x]</span>
+	{% else %}
+	<span class="add-seed">[+]</span>
+	{% endif %}
+	<span class="seed-id">{{ object.entity.id }}</span>
+
+	{% else %}
+	{% if object.toEntity %}
+
+	{% if object.toEntity == like %}
+
+	{% if object.fromEntity in active.seeds.all %}
+	<span class="delete-seed">[x]</span>
+	{% else %}
+	<span class="add-seed">[+]</span>
+	{% endif %}
+	<span class="seed-id">{{ object.fromEntity.id }}</span>
+
+	{% else %}
+
+	{% if object.toEntity in active.seeds.all %}
+	<span class="delete-seed">[x]</span>
+	{% else %}
+	<span class="add-seed">[+]</span>
+	{% endif %}
+	<span class="seed-id">{{ object.toEntity.id }}</span>
+
+	{% endif %}
+	{% else %}
+
+	{% if object.id in active.seeds.all %}
+	<span class="delete-seed">[x]</span>
+	{% else %}
+	<span class="add-seed">[+]</span>
+	{% endif %}
+	<span class="seed-id">{{ object.id }}</span>
+
+	{% endif %}{% endif %}
+      </div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="page-nav">
+  <div class="left-nav">
+    {% if page.has_other_pages %}<a href="{{ page_url }}1">first</a>{% endif %}
+    {% if page.has_previous %}<a href="{{ page_url }}{{ page.previous_page_number }}">prev</a>{% endif %}
+  </div>
+  <div class="right-nav">
+    {% if page.has_next %}<a href="{{ page_url }}{{ page.next_page_number }}">next</a>{% endif %}
+    {% if page.has_other_pages %}<a href="{{ page_url }}{{ page.paginator.num_pages }}">last</a>{% endif %}
+  </div>
+</div>

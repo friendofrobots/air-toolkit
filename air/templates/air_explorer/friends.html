@@ -3,10 +3,49 @@
 {% block head_title %}Friends{% endblock %}
 
 {% block content %}
-  {% for friend in friends %}
-  <div class="friend">
-    <img src="https://graph.facebook.com/{{ friend.fbid }}/picture"/>
-    <a href="/friends/{{ friend.id }}/">{{ friend.name }}</a>
+{% include "tabbar.html" %}
+
+<div id="title">
+  <h1>Friends</h1>
+</div>
+
+<div class="page-nav">
+  <div class="left-nav">
+    {% if page.has_other_pages %}<a href="{% url friends_start %}1">first</a>{% endif %}
+    {% if page.has_previous %}<a href="{% url friends_start %}{{ page.previous_page_number }}">prev</a>{% endif %}
   </div>
-  {% endfor %}
+  <div class="right-nav">
+    {% if page.has_next %}<a href="{% url friends_start %}{{ page.next_page_number }}">next</a>{% endif %}
+    {% if page.has_other_pages %}<a href="{% url friends_start %}{{ page.paginator.num_pages }}">last</a>{% endif %}
+  </div>
+</div>
+
+<div id="subject">
+  <ul id="objects">
+    {% for object in page.object_list %}
+    <li class="object">
+      <a href="{% url friend_start object.id %}">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ object.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ object.name }}
+	</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="page-nav">
+  <div class="left-nav">
+    {% if page.has_other_pages %}<a href="{% url friends_start %}1">first</a>{% endif %}
+    {% if page.has_previous %}<a href="{% url friends_start %}{{ page.previous_page_number }}">prev</a>{% endif %}
+  </div>
+  <div class="right-nav">
+    {% if page.has_next %}<a href="{% url friends_start %}{{ page.next_page_number }}">next</a>{% endif %}
+    {% if page.has_other_pages %}<a href="{% url friends_start %}{{ page.paginator.num_pages }}">last</a>{% endif %}
+  </div>
+</div>
+
 {% endblock %}

@@ -43,7 +43,7 @@ def profile(request, entity_id=None, template_name="reflect/profile.html"):
         """
         profile = request.user.profile
         if not entity_id:
-            entity = Entity.objects.get(fbid=profile.fbid)
+            entity = Entity.objects.get(owner=profile,fbid=profile.fbid)
         else:
             entity = get_object_or_404(Entity,id=entity_id)
         categories = Category.objects.filter(owner=profile).order_by('id')

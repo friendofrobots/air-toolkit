@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block head_title %}Friend: {{ friend.name }}{% endblock %}
+
+{% block head_extra %}
+<script type="text/javascript" src="/media/js/category.js"></script>
+{% endblock %}
+
+{% block content %}
+{% include "tabbar.html" %}
+
+<div id="title">
+  <h1>{{ friend.name }}</h1>
+</div>
+
+<div id="subject">
+  <ul id="objects">
+    {% for object in likes %}
+    <li class="object">
+      <a href="{% url like_start object.id %}">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ object.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ object.name }}
+	</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% if not active %}
+<form method="post">
+  <input type="submit" value="start category"></input>
+</form>
+{% endif %}
+
+{% if active %}
+{% include "air_explorer/category_sidebar.html" %}
+{% endif %}
+{% endblock %}

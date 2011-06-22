@@ -26,7 +26,7 @@ class Entity(models.Model):
         return set([link.fromEntity for link in self.linksTo.filter(relation="likes").select_related()])
 
     def getpmis(self):
-        return PMI.objects.filter(models.Q(toEntity=self) | models.Q(fromEntity=self)).distinct().select_related().order_by('-value')
+        return PMI.objects.filter(models.Q(toEntity=self) | models.Q(fromEntity=self)).distinct().select_related().order_by('-value','toEntity__fbid','fromEntity__fbid')
 
     def topCategory(self):
         try:
@@ -63,6 +63,9 @@ class PMI(models.Model):
     fromEntity = models.ForeignKey(Entity,related_name='pmiFrom')
     toEntity = models.ForeignKey(Entity,related_name='pmiTo')
     value = models.FloatField()
+
+    def normalized_value(self):
+        return (self.value - self.owner.minpmi) /  (self.owner.maxpmi - self.owner.minpmi)
 
     def __unicode__(self):
         return self.fromEntity.name +","+ self.toEntity.name +"=>"+ unicode(self.value)
@@ -111,6 +114,21 @@ class CategoryScore(models.Model):
     entity = models.ForeignKey(Entity,related_name="categoryScore")
     value = models.FloatField(default=0.0)
     fired = models.BooleanField(default=False)
+
+    def normalized_value(self):
+        return self.value
+
+    def getEntity(self):
+        return self.entity
+
+    def __unicode__(self):
+        return self.category.name + ': ' + self.entity.name + ' - ' + unicode(self.value)
+
+class CategoryMembership(models.Model):
+    owner = models.ForeignKey(Profile)
+    category = models.ForeignKey(Category,related_name="memberships")
+    member = models.ForeignKey(Entity,related_name="categoryMembership")
+    value = models.FloatField(default=0.0)
 
     def __unicode__(self):
         return self.category.name + ': ' + self.entity.name + ' - ' + unicode(self.value)

@@ -1,4 +1,5 @@
 from django.db.models import Count, Q, Max, Min
+from django.db import transaction
 from celery.decorators import task
 from celery.result import TaskSetResult
 from toolkit.models import DownloadStatus, Entity, Link, PMI, Category, CategoryScore
@@ -127,14 +128,15 @@ def calcPMIs(profile_id, linkedBy, entity_id1, lb1, numpeople):
     """
     profile = Profile.objects.get(id=profile_id)
     fromEntity = Entity.objects.get(id=entity_id1)
-    for entity_id2,lb2 in linkedBy.iteritems():
-        if entity_id1 <= entity_id2 and len(lb1.intersection(lb2))>0:
-            PMI.objects.get_or_create(
-                owner=profile,
-                fromEntity=fromEntity,
-                toEntity=Entity.objects.get(id=entity_id2),
-                value=math.log(len(lb1.intersection(lb2))*numpeople/(len(lb1)*len(lb2)),2))
-
+    with transaction.commit_on_success():
+        for entity_id2,lb2 in linkedBy.iteritems():
+            if len(lb1.intersection(lb2))>0:
+                PMI.objects.get_or_create(
+                    owner=profile,
+                    fromEntity=fromEntity,
+                    toEntity=Entity.objects.get(id=entity_id2),
+                    value=math.log(len(lb1.intersection(lb2))*numpeople/(len(lb1)*len(lb2)),2))
+                
 @task(ignore_result=True)
 def checkPMISet(taskset_id,profile_id,status_id):
     result = TaskSetResult.restore(taskset_id)
@@ -145,9 +147,6 @@ def checkPMISet(taskset_id,profile_id,status_id):
         status.save()
     else:
         checkTaskSet.retry(countdown=15, max_retries=None)
-
-def testCategory(profile_id, category_id):
-    return createCategory.delay(profile_id,category_id,.6,.4,.3)
 
 @task(ignore_result=True)
 def createCategory(profile_id, category_id,
@@ -184,35 +183,36 @@ def createCategory(profile_id, category_id,
     toFire = category.scores.filter(fired=False,value__gte=threshold)
     # going back and forth between nodes and score, need to clear this up
     while toFire:
-        if toFire.count() > 150:
-            category.addNumToStatus(str(toFire.count())+', got too big so I had to quit')
-            break
-        category.addNumToStatus(toFire.count())
-        for score1 in toFire:
-            for node2 in Entity.objects.filter(pmiTo__fromEntity=score1.entity):
-                if score1.entity != node2:
-                    pmi = score1.entity.pmiFrom.get(toEntity=node2)
-                    node2score = node2.categoryScore.get(category=category)
-                    weight = (pmi.value-minpmi) / (maxpmi-minpmi)
-                    newValue = node2score.value + (score1.value*weight*decayrate)
-                    if newValue > 1:
-                        newValue = 1.0
-                    node2score.value = newValue
-                    node2score.save()
-            for node2 in Entity.objects.filter(pmiFrom__toEntity=score1.entity):
-                if score1.entity != node2:
-                    pmi = score1.entity.pmiTo.get(fromEntity=node2)
-                    node2score = node2.categoryScore.get(category=category)
-                    weight = (pmi.value-minpmi) / (maxpmi-minpmi)
-                    newValue = node2score.value + (score1.value*weight*decayrate)
-                    if newValue > 1:
-                        newValue = 1.0
-                    node2score.value = newValue
-                    node2score.save()
-            score1.fired = True
-            score1.save()
-        toFire = category.scores.filter(fired=False,value__gte=threshold)
-        decayrate = decayrate**2
+        with transaction.commit_on_success():
+            if toFire.count() > 150:
+                category.addNumToStatus(str(toFire.count())+', got too big so I had to quit')
+                break
+            category.addNumToStatus(toFire.count())
+            for score1 in toFire:
+                for node2 in Entity.objects.filter(pmiTo__fromEntity=score1.entity):
+                    if score1.entity != node2:
+                        pmi = score1.entity.pmiFrom.get(toEntity=node2)
+                        node2score = node2.categoryScore.get(category=category)
+                        weight = (pmi.value-minpmi) / (maxpmi-minpmi)
+                        newValue = node2score.value + (score1.value*weight*decayrate)
+                        if newValue > 1:
+                            newValue = 1.0
+                        node2score.value = newValue
+                        node2score.save()
+                for node2 in Entity.objects.filter(pmiFrom__toEntity=score1.entity):
+                    if score1.entity != node2:
+                        pmi = score1.entity.pmiTo.get(fromEntity=node2)
+                        node2score = node2.categoryScore.get(category=category)
+                        weight = (pmi.value-minpmi) / (maxpmi-minpmi)
+                        newValue = node2score.value + (score1.value*weight*decayrate)
+                        if newValue > 1:
+                            newValue = 1.0
+                        node2score.value = newValue
+                        node2score.save()
+                score1.fired = True
+                score1.save()
+            toFire = category.scores.filter(fired=False,value__gte=threshold)
+            decayrate = decayrate**2
     category.task_id = ""
     category.active = None
     category.save()
