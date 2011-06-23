@@ -3,7 +3,7 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns('toolkit.views',
     url(r'^download/start/$', 'startDownload', name='startDownload'),
     url(r'^download/status/$', 'status', name='status'),
-    url(r'^pmis/(\d+)$', 'like_pmis', name='like_pmis'),
+    url(r'^pmis/(\d+)$', 'page_pmis', name='page_pmis'),
     url(r'^category/new/(\S+)$', 'newCategory', name='categoryNewRedirect'),
     url(r'^category/new/$', 'newCategory', name='categoryNew'),
     url(r'^category/start/$', 'startCategoryCreation', name='categoryCreate'),

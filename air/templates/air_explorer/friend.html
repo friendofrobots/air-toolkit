@@ -15,7 +15,7 @@
 
 <div id="subject">
   <ul id="objects">
-    {% for object in likes %}
+    {% for object in friend.likes.all %}
     <li class="object">
       <a href="{% url like_start object.id %}">
 	<div class="image-holder">

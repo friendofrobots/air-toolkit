@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 import json, facebook
 from celery.result import AsyncResult, TaskSetResult
 from celery.task.sets import TaskSet
-from toolkit.models import Entity, Link, PMI, DownloadStatus, Category, CategoryScore
+from toolkit.models import Person, Page, PMI, DownloadStatus, Category, CategoryScore
 from toolkit import tasks
 from toolkit.forms import CategoryCreateForm
 from fbauth.models import Profile
@@ -55,12 +55,10 @@ def startDownload(request):
                 me = graphapi.get_object('me')
                 friends = [(f['id'],f['name']) for f in graphapi.get_connections('me','friends')['data']]
                 friends.append((me['id'],me['name']))
-                for friend in friends:
-                    Entity.objects.create(owner=profile,
-                                          fbid=friend[0],
-                                          name=friend[1])
-                subtasks = [tasks.dlUser.subtask((profile.id,graphapi,fbid)) for (fbid,name) in friends]
+
+                subtasks = [tasks.dlUser.subtask((profile.id,graphapi,fbid,name)) for (fbid,name) in friends]
                 result = TaskSet(tasks=subtasks).apply_async()
+
                 status = DownloadStatus.objects.create(owner=profile,stage=1,task_id=result.taskset_id)
                 status.save()
                 result.save()
@@ -113,16 +111,16 @@ def status(request):
             }
     return HttpResponse(json.dumps(response_data), mimetype="application/json")
 
-## Entity Views ##
-def entityLikedBy(request, entity_id):
+## Page Views ##
+def pageLikedBy(request, page_id):
     return HttpResponse(json.dumps(response_data),mimetype="application/json")
 
-def like_pmis(request, entity_id):
+def page_pmis(request, page_id):
     if request.user.is_authenticated():
         profile = request.user.profile
-        like = get_object_or_404(Entity,id=entity_id)
+        like = get_object_or_404(Page,id=page_id)
         response_data = {
-            "pmis": [[pmi.fromEntity.name,pmi.value] if pmi.toEntity == like else [pmi.toEntity.name,pmi.value] for pmi in like.getpmis()]
+            "pmis": [[pmi.toPage.name,pmi.value] for pmi in page.pmisFrom.order_by('fbid')]
             }
     else:
         response_data = {
@@ -136,7 +134,7 @@ def addSeed(request, seed_id):
             profile = request.user.profile
             try:
                 active = profile.activeCategory
-                seed = Entity.objects.get(id=seed_id)
+                seed = Page.objects.get(id=seed_id)
                 active.seeds.add(seed)
                 response_data = {
                     "id":seed_id,
@@ -162,7 +160,7 @@ def deleteSeed(request, seed_id):
             profile = request.user.profile
             try:
                 active = profile.activeCategory
-                seed = Entity.objects.get(id=seed_id)
+                seed = Page.objects.get(id=seed_id)
                 active.seeds.remove(seed)
                 response_data = {
                     "id":seed_id,

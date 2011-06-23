@@ -17,7 +17,7 @@ var started = {% if active and active.task_id %}true{% else %}false{% endif %};
 </div>
 
 {% url like_start like.id as page_url%}
-{% include "air_explorer/pages.html" %}
+{% include "air_explorer/paginate.html" %}
 
 {% if not active %}
 <form method="post">

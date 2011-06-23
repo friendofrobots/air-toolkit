@@ -1,0 +1,88 @@
+<div class="page-nav">
+  <div class="left-nav">
+    {% if paginate.has_other_pages %}<a href="{{ page_url }}1">first</a>{% endif %}
+    {% if paginate.has_previous %}<a href="{{ page_url }}{{ paginate.previous_page_number }}">prev</a>{% endif %}
+  </div>
+  <div class="right-nav">
+    {% if paginate.has_next %}<a href="{{ page_url }}{{ paginate.next_page_number }}">next</a>{% endif %}
+    {% if paginate.has_other_pages %}<a href="{{ page_url }}{{ paginate.paginator.num_pages }}">last</a>{% endif %}
+  </div>
+</div>
+
+<div id="subject">
+  <ul id="objects">
+    {% for object in paginate.object_list %}
+    <li class="object">
+      <a href="{% if object.page %}{% url like_start object.page.id %}{% else %}{% if object.toPage %}{% url like_start object.toPage.id %}{% else %}{% url like_start object.id %}{% endif %}{% endif %}">
+	<div class="image-holder">
+	  {% if object.page %}
+	  <img src="https://graph.facebook.com/{{ object.page.fbid }}/picture?type=normal" />
+	  {% else %}{% if object.toPage %}
+	  <img src="https://graph.facebook.com/{{ object.toPage.fbid }}/picture?type=normal" />
+	  {% else %}
+	  <img src="https://graph.facebook.com/{{ object.fbid }}/picture?type=normal" />
+	  {% endif %}{% endif %}
+	</div>
+	<div class="title-holder">
+	  {% if object.page %}
+	  {{ object.page.name }}
+	  {% else %}{% if object.toPage %}
+	  {{ object.toPage.name }}
+	  {% else %}
+	  {{ object.name }}
+	  {% endif %}{% endif %}
+	</div>
+	{% if object.normalized_value %}
+	<div class="value-bar">
+	  <div class="filled-bar"></div>
+	</div>
+	<div class="value-num">
+	  {{ object.normalized_value }}
+	</div>
+	{% endif %}
+      </a>
+      {% if active and not active.task_id %}
+      <div class="like-controls">
+	{% if object.page %}
+	{% if object.page in active.seeds.all %}
+	<span class="delete-seed">[x]</span>
+	{% else %}
+	<span class="add-seed">[+]</span>
+	{% endif %}
+	<span class="seed-id">{{ object.page.id }}</span>
+
+	{% else %}
+	{% if object.toPage %}
+	{% if object.toPage in active.seeds.all %}
+	<span class="delete-seed">[x]</span>
+	{% else %}
+	<span class="add-seed">[+]</span>
+	{% endif %}
+	<span class="seed-id">{{ object.toPage.id }}</span>
+
+	{% else %}
+	{% if object.id in active.seeds.all %}
+	<span class="delete-seed">[x]</span>
+	{% else %}
+	<span class="add-seed">[+]</span>
+	{% endif %}
+	<span class="seed-id">{{ object.id }}</span>
+
+	{% endif %}{% endif %}
+      </div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="page-nav">
+  <div class="left-nav">
+    {% if paginate.has_other_pages %}<a href="{{ page_url }}1">first</a>{% endif %}
+    {% if paginate.has_previous %}<a href="{{ page_url }}{{ paginate.previous_page_number }}">prev</a>{% endif %}
+  </div>
+  <div class="right-nav">
+    {% if paginate.has_next %}<a href="{{ page_url }}{{ paginate.next_page_number }}">next</a>{% endif %}
+    {% if paginate.has_other_pages %}<a href="{{ page_url }}{{ paginate.paginator.num_pages }}">last</a>{% endif %}
+  </div>
+</div>

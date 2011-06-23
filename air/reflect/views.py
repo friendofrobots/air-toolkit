@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, redirect
 
 import json
-from toolkit.models import Entity, Link, PMI, Category, CategoryScore
+from toolkit.models import Person, Page, PMI, Category, CategoryScore
 
 def home(request, template_name="reflect/home.html"):
     if request.user.is_authenticated():
@@ -35,43 +35,40 @@ def categories(request, category_id=None, template_name="reflect/categories.html
             'categories' : categories,
             }, context_instance=RequestContext(request))    
 
-def profile(request, entity_id=None, template_name="reflect/profile.html"):
+def profile(request, person_id=None, template_name="reflect/profile.html"):
     if request.user.is_authenticated():
         """ I need categories of objects, sorted.
        Then I need to either determine the category for each object
         or put that off and do it by ajax. I'm thinking about pre-calculating.
         """
         profile = request.user.profile
-        if not entity_id:
-            entity = Entity.objects.get(owner=profile,fbid=profile.fbid)
+        if not person_id:
+            person = Person.objects.get(owner=profile,fbid=profile.fbid)
         else:
-            entity = get_object_or_404(Entity,id=entity_id)
+            person = get_object_or_404(Person,id=person_id)
         categories = Category.objects.filter(owner=profile).order_by('id')
-        likeLinks = entity.likes()
-        likes = Entity.objects.filter(linksTo__in=likeLinks).distinct()
 
         fbcategories = {}
-        for like in likes:
-            fbcat_link = like.linksFrom.filter(relation="category")[0]
-            if fbcat_link.toEntity.name not in fbcategories:
-                fbcategories[fbcat_link.toEntity.name] = []
-            fbcategories[fbcat_link.toEntity.name].append(like)
+        for like in person.likes.order_by('-category'):
+            if like.category not in fbcategories:
+                fbcategories[like.category] = []
+            fbcategories[like.category].append(like)
         facebook_categories = fbcategories.items()
         facebook_categories.sort(key=lambda x : len(x[1]))
         facebook_categories.reverse()
 
-        mapping = ["'"+str(like.id)+"':"+str(like.topCategory()) for like in likes]
+        mapping = ["'"+str(like.id)+"':"+str(like.topCategory()) for like in person.likes.all()]
         # I don't want to call topCategory() twice, so I'm checking for None on a second stage
         mapping = ','.join([s for s in mapping if s[-1] != 'e'] )
                 
     else:
         return redirect('r_home')
     return render_to_response(template_name, {
-            'entity' : entity,
+            'person' : person,
             'categories':categories,
-            'facebook_categories':facebook_categories,
+            'likes':facebook_categories,
             'mapping':mapping,
             }, context_instance=RequestContext(request))
 
-def friends(request, entity_id=None, template_name="reflect/profile.html"):
+def friends(request, template_name="reflect/profile.html"):
     return redirect('r_home')

@@ -15,18 +15,20 @@ class DownloadStatus(models.Model):
     lastupdated = models.DateTimeField(auto_now=True)
     task_id = models.CharField(max_length=200,blank=True)
 
-class Entity(models.Model):
+class Page(models.Model):
     owner = models.ForeignKey(Profile)
     fbid = models.CharField(max_length=50)
     name = models.CharField(max_length=200)
+    category = models.CharField(max_length=200)
 
-    # Like methods
-    def likedBy(self):
-        # Caution: returns a set instead of a QuerySet
-        return set([link.fromEntity for link in self.linksTo.filter(relation="likes").select_related()])
+    def __unicode__(self):
+        return self.name
 
-    def getpmis(self):
-        return PMI.objects.filter(models.Q(toEntity=self) | models.Q(fromEntity=self)).distinct().select_related().order_by('-value','toEntity__fbid','fromEntity__fbid')
+class Person(models.Model):
+    owner = models.ForeignKey(Profile)
+    fbid = models.CharField(max_length=50)
+    name = models.CharField(max_length=200)
+    likes = models.ManyToManyField(Page,blank=True,related_name='likedBy')
 
     def topCategory(self):
         try:
@@ -36,44 +38,25 @@ class Entity(models.Model):
             category_id = None
         return category_id
 
-    # Profile methods
-    def likes(self):
-        # Caution: returns a set of links, not entities
-        counted = self.linksFrom.filter(relation="likes").annotate(entity_activity=Count('toEntity__linksTo'))
-        return counted.filter(entity_activity__gt=1).select_related()
-
     def __unicode__(self):
         return self.name
 
-class Link(models.Model):
-    owner = models.ForeignKey(Profile)
-    relation = models.CharField(max_length=100)
-    fromEntity = models.ForeignKey(Entity,related_name='linksFrom')
-    toEntity = models.ForeignKey(Entity,related_name='linksTo')
-    weight = models.FloatField(default=1.0)
-
-    def __unicode__(self):
-        return unicode((self.fromEntity.name,
-                        self.relation,
-                        self.weight,
-                        self.toEntity.name))
-
 class PMI(models.Model):
     owner = models.ForeignKey(Profile)
-    fromEntity = models.ForeignKey(Entity,related_name='pmiFrom')
-    toEntity = models.ForeignKey(Entity,related_name='pmiTo')
+    fromPage = models.ForeignKey(Page,related_name='pmisFrom')
+    toPage = models.ForeignKey(Page,related_name='pmisTo')
     value = models.FloatField()
 
     def normalized_value(self):
         return (self.value - self.owner.minpmi) /  (self.owner.maxpmi - self.owner.minpmi)
 
     def __unicode__(self):
-        return self.fromEntity.name +","+ self.toEntity.name +"=>"+ unicode(self.value)
+        return self.fromPage.name +","+ self.toPage.name +"=>"+ unicode(self.value)
     
 class Category(models.Model):
     owner = models.ForeignKey(Profile)
     name = models.CharField(max_length=200)
-    seeds = models.ManyToManyField(Entity,blank=True)
+    seeds = models.ManyToManyField(Page,blank=True,related_name="seedOf")
     active = models.OneToOneField(Profile,related_name="activeCategory",blank=True,null=True)
     task_id = models.CharField(max_length=200,blank=True)
     status = models.TextField(blank=True)
@@ -111,24 +94,24 @@ class Category(models.Model):
 class CategoryScore(models.Model):
     owner = models.ForeignKey(Profile)
     category = models.ForeignKey(Category,related_name="scores")
-    entity = models.ForeignKey(Entity,related_name="categoryScore")
+    page = models.ForeignKey(Page,related_name="categoryScore")
     value = models.FloatField(default=0.0)
     fired = models.BooleanField(default=False)
 
     def normalized_value(self):
         return self.value
 
-    def getEntity(self):
-        return self.entity
+    def getPage(self):
+        return self.page
 
     def __unicode__(self):
-        return self.category.name + ': ' + self.entity.name + ' - ' + unicode(self.value)
+        return self.category.name + ': ' + self.page.name + ' - ' + unicode(self.value)
 
 class CategoryMembership(models.Model):
     owner = models.ForeignKey(Profile)
     category = models.ForeignKey(Category,related_name="memberships")
-    member = models.ForeignKey(Entity,related_name="categoryMembership")
+    member = models.ForeignKey(Person,related_name="categoryMembership")
     value = models.FloatField(default=0.0)
 
     def __unicode__(self):
-        return self.category.name + ': ' + self.entity.name + ' - ' + unicode(self.value)
+        return self.category.name + ': ' + self.member.name + ' - ' + unicode(self.value)

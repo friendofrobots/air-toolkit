@@ -24,10 +24,10 @@
     {% for score in category.getTop %}
     <li class="like">
       <div class="image-holder">
-	<img src="https://graph.facebook.com/{{ score.entity.fbid }}/picture?type=normal" />
+	<img src="https://graph.facebook.com/{{ score.page.fbid }}/picture?type=normal" />
       </div>
       <div class="title-holder">
-	{{ score.entity.name }}
+	{{ score.page.name }}
       </div>
       <div class="like-id">
 	

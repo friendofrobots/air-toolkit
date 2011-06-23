@@ -11,7 +11,7 @@
   <li>
     <a href="{% url r_home %}" target="_blank">Reflect</a>
   </li>
-  {% if not active and likes or not active and categories %}
+  {% if allowNew %}
   <li id="new_tab">
     <form action="{% url categoryNewRedirect path %}" method="post" >
       <input type="submit" class="fakelink" value="New Category"></input>
