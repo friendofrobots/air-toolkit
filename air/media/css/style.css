@@ -228,23 +228,20 @@ button:hover, .button:hover {
 
 /* category */
 #category-info {
-  min-height:55px;
   padding:10px;
   border: 1px solid black;
 }
 #category-info ul {
-  width:320px;
+  width:200px;
   margin:0 20px;
   display: inline-block;
-}
-#category-info #parameters {
-  float:right;
+  vertical-align:top;
 }
 #category-info #parameters div {
   display:inline-block;
 }
 #category-info #parameters .label {
-  width:200px;
+  width:100px;
   margin-right: 10px;
   text-align:right;
 }

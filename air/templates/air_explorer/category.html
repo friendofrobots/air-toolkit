@@ -17,7 +17,12 @@
       <li>{{ seed.name }}</li>
       {% endfor %}
     </ul>
-    <ul id="parameters">
+    <ul id="rounds" class="category-data">
+      {% for round in category.getStatus %}
+      <li>Round: {{ round }}</li>
+      {% endfor %}
+    </ul>
+    <ul id="parameters" class="category-data">
       <li><div class="label">Start Value :</div> <div class="value">{{ category.startvalue }}</div></li>
       <li><div class="label">Threshold :</div> <div class="value">{{ category.threshold }}</div></li>
       <li><div class="label">Decay Rate :</div> <div class="value">{{ category.decayrate }}</div></li>

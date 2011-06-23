@@ -183,11 +183,11 @@ def createCategory(profile_id, category_id,
     toFire = category.scores.filter(fired=False,value__gte=threshold)
     # going back and forth between nodes and score, need to clear this up
     while toFire:
+        if toFire.count() > 150:
+            category.addNumToStatus(str(toFire.count())+', got too big so I had to quit')
+            break
+        category.addNumToStatus(toFire.count())
         with transaction.commit_on_success():
-            if toFire.count() > 150:
-                category.addNumToStatus(str(toFire.count())+', got too big so I had to quit')
-                break
-            category.addNumToStatus(toFire.count())
             for score1 in toFire:
                 for node2 in Entity.objects.filter(pmiTo__fromEntity=score1.entity):
                     if score1.entity != node2:
