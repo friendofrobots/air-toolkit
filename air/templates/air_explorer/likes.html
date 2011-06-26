@@ -6,7 +6,7 @@
 <script>
 var started = {% if active and active.task_id %}true{% else %}false{% endif %};
 </script>
-<script type="text/javascript" src="/media/js/pmi.js"></script>
+<script type="text/javascript" src="/media/js/category_sidebar.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -58,12 +58,6 @@ var started = {% if active and active.task_id %}true{% else %}false{% endif %};
 
 {% url likes_start startswith as page_url %}
 {% include "air_explorer/paginate.html" %}
-
-{% if not active %}
-<form method="post">
-  <input type="submit" value="start category"></input>
-</form>
-{% endif %}
 
 {% if active %}
 {% include "air_explorer/category_sidebar.html" %}

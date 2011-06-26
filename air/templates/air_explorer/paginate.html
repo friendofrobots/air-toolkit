@@ -10,10 +10,11 @@
 </div>
 
 <div id="subject">
-  <ul id="objects">
+  <ul id="objects" class="object-list">
     {% for object in paginate.object_list %}
     <li class="object">
-      <a href="{% if object.page %}{% url like_start object.page.id %}{% else %}{% if object.toPage %}{% url like_start object.toPage.id %}{% else %}{% url like_start object.id %}{% endif %}{% endif %}">
+      <a href="{% if object.page %}{% url like_start object.page.id %}{% else %}{% if object.toPage %}{% url like_start object.toPage.id %}{% else %}{% url like_start object.id %}{% endif %}{% endif %}"
+	 title="{% for person in object.page.likedBy.all %}{{ person.name }}, {% endfor %}{% for person in object.toPage.likedBy.all %}{{ person.name }}, {% endfor %}">
 	<div class="image-holder">
 	  {% if object.page %}
 	  <img src="https://graph.facebook.com/{{ object.page.fbid }}/picture?type=normal" />
@@ -42,7 +43,7 @@
 	{% endif %}
       </a>
       {% if active and not active.task_id %}
-      <div class="like-controls">
+      <div id="controls-{% if object.page %}{{ object.page.id }}{% else %}{% if object.toPage %}{{ object.toPage.id }}{% else %}{{ object.id }}{% endif %}{% endif %}" class="like-controls">
 	{% if object.page %}
 	{% if object.page in active.seeds.all %}
 	<span class="delete-seed">[x]</span>

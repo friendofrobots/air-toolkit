@@ -14,10 +14,10 @@
 </div>
 
 <div id="subject">
-  <ul id="objects">
+  <ul id="objects" class="object-list">
     {% for object in friend.likes.all %}
     <li class="object">
-      <a href="{% url like_start object.id %}">
+      <a href="{% url like_start object.id %}" title="{% for person in object.likedBy.all %}{{ person.name }}, {% endfor %}">
 	<div class="image-holder">
 	  <img src="https://graph.facebook.com/{{ object.fbid }}/picture?type=normal" />
 	</div>
@@ -30,11 +30,29 @@
   </ul>
 </div>
 
-{% if not active %}
-<form method="post">
-  <input type="submit" value="start category"></input>
-</form>
-{% endif %}
+<div id="second-title">
+  <h2>top categories</h2>
+  <ul id="top-members" class="object-list">
+    {% for membership in memberships %}
+    <li class="object">
+      <a href="{% url category_start membership.category.id %}">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ membership.category.getASeed.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ membership.category.name }}
+	</div>
+	<div class="value-bar">
+	  <div class="filled-bar"></div>
+	</div>
+	<div class="value-num">
+	  {{ membership.value }}
+	</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
 
 {% if active %}
 {% include "air_explorer/category_sidebar.html" %}

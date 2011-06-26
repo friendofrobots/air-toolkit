@@ -4,7 +4,9 @@
     {% for seed in active.seeds.all %}
     <li id="seed-{{ seed.id }}">
       <h3>
-        {{ seed.name }}
+	<a href="{% url like_start seed.id %}">
+          {{ seed.name }}
+	</a>
 	{% if not active.task_id %}
 	<span class="delete-seed">[x]</span>
 	{% endif %}

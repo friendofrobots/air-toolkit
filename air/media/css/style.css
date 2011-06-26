@@ -74,12 +74,12 @@ button:hover, .button:hover {
   float:right;
 }
 
-#title {
+#title, #second-title {
   width: 750px;
   padding:10px;
   margin: 0 auto;
 }
-#title h1 {
+#title h1, #second-title h2 {
   margin: 8px;
 }
 
@@ -138,10 +138,6 @@ button:hover, .button:hover {
 .seed-id, .pmi-id, .pmi-box {
   display:none;
 }
-.hide {
-  cursor:pointer;
-}
-
 #category-sidebar {
   border : 2px solid black;
   width: 250px;
@@ -228,33 +224,30 @@ button:hover, .button:hover {
 
 /* category */
 #category-info {
-  min-height:55px;
   padding:10px;
   border: 1px solid black;
 }
 #category-info ul {
-  width:320px;
+  width:200px;
   margin:0 20px;
   display: inline-block;
-}
-#category-info #parameters {
-  float:right;
+  vertical-align:top;
 }
 #category-info #parameters div {
   display:inline-block;
 }
 #category-info #parameters .label {
-  width:200px;
+  width:100px;
   margin-right: 10px;
   text-align:right;
 }
 /* pages */
-#subject #objects {
+.object-list {
   width:635px;
   margin:10px auto;
 }
 
-#subject .object {
+.object {
   width:100px;
   display:inline-block;
   margin: 2px 0;
@@ -294,4 +287,10 @@ button:hover, .button:hover {
   padding: 2px;
   border-left: solid 1px #B3B3B3;
   border-bottom: solid 1px #B3B3B3;
+}
+#title .like-controls {
+  position:static;
+  border: none;
+  font-size: 50%;
+  vertical-align:text-top;
 }

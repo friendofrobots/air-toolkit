@@ -113,6 +113,16 @@ def status(request):
 
 ## Page Views ##
 def pageLikedBy(request, page_id):
+    if request.user.is_authenticated():
+        profile = request.user.profile
+        page = get_object_or_404(Page,id=page_id)
+        response_data = {
+            "likedBy": [[person.name,person.fbid,person.id] for person in page.likedBy.order_by('fbid')]
+            }
+    else:
+        response_data = {
+            "error": "user must be logged in"
+            }
     return HttpResponse(json.dumps(response_data),mimetype="application/json")
 
 def page_pmis(request, page_id):

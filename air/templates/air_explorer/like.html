@@ -6,24 +6,48 @@
 <script>
 var started = {% if active and active.task_id %}true{% else %}false{% endif %};
 </script>
-<script type="text/javascript" src="/media/js/pmi.js"></script>
+<script type="text/javascript" src="/media/js/category_sidebar.js"></script>
 {% endblock %}
 
 {% block content %}
 {% include "tabbar.html" %}
 
 <div id="title">
-  <h1 id="like-title">{{ like.name }}</h1>
+  <h1 id="title-{{ like.id }}">
+    {{ like.name }}
+    {% if active and not active.task_id %}
+    <span class="like-controls">
+      {% if like in active.seeds.all %}
+      <span class="delete-seed">[x]</span>
+      {% else %}
+      <span class="add-seed">[+]</span>
+      {% endif %}
+      <span class="seed-id">{{ like.id }}</span>
+    </span>
+    {% endif %}
+  </h1>
 </div>
 
 {% url like_start like.id as page_url%}
 {% include "air_explorer/paginate.html" %}
 
-{% if not active %}
-<form method="post">
-  <input type="submit" value="start category"></input>
-</form>
-{% endif %}
+<div id="second-title">
+  <h2>liked by</h2>
+  <ul id="likedBy" class="object-list">
+    {% for person in like.likedBy.all %}
+    <li class="object">
+      <a href="{% url friend_start person.id %}">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ person.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ person.name }}
+	</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
 
 {% if active %}
 {% include "air_explorer/category_sidebar.html" %}

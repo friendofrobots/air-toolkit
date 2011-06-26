@@ -67,6 +67,7 @@ def friend(request, person_id, page_num=1, template_name="air_explorer/friend.ht
     if request.user.is_authenticated():
         profile = request.user.profile
         person = get_object_or_404(Person,id=person_id)
+        memberships = person.categoryMembership.order_by('-value')[:12]
         try:
             active = profile.activeCategory
             createForm = CategoryCreateForm(initial={'category_id' : active.id,
@@ -83,6 +84,7 @@ def friend(request, person_id, page_num=1, template_name="air_explorer/friend.ht
     return render_to_response(template_name, {
             'path' : request.path,
             'friend' : person,
+            'memberships' : memberships,
             'active' : active,
             'createForm' : createForm,
             'allowNew' : allowNew,
@@ -101,9 +103,9 @@ def likes(request, startsWith=None, page_num=1, template_name="air_explorer/like
             startsWith = 'a'
         pages = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy'))
         if startsWith == u'~':
-            likes = pages.filter(activity__gt=1,name__iregex=r'\A\W').order_by('name')
+            likes = pages.filter(activity__gt=1,name__iregex=r'\A\W').order_by('name','fbid')
         else:
-            likes = pages.filter(activity__gt=1,name__istartswith=startsWith).order_by('name')
+            likes = pages.filter(activity__gt=1,name__istartswith=startsWith).order_by('name','fbid')
         paginator = Paginator(likes,24)
         
         try:
@@ -137,7 +139,7 @@ def like(request, page_id, page_num=1, template_name="air_explorer/like.html"):
     if request.user.is_authenticated():
         profile = request.user.profile
         page = get_object_or_404(Page,id=page_id)
-        paginator = Paginator(page.pmisFrom.order_by('-value','toPage__category'),24)
+        paginator = Paginator(page.pmisFrom.order_by('-value','toPage__fbid'),24)
         try:
             pmi_page = paginator.page(page_num)
         except (EmptyPage, InvalidPage):
@@ -201,10 +203,12 @@ def category(request, category_id, page_num=1, template_name="air_explorer/categ
             score_page = paginator.page(page_num)
         except (EmptyPage, InvalidPage):
             score_page = paginator.page(paginator.num_pages)
+        memberships = category.memberships.order_by('-value')[:12]
     else:
         return redirect('home')
     return render_to_response(template_name, {
             'path' : request.path,
             'category' : category,
             'paginate' : score_page,
+            'memberships' : memberships,
             }, context_instance=RequestContext(request))

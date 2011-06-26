@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import Count
 from fbauth.models import Profile
-import json,pickle
+import json,pickle,math
 
 class DownloadStatus(models.Model):
     owner = models.OneToOneField(Profile,related_name="downloadStatus")
@@ -14,6 +14,10 @@ class DownloadStatus(models.Model):
             ), default=0)
     lastupdated = models.DateTimeField(auto_now=True)
     task_id = models.CharField(max_length=200,blank=True)
+    
+    numpeople = models.IntegerField(null=True) # filtered for people with likes
+    minpmi = models.FloatField(null=True)
+    maxpmi = models.FloatField(null=True)
 
 class Page(models.Model):
     owner = models.ForeignKey(Profile)
@@ -46,9 +50,16 @@ class PMI(models.Model):
     fromPage = models.ForeignKey(Page,related_name='pmisFrom')
     toPage = models.ForeignKey(Page,related_name='pmisTo')
     value = models.FloatField()
+    
+    def npmi(self):
+        numpeople = self.owner.downloadStatus.numpeople
+        npmi = -1. * self.value / math.log(1.*max(self.fromPage.likedBy.count(),
+                                                  self.toPage.likedBy.count())/numpeople,2)
+        return (1 + npmi)/2
 
     def normalized_value(self):
-        return (self.value - self.owner.minpmi) /  (self.owner.maxpmi - self.owner.minpmi)
+        downloadStatus = self.owner.downloadStatus
+        return (self.value - downloadStatus.minpmi) / (downloadStatus.maxpmi - downloadStatus.minpmi)
 
     def __unicode__(self):
         return self.fromPage.name +","+ self.toPage.name +"=>"+ unicode(self.value)
@@ -63,7 +74,9 @@ class Category(models.Model):
     startvalue = models.FloatField(default=0.6)
     threshold = models.FloatField(default=0.4)
     decayrate = models.FloatField(default=0.3)
-    
+
+    def getASeed(self):
+        return self.seeds.all()[0]
 
     def getTop(self,num=12):
         return self.scores.order_by('-value')[:num]

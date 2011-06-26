@@ -17,7 +17,12 @@
       <li>{{ seed.name }}</li>
       {% endfor %}
     </ul>
-    <ul id="parameters">
+    <ul id="rounds" class="category-data">
+      {% for round in category.getStatus %}
+      <li>Round: {{ round }}</li>
+      {% endfor %}
+    </ul>
+    <ul id="parameters" class="category-data">
       <li><div class="label">Start Value :</div> <div class="value">{{ category.startvalue }}</div></li>
       <li><div class="label">Threshold :</div> <div class="value">{{ category.threshold }}</div></li>
       <li><div class="label">Decay Rate :</div> <div class="value">{{ category.decayrate }}</div></li>
@@ -27,5 +32,29 @@
 
 {% url category_start category.id as page_url%}
 {% include "air_explorer/paginate.html" %}
+
+<div id="second-title">
+  <h2>top members</h2>
+  <ul id="top-members" class="object-list">
+    {% for membership in memberships %}
+    <li class="object">
+      <a href="{% url friend_start membership.member.id %}">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ membership.member.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ membership.member.name }}
+	</div>
+	<div class="value-bar">
+	  <div class="filled-bar"></div>
+	</div>
+	<div class="value-num">
+	  {{ membership.value }}
+	</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
 
 {% endblock %}

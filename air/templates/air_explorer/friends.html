@@ -21,7 +21,7 @@
 </div>
 
 <div id="subject">
-  <ul id="objects">
+  <ul id="objects" class="object-list">
     {% for object in paginate.object_list %}
     <li class="object">
       <a href="{% url friend_start object.id %}">
