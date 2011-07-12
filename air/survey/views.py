@@ -5,70 +5,103 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, redirect
 
 import json
-from toolkit.models import Person, Page, PMI, Category, CategoryScore
+from toolkit.models import Person, Page, PMI, DownloadStatus, Category, CategoryScore, CategoryMembership
 
-def home(request, template_name="reflect/home.html"):
+def home(request, template_name="survey/home.html"):
     if request.user.is_authenticated():
         try:
-            status = request.user.profile.downloadStatus
-        except:
+            profile = request.user.profile
+            status = profile.downloadStatus
+            category = profile.category_set.order_by('id')[0]
+        except DownloadStatus.DoesNotExist:
             status = None
+            category = None
     else:
         # This doesn't work, I need to figure out how to redirect properly
-        return redirect('login_redirect','r_home')
+        return redirect('login_redirect','s_home')
     return render_to_response(template_name, {
             'status' : status,
+            'category' : category,
             }, context_instance=RequestContext(request))
 
-def categories(request, category_id=None, template_name="reflect/categories.html"):
+def category(request, category_id=None, template_name="survey/category.html"):
     if request.user.is_authenticated():
         profile = request.user.profile
-        categories = Category.objects.filter(owner=profile).order_by('id')
-        if not category_id:
-            category = categories[0]
-        else:
-            category = get_object_or_404(Category,id=category_id)
+        category = get_object_or_404(Category,id=category_id)
     else:
-        return redirect('r_home')
+        return redirect('s_home')
     return render_to_response(template_name, {
             'category' : category,
-            'categories' : categories,
-            }, context_instance=RequestContext(request))    
+            'question_number' : 1,
+            'prev' : category.id - 1 if category.id > 1 else None,
+            'next' : category.id + 1 if category.id < 12 else None,
+            'tab' : 'category',
+            }, context_instance=RequestContext(request))
 
-def profile(request, person_id=None, template_name="reflect/profile.html"):
+def profile(request, category_id=None, person_id=None, template_name="survey/profile.html"):
     if request.user.is_authenticated():
         """ I need categories of objects, sorted.
        Then I need to either determine the category for each object
         or put that off and do it by ajax. I'm thinking about pre-calculating.
         """
         profile = request.user.profile
+        category = get_object_or_404(Category,id=category_id)
         if not person_id:
             person = Person.objects.get(owner=profile,fbid=profile.fbid)
         else:
             person = get_object_or_404(Person,id=person_id)
-        categories = Category.objects.filter(owner=profile).order_by('id')
 
         fbcategories = {}
         for like in person.likes.order_by('-category'):
             if like.category not in fbcategories:
                 fbcategories[like.category] = []
             fbcategories[like.category].append(like)
-        facebook_categories = fbcategories.items()
-        facebook_categories.sort(key=lambda x : len(x[1]))
-        facebook_categories.reverse()
+        likes_by_fbcat = fbcategories.items()
+        likes_by_fbcat.sort(key=lambda x : len(x[1]))
+        likes_by_fbcat.reverse()
 
-        mapping = ["'"+str(like.id)+"':"+str(like.topCategory()) for like in person.likes.all()]
-        # I don't want to call topCategory() twice, so I'm checking for None on a second stage
-        mapping = ','.join([s for s in mapping if s[-1] != 'e'] )
-                
+        cat_likes = ','.join(["'"+str(like.id)+"'" for like in person.likes.all() if like.categoryScore.filter(category=category).exists() and like.categoryScore.get(category=category).value > .2])
+
     else:
-        return redirect('r_home')
+        return redirect('s_home')
     return render_to_response(template_name, {
             'person' : person,
-            'categories':categories,
-            'likes':facebook_categories,
-            'mapping':mapping,
+            'category' : category,
+            'likes_by_fbcat':likes_by_fbcat,
+            'cat_likes':cat_likes,
+            'question_number' : 1,
+            'prev' : category.id - 1 if category.id > 1 else None,
+            'next' : category.id + 1 if category.id < 12 else None,
+            'tab' : "profile",
             }, context_instance=RequestContext(request))
 
-def friends(request, template_name="reflect/profile.html"):
-    return redirect('r_home')
+def friends(request, category_id=None, page_num=None, template_name="survey/friends.html"):
+    if request.user.is_authenticated():
+        profile = request.user.profile
+        category = get_object_or_404(Category,id=category_id)
+    else:
+        return redirect('s_home')
+    return render_to_response(template_name, {
+            'category' : category,
+            'memberships' : category.memberships.order_by('-value'),
+            'question_number' : 1,
+            'prev' : category.id - 1 if category.id > 1 else None,
+            'next' : category.id + 1 if category.id < 12 else None,
+            'tab' : "friends",
+            }, context_instance=RequestContext(request))
+
+def like(request, category_id=None, like_id=None, template_name="survey/like.html"):
+    if request.user.is_authenticated():
+        profile = request.user.profile
+        category = get_object_or_404(Category,id=category_id)
+        like = get_object_or_404(Page,id=like_id)
+    else:
+        return redirect('s_home')
+    return render_to_response(template_name, {
+            'category' : category,
+            'like' : like,
+            'question_number' : 1,
+            'prev' : category.id - 1 if category.id > 1 else None,
+            'next' : category.id + 1 if category.id < 12 else None,
+            'tab' : 'category',
+            }, context_instance=RequestContext(request))

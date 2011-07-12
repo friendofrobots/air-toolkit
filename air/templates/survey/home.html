@@ -1,4 +1,4 @@
-{% extends "reflect/app_base.html" %}
+{% extends "survey/app_base.html" %}
 
 {% block head_title %}Home{% endblock %}
 
@@ -39,7 +39,7 @@ var redirect = true;
   </div>
   {% endif %}
   {% comment %}
-  <div id="downloading" {% if not status or status.stage == 0 or status.stage == 4 %}style="display:none;"{% endif %}>
+  <div id="downloading" {% if not status or status.stage == 0 or status.stage == 3 %}style="display:none;"{% endif %}>
     <p id="error"></p>
     <p id="starting" class="stages">
       Your download has been started. It takes a while, so you should come
@@ -62,8 +62,8 @@ var redirect = true;
   </div>
   {% endcomment %}
 
-  <div id="getstarted" {% if not status or status.stage != 3 %}style="display:none;"{% endif %}>
-    <a class="button" href="/reflect/categories/">Get Started</a>
+  <div id="getstarted" {% if not category %}style="display:none;"{% endif %}>
+    <a class="button" href="{% url s_category_start category.id %}">Get Started</a>
   </div>
 </div>
   

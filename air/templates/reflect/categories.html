@@ -22,15 +22,15 @@
   <h2 id="cat-title">{{ category.name }}</h2>
   <ul id="likes">
     {% for score in category.getTop %}
-    <li class="like">
+    <li class="like object">
       <div class="image-holder">
-	<img src="https://graph.facebook.com/{{ score.page.fbid }}/picture?type=normal" />
+	<img src="https://graph.facebook.com/{{ score.entity.fbid }}/picture?type=normal" />
       </div>
       <div class="title-holder">
 	{{ score.page.name }}
       </div>
       <div class="like-id">
-	
+	{{ score.page.id }}
       </div>
     </li>
     {% endfor %}

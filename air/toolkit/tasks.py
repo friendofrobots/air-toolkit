@@ -21,6 +21,7 @@ def dlUser(profile_id,graphapi,fbid,name):
         person = Person.objects.create(owner=profile,
                                        fbid=fbid,
                                        name=name)
+        # person.dlInfo(graphapi,person)
 
         likes = graphapi.get_connections(fbid,"likes")['data']
         for like in likes:
@@ -50,6 +51,80 @@ def dlUser(profile_id,graphapi,fbid,name):
         print exc
         dlUser.retry(countdown=15, max_retries=None, throw=False)
 
+def dlInfo(graphapi,person):
+    data = graphapi.get_object(fbid)
+    if 'gender' in data:
+        if len(item['location']['name']) > 200:
+            name = item['location']['name'][:200]
+        else:
+            name = item['location']['name']
+        prop, created = PersonProperty.get_or_create(
+            relation=data['gender'],
+            name=name)
+        person.properties.add(prop)
+    if 'hometown' in data:
+        if len(data['hometown']['name']) > 200:
+            name = data['hometown']['name'][:200]
+        else:
+            name = data['hometown']['name']
+        prop, created = PersonProperty.get_or_create(
+            relation='hometown',
+            name=name)
+        person.properties.add(prop)
+    if 'location' in data:
+        if len(data['location']['name']) > 200:
+            name = data['location']['name'][:200]
+        else:
+            name = data['location']['name']
+        prop, created = PersonProperty.get_or_create(
+            relation='location',
+            name=name)
+        person.properties.add(prop)
+    if 'education' in data:
+        for item in data['education']:
+            if 'school' in item:
+                if len(item['school']['name']) > 200:
+                    name = item['school']['name'][:200]
+                else:
+                    name = item['school']['name']
+                prop, created = PersonProperty.get_or_create(
+                    relation='school',
+                    name=name)
+                person.properties.add(prop)
+    if 'work' in data:
+        for item in data['work']:
+            if 'employer' in item:
+                if len(item['employer']['name']) > 200:
+                    name = item['employer']['name'][:200]
+                else:
+                    name = item['employer']['name']
+                prop, created = PersonProperty.get_or_create(
+                    relation='work',
+                    name=name)
+                person.properties.add(prop)
+    if 'religion' in data:
+        try:
+            name = data['religion']['name']
+        except:
+            name = data['religion']
+        if len(name) > 200:
+            name = data['religion']['name'][:200]
+        prop, created = PersonProperty.get_or_create(
+            relation='religion',
+            name=name)
+        person.properties.add(prop)
+    if 'political' in data:
+        try:
+            name = data['political']['name']
+        except:
+            name = data['political']
+        if len(name) > 200:
+            name = data['religion']['name'][:200]
+        prop, created = PersonProperty.get_or_create(
+            relation='religion',
+            name=name)
+    person.save()
+
 @task(ignore_result=True)
 def checkTaskSet(taskset_id,profile_id,status_id):
     result = TaskSetResult.restore(taskset_id)
@@ -64,7 +139,7 @@ def checkTaskSet(taskset_id,profile_id,status_id):
         status = DownloadStatus.objects.get(id=status_id)
         status.numpeople = numpeople
         status.stage = 2
-        status.task_id = r.task_id
+        status.task_id = r.taskset_id
         status.save()
     else:
         checkTaskSet.retry(countdown=15, max_retries=None)
@@ -79,7 +154,7 @@ def testPMIs(profile_id,status_id):
     r2 = checkPMISet.delay(r.taskset_id,profile.id,status_id)
     status = DownloadStatus.objects.get(id=status_id)
     status.stage = 2
-    status.task_id = r.task_id
+    status.task_id = r.taskset_id
     status.save()
 
 @task(ignore_result=True)
@@ -123,18 +198,11 @@ def createCategory(profile_id, category_id,
                    startvalue, threshold, decayrate):
     profile = Profile.objects.get(id=profile_id)
     category = Category.objects.get(id=category_id)
-    if not category.scores.exists():
-        pages = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy')).filter(activity__gt=1)
-        for page in pages:
-            CategoryScore.objects.get_or_create(owner=profile,
-                                         category=category,
-                                         page=page)
     category.startvalue = startvalue
     category.threshold = threshold
     category.decayrate = decayrate
-    category.status = ""
     category.save()
-    category.scores.update(value=0.0,fired=False)
+    category.resetScores()
     downloadStatus = profile.downloadStatus
     minpmi, maxpmi = downloadStatus.minpmi, downloadStatus.maxpmi
     """
@@ -150,7 +218,7 @@ def createCategory(profile_id, category_id,
     # going back and forth between nodes and score, need to clear this up
     try:
         while toFire:
-            if toFire.count() > 400:
+            if toFire.count() > 600:
                 category.addNumToStatus(str(toFire.count())+', got too big so I had to quit')
                 break
             category.addNumToStatus(toFire.count())
@@ -173,19 +241,3 @@ def createCategory(profile_id, category_id,
         category.task_id = ""
         category.active = None
         category.save()
-
-@task(ignore_result=True)
-def calcMemberships(profile_id, category_id):
-    profile = Profile.objects.get(id=profile_id)
-    category = Category.objects.get(id=category_id)
-
-    with transaction.commit_on_success():
-        for person in Person.objects.filter(owner=profile):
-            membership = 0
-            for score in category.scores.filter(page__in=person.likes.all()):
-                membership += score.value
-            CategoryMembership.objects.get_or_create(
-                owner=profile,
-                category=category,
-                member=person,
-                value=membership)

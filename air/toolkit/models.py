@@ -1,7 +1,8 @@
 from django.db import models
 from django.db.models import Count
+from django.db import transaction
 from fbauth.models import Profile
-import json,pickle,math
+import json, pickle, math
 
 class DownloadStatus(models.Model):
     owner = models.OneToOneField(Profile,related_name="downloadStatus")
@@ -25,15 +26,6 @@ class Page(models.Model):
     name = models.CharField(max_length=200)
     category = models.CharField(max_length=200)
 
-    def __unicode__(self):
-        return self.name
-
-class Person(models.Model):
-    owner = models.ForeignKey(Profile)
-    fbid = models.CharField(max_length=50)
-    name = models.CharField(max_length=200)
-    likes = models.ManyToManyField(Page,blank=True,related_name='likedBy')
-
     def topCategory(self):
         try:
             topscore = self.categoryScore.order_by('-value')[0]
@@ -44,6 +36,32 @@ class Person(models.Model):
 
     def __unicode__(self):
         return self.name
+
+class Person(models.Model):
+    owner = models.ForeignKey(Profile)
+    fbid = models.CharField(max_length=50)
+    name = models.CharField(max_length=200)
+    likes = models.ManyToManyField(Page,blank=True,related_name='likedBy')
+    gender = models.CharField(blank=True,max_length=50)
+    hometown = models.CharField(blank=True,max_length=200)
+    location = models.CharField(blank=True,max_length=200)
+    religion = models.CharField(blank=True,max_length=200)
+    political = models.CharField(blank=True,max_length=200)
+
+    def __unicode__(self):
+        return self.name
+
+class PersonProperty(models.Model):
+    owner = models.ForeignKey(Profile)
+    person = models.ForeignKey(Person,related_name='properties')
+    relation = models.CharField(max_length=50, choices=(
+            ('gender','Gender'),
+            ('hometown','Hometown'),
+            ('location','Location'),
+            ('religion','Religion'),
+            ('political','Political'),
+            ))
+    name = models.CharField(max_length=200)
 
 class PMI(models.Model):
     owner = models.ForeignKey(Profile)
@@ -79,12 +97,10 @@ class Category(models.Model):
         return self.seeds.all()[0]
 
     def getTop(self,num=12):
-        return self.scores.order_by('-value')[:num]
+        return self.scores.order_by('-value','page__fbid')[:num]
 
-    def getTopPeople(self,num=10):
-        # I might actually want to calculate membership gradience for each
-        # entity ahead of time
-        return num
+    def getTopPeople(self,num=4):
+        return self.memberships.order_by('-value','member__fbid')[:num]
 
     def addNumToStatus(self,num):
         if not self.status:
@@ -117,6 +133,31 @@ class CategoryScore(models.Model):
     def getPage(self):
         return self.page
 
+    def resetScores(self):
+        if not self.scores.exists():
+            pages = Page.objects.filter(owner=self.owner).annotate(activity=Count('likedBy')).filter(activity__gt=1)
+            for page in pages:
+                CategoryScore.objects.get_or_create(owner=self.owner,
+                                                    category=self,
+                                                    page=page)
+        self.scores.update(value=0.0,fired=False)
+        try:
+            self.collection.seedCategory()
+        except:
+            self.scores.filter(page__in=self.seeds.all()).update(value=self.startvalue)
+
+    def calcMemberships(self):
+        with transaction.commit_on_success():
+            for person in Person.objects.filter(owner=self.owner):
+                membership = 0
+                for score in self.scores.filter(page__in=person.likes.all()):
+                    membership += score.value
+                    CategoryMembership.objects.get_or_create(
+                        owner=self.owner,
+                        category=self,
+                        member=person,
+                        value=membership)
+
     def __unicode__(self):
         return self.category.name + ': ' + self.page.name + ' - ' + unicode(self.value)
 
@@ -128,3 +169,14 @@ class CategoryMembership(models.Model):
 
     def __unicode__(self):
         return self.category.name + ': ' + self.member.name + ' - ' + unicode(self.value)
+
+class PeopleCollection(models.Model):
+    owner = models.ForeignKey(Profile)
+    category = models.OneToOneField(Category,related_name="collection")
+    people = models.ManyToManyField(Person,related_name="collection")
+    
+    def seedCategory(self):
+        for person in self.people.all():
+            for like in person.likes.all():
+                if like not in seeds:
+                    win

@@ -53,9 +53,9 @@ def profile(request, person_id=None, template_name="reflect/profile.html"):
             if like.category not in fbcategories:
                 fbcategories[like.category] = []
             fbcategories[like.category].append(like)
-        facebook_categories = fbcategories.items()
-        facebook_categories.sort(key=lambda x : len(x[1]))
-        facebook_categories.reverse()
+        likes_by_fbcat = fbcategories.items()
+        likes_by_fbcat.sort(key=lambda x : len(x[1]))
+        likes_by_fbcat.reverse()
 
         mapping = ["'"+str(like.id)+"':"+str(like.topCategory()) for like in person.likes.all()]
         # I don't want to call topCategory() twice, so I'm checking for None on a second stage
@@ -66,7 +66,7 @@ def profile(request, person_id=None, template_name="reflect/profile.html"):
     return render_to_response(template_name, {
             'person' : person,
             'categories':categories,
-            'likes':facebook_categories,
+            'likes_by_fbcat':likes_by_fbcat,
             'mapping':mapping,
             }, context_instance=RequestContext(request))
 

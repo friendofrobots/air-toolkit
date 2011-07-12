@@ -1,0 +1,121 @@
+{% extends "survey/app_base.html" %}
+
+{% block head_title %}Friends{% endblock %}
+{% block content %}
+<style>
+  li h3 {
+    margin: 16px 8px;
+</style>
+<div id="sidebar">
+  <ul id="tabs">
+    <li>
+      <h3>Network</h3>
+      <ul>
+	<li class="tab">
+	  <a>MIT</a> (205)
+	</li>
+	<li class="tab">
+	  <a>Boston, MA</a> (123)
+	</li>
+	<li class="tab">
+	  <a>Santa Cruz, CA</a> (76)
+	</li>
+	<li class="tab">
+	  <a>Watsonville High</a> (15)
+	</li>
+      </ul>
+    </li>
+    <li>
+      <h3>Gender</h3>
+      <ul>
+	<li class="tab">
+	  <a>Female</a> (210)
+	</li>
+	<li class="tab">
+	  <a>Male</a> (195)
+	</li>
+	<li class="tab">
+	  <a>Unstated</a> (82)
+	</li>
+      </ul>
+    </li>
+    <li>
+      <h3>Hometown</h3>
+      <ul>
+	<li class="tab">
+	  <a>Watsonville, CA</a> (144)
+	</li>
+	<li class="tab">
+	  <a>Santa Cruz, CA</a> (35)
+	</li>
+      </ul>
+    </li>
+    <li>
+      <h3>Likes</h3>
+      <ul>
+	<li class="tab">
+	  <a>The Office</a> (39)
+	</li>
+	<li class="tab">
+	  <a>Barack Obama</a> (37)
+	</li>
+	<li class="tab">
+	  <a>In-N-Out to Watsonville</a> (32)
+	</li>
+	<li class="tab">
+	  <a>Watsonville</a> (29)
+	</li>
+      </ul>
+    </li>
+    <li>
+  </ul>
+</div>
+
+<div id="rightContent">
+  <ul class="object-list">
+    {% for membership in memberships %}
+    <li class="friend object">
+      <a href="{% url s_profile category.id membership.member.id %}">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ membership.member.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ membership.member.name }}
+	</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% endblock %}
+
+
+
+
+{% comment %}
+{% block content %}
+{% include "survey/header.html" %}
+{% include "survey/sidebar.html" %}
+
+<div id="rightContent">
+  <ul class="object-list">
+    {% for membership in memberships %}
+    <li class="friend object">
+      <a href="{% url s_profile category.id membership.member.id %}">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ membership.member.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ membership.member.name }}
+	</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% include "survey/survey.html" %}
+
+{% endblock %}
+{% endcomment %}

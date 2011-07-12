@@ -1,0 +1,47 @@
+{% extends "survey/app_base.html" %}
+
+{% block head_title %}{{ person.name }}{% endblock %}
+
+{% block head_extra %}
+<script>
+var cat_id = {{ category.id }};
+var cat_likes = [
+  {{ cat_likes|safe }}
+];
+</script>
+<script type="text/javascript" src="/media/js/s_profile.js"></script>
+{% endblock %}
+
+{% block content %}
+{% include "survey/header.html" %}
+{% include "survey/sidebar.html" %}
+
+<div id="rightContent">
+  <ul class="object-list">
+    <h2>{{ person.name }}</h2>
+    {% for facebook_category, likes in likes_by_fbcat %}
+    <li class="category">
+      <h3>{{ facebook_category }}</h3>
+      <ul class="category_likes">
+	{% for like in likes %}
+	<li class="like object" id="{{ like.id }}">
+	  <a href="{% url s_like category.id like.id %}">
+	    <div class="image-holder">
+	      <img src="https://graph.facebook.com/{{ like.fbid }}/picture?type=normal" />
+	    </div>
+	    <div class="title-holder">
+	      {{ like.name }}
+	    </div>
+	    <div class="filter"></div>
+	  </a>
+	</li>
+	{% endfor %}
+      </ul>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% include "survey/survey.html" %}
+
+{% endblock %}

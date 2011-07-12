@@ -1,0 +1,17 @@
+<div id="header">
+  <form>
+    <input id="category_id" type="text" style="display:none" value="{{ category.id }}" />
+    <input id="rename" type="text" value="{{ category.name }}" />
+    {% comment %}<a id="changeName" class="button">Name this Category?</a>{% endcomment %}
+  </form>
+  {% if prev %}
+  <div id="cat-left" class="cat-nav">
+    <a href="{% url s_category_start prev %}">Previous Category</a>
+  </div>
+  {% endif %}
+  {% if next %}
+  <div id="cat-right" class="cat-nav">
+    <a href="{% url s_category_start next %}">Next Category</a>
+  </div>
+  {% endif %}
+</div>

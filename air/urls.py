@@ -11,5 +11,6 @@ urlpatterns = patterns('',
     (r'^auth/', include('fbauth.urls')),
     (r'^t/', include('toolkit.urls')),
     (r'^reflect/', include('reflect.urls')),
+    (r'^survey/', include('survey.urls')),
     (r'^', include('air_explorer.urls')),
 )

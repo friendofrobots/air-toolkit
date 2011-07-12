@@ -1,0 +1,40 @@
+{% extends "survey/app_base.html" %}
+
+{% block head_title %}{{ like.name }}{% endblock %}
+
+{% block head_extra %}
+<script>
+var cat_id = {{ category.id }};
+var mapping = {
+  {{ mapping|safe }}
+};
+</script>
+<script type="text/javascript" src="/media/js/r_profile.js"></script>
+{% endblock %}
+
+{% block content %}
+{% include "survey/header.html" %}
+{% include "survey/sidebar.html" %}
+
+<div id="rightContent">
+  <h1>{{ like.name }}</h1>
+  <h3>Liked By</h3>
+  <ul class="info">
+    {% for friend in like.likedBy.all %}
+    <li class="friend object">
+      <a href="{% url s_profile category.id friend.id %}">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ friend.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ friend.name }}
+	</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% include "survey/survey.html" %}
+
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "survey/app_base.html" %}
+
+{% block head_title %}{{ category.name }}{% endblock %}
+
+{% block head_extra %}
+<script type="text/javascript" src="/media/js/r_categories.js"></script>
+{% endblock %}
+
+{% block content %}
+{% include "survey/header.html" %}
+{% include "survey/sidebar.html" %}
+
+<div id="rightContent">
+  <ul id="likes" class="object-list">
+    {% for score in category.getTop %}
+    <li class="like object">
+      <a href="{% url s_like category.id score.page.id %}">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ score.page.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ score.page.name }}
+	</div>
+	<div class="like-id">
+	  {{ score.page.id }}
+	</div>
+      </a>
+    </li>
+    {% endfor %}
+    <hr />
+    {% for membership in category.getTopPeople %}
+    <li class="profile object">
+      <a href="{% url s_profile category.id membership.member.id %}">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ membership.member.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ membership.member.name }}
+	</div>
+	<div class="person-id">
+	  {{ membership.member.id }}
+	</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% include "survey/survey.html" %}
+
+{% endblock %}
