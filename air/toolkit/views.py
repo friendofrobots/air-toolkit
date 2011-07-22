@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 import json, facebook
 from celery.result import AsyncResult, TaskSetResult
 from celery.task.sets import TaskSet
-from toolkit.models import Person, Page, PMI, DownloadStatus, Category, CategoryScore
+from toolkit.models import *
 from toolkit import tasks
 from toolkit.forms import CategoryCreateForm
 from fbauth.models import Profile
@@ -34,8 +34,10 @@ def startDownload(request):
     if request.user.is_authenticated():
         if request.method == 'POST':
             profile = request.user.profile
-            try:
-                status = profile.downloadStatus
+            status, created = DownloadStatus.objects.get_or_create(
+                owner=profile,
+                stage=0)
+            if status.stage > 0:
                 if status.stage < 3:
                     result = TaskSetResult.restore(status.task_id)
                     response_data = {
@@ -50,7 +52,7 @@ def startDownload(request):
                         "stage" : status.stage,
                         "state" : "completed",
                         }
-            except:
+            else:
                 graphapi = facebook.GraphAPI(profile.access_token)
                 me = graphapi.get_object('me')
                 friends = [(f['id'],f['name']) for f in graphapi.get_connections('me','friends')['data']]
@@ -58,11 +60,11 @@ def startDownload(request):
 
                 subtasks = [tasks.dlUser.subtask((profile.id,graphapi,fbid,name)) for (fbid,name) in friends]
                 result = TaskSet(tasks=subtasks).apply_async()
-
-                status = DownloadStatus.objects.create(owner=profile,stage=1,task_id=result.taskset_id)
-                status.save()
                 result.save()
-                r = tasks.checkTaskSet.delay(result.taskset_id,profile.id,status.id)
+                status.stage = 1
+                status.task_id = result.taskset_id
+                status.save()
+                r = tasks.checkTaskSet.delay(result,profile.id)
                 response_data = {
                     "stage":1,
                     "completed": result.completed_count(),
@@ -80,7 +82,8 @@ def startDownload(request):
 
 def status(request):
     if request.user.is_authenticated():
-        status = request.user.profile.downloadStatus
+        profile = request.user.profile
+        status = profile.status
         """
         I need to execute 2 separate tasks:
         1) Download and save (set) - this should already be started
@@ -90,7 +93,7 @@ def status(request):
             result = TaskSetResult.restore(status.task_id)
             response_data = {
                 "stage":1,
-                "completed": result.completed_count(),
+                "completed": Person.objects.filter(owner=profile).count(),#result.completed_count(),
                 "total": result.total,
                 }
         elif status.stage==2:
@@ -138,6 +141,8 @@ def page_pmis(request, page_id):
             }
     return HttpResponse(json.dumps(response_data),mimetype="application/json")
 
+
+## Category Views ##
 def addSeed(request, seed_id):
     if request.user.is_authenticated():
         if request.method == 'POST':
@@ -212,7 +217,6 @@ def newCategory(request, redirect_uri=None):
                 if category.name == 'tempcategoryname':
                     category.name = 'Category '+unicode(category.id)
                     category.save()
-                createForm = CategoryCreateForm({ 'id':category.id })
                 if redirect_uri:
                     if redirect_uri[0] != '/':
                         redirect_uri = '/'+redirect_uri
@@ -231,6 +235,73 @@ def newCategory(request, redirect_uri=None):
             }
     return HttpResponse(json.dumps(response_data),mimetype="application/json")
 
+def createCategoryFromGroup(request):
+    if request.user.is_authenticated():
+        if request.method == 'POST':
+            profile = request.user.profile
+            people = request.POST.getlist('people')
+            if people:
+                category = Category.objects.create(owner=profile,
+                                                   name=request.POST.get('name','tempcategoryname'))
+                group = PersonGroup.objects.create(owner=profile,
+                                                   category=category)
+                group.people.add(*[Person.objects.get(id=x) for x in people])
+                if category.name == 'tempcategoryname':
+                    category.name = 'Category '+unicode(category.id)
+                category.save()
+                if request.POST.__contains__('redirect'):
+                    return redirect(request.POST.get('redirect'),category.id)
+                else:
+                    response_data = {
+                        "success": "true",
+                        "id":category.id,
+                        "url":reverse('context:category',category.id)
+                    }
+            else:
+                response_data = {
+                    "error": "must be at least one person"
+                    }
+        else:
+            response_data = {
+                "error": "must be a post request"
+                }
+    else:
+        response_data = {
+            "error": "user must be logged in"
+            }
+    return HttpResponse(json.dumps(response_data),mimetype="application/json")
+
+def createCategoryFromPage(request):
+    if request.user.is_authenticated():
+        if request.method == 'POST':
+            profile = request.user.profile
+            if request.POST.__contains__('seed'):
+                seed = Page.objects.get(id=request.POST.get('seed'))
+                category = Category.objects.create(owner=profile,
+                                                   name=seed.name)
+                category.seeds.add(seed)
+                if request.POST.__contains__('redirect'):
+                    return redirect(request.POST.get('redirect'),category.id)
+                else:
+                    response_data = {
+                        "success": "true",
+                        "id":category.id,
+                        "url":reverse('context:category',category.id)
+                        }
+            else:
+                response_data = {
+                    "error": "must be at least one person"
+                    }
+        else:
+            response_data = {
+                "error": "must be a post request"
+                }
+    else:
+        response_data = {
+            "error": "user must be logged in"
+            }
+    return HttpResponse(json.dumps(response_data),mimetype="application/json")
+    
 def startCategoryCreation(request):
     if request.user.is_authenticated():
         if request.method == 'POST':
@@ -329,6 +400,46 @@ def categoryReset(request,category_id):
                 category.task_id = ""
                 category.status = ""
                 category.save()
-        return redirect('categories')
+        return redirect('explore:categories')
     else:
-        return redirect('home')
+        return redirect('explore:home')
+
+def clearNotifications(request):
+    if request.user.is_authenticated():
+        if request.method == "POST":
+            if request.method.__contains__('read'):
+                read = request.GET.getlist('read')
+                Category.objects.filter(id__in=read).update(unread=False)
+                unread = Category.objects.filter(owner=profile,unread=True).order_by('-last_updated')
+                response_data = {
+                    "success":True,
+                    "unread":[[c.id,c.name] for c in unread],
+                    }
+            else:
+                response_data = {
+                    "success":False,
+                    "unread":[[c.id,c.name] for c in unread],
+                    }
+        else:
+            response_data = {
+                "error":"must be post",
+                }
+    else:
+        response_data = {
+            "error":"not logged in",
+            }
+    return HttpResponse(json.dumps(response_data),mimetype="application/json")
+
+def getNotifications(request):
+    if request.user.is_authenticated():
+        unread = Category.objects.filter(owner=profile,unread=True).order_by('-last_updated')
+        response_data = {
+            "success":True,
+            "unread":[[c.id,c.name] for c in unread],
+            }
+    else:
+        response_data = {
+            "error":"not logged in",
+            }
+    return HttpResponse(json.dumps(response_data),mimetype="application/json")
+    

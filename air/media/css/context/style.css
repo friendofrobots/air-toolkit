@@ -1,0 +1,313 @@
+body {
+  margin:0;
+  padding:0;
+  font-family: sans-serif;
+  min-height: 600px;
+}
+
+ul {
+  list-style-type: none;
+  margin:4px;
+  padding:0;
+}
+
+#content {
+  margin: 0 auto;
+  width:760px;
+  height: 800px;
+  position: relative;
+  overflow:auto;
+}
+
+a, .fakelink {
+  color:black;
+  text-decoration:none;
+  cursor:pointer;
+}
+button, .button {
+  border: 3px solid black;
+  background-color: #FFF;
+  border-radius: 16px;
+  font-weight: bold;
+  font-size:100%;
+  padding:6px;
+  display:block;
+}
+
+/* tabbar.html */
+#tabbar {
+  padding: 0 10px;
+  border-top: 2px solid black;
+}
+#tabbar li {
+  display: inline-block;
+  border-width: 0 2px 2px 2px;
+  border-style: solid;
+  border-color: black;
+  padding: 2px;
+  margin:0;
+  text-align: center;
+}
+#tabbar a {
+  font-weight:bold;
+  border: none;
+  background-color:white;
+  display: inline;
+  padding:0;
+  margin: 0;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 100%;
+}
+
+/* notifications.html */
+#notifications {
+  position:fixed;
+  bottom:0;
+  min-height:12px;
+  width:750px;
+  border-top:2px solid black;
+  background-color:#FFF;
+}
+
+#notify-top {
+  text-align:center;
+  cursor:pointer;
+  padding:2px;
+  border-bottom:1px solid black;
+}
+.unread-red {
+  display:inline-block;
+  background-color:#F00;
+  border-radius: 4px;
+  color:#FFF;
+  padding: 1px 3px 0;
+  vertical-align:bottom;
+}
+
+#notify-categories {
+  display:none;
+  padding-left:40px;
+}
+
+/* object-list */
+.object {
+  width:100px;
+  height:140px;
+  display:inline-block;
+  vertical-align:top;
+  margin: 2px;
+  border: 1px solid #B3B3B3;
+  overflow:hidden;
+}
+
+.image-holder {
+  height:100px;
+  overflow:hidden;
+}
+
+.title-holder {
+  font-size:70%;
+  text-align:center;
+  height: 30px;
+  padding: 4px;
+}
+
+.page-id, .person-id, .friend-id,
+.category-id, .property-id, .like-id {
+  display:none;
+}
+
+/* thinking-cover */
+#thinking-cover {
+  display: none;
+  background-color : rgba(255,255,255,0.9);
+  position: absolute;
+  top: 105px;
+  left:0;
+  z-index:10;
+  width:100%;
+  height:800px;
+  padding-top: 150px;
+  text-align:center;
+  font-size:200%;
+  color: #DDD;
+  text-shadow: 2px 2px 2px #AAA;
+}
+
+/* home.html */
+.box {
+  border: 2px solid black;
+  margin: 4px;
+  padding: 12px;
+  width: 678px;
+}
+.box h2 {
+  margin: 4px;
+}
+
+.vertical-box {
+  width:319px;
+  height: 200px;
+  display:inline-block;
+  vertical-align:top;
+}
+
+.status-bar {
+  width:400px;
+  border: 1px solid black;
+  height: 10px;
+  display:inline-block;
+}
+.status-fill {
+  height:10px;
+  background-color:black;
+}
+
+
+/* friends.html */
+/* sidebar */
+#sidebar {
+  float:left;
+  width: 179px;
+  padding: 0 0 0 2px;
+  border-right: 1px solid #B3B3B3;
+}
+
+.relation h3 {
+  margin: 0;
+  font-weight:normal;
+  font-size:150%;
+  background-color: #DBDFEB;
+  padding:5px;
+}
+
+.filter:first-child {
+  border-top: 1px solid #B3B3B3;
+}
+.filter {
+  border-bottom: 1px solid #B3B3B3;
+  padding:4px;
+  font-size:75%;
+}
+.filter:hover {
+  background-color: #ABAFBB;
+}
+.filter a {
+  text-decoration:none;
+  color:#000;
+}
+.active {
+  background-color: #DBDFEB;
+}
+
+/* rightContent */
+#rightContent {
+  width: 493px;
+  padding: 0 20px 0 20px;
+  margin-left: 180px;
+}
+
+#rightContent h2 {
+  font-weight: normal;
+  font-size: 200%;
+  background-color: #DDD;
+  padding: 4px;
+  margin-top: 4px;
+}
+
+.select-option {
+  color: #00F;
+  display: inline-block;
+}
+
+.friend {
+  padding:2px;
+  cursor: pointer;
+}
+.selected {
+  color: #FFF;
+  background-color: #00F;
+}
+.friend input {
+  display:none;
+}
+
+#group-submit {
+  position:fixed;
+  bottom: 0;
+  right:20px;
+  background-color: #FFF;
+  border: 2px solid black;
+  font-size:150%;
+  
+}
+
+/* pages.html */
+#searchbox {
+  margin:10px auto;
+  width:80%;
+  font-size:150%;
+  display:block;
+}
+  
+.page {
+  border: 1px solid black;
+  overflow:hidden;
+  padding:10px;
+  margin-bottom: 4px;
+}
+
+.page-img {
+  float:left;
+  margin-right:10px;
+  overflow:hidden;
+  height:100px;
+}
+.page-title {
+  font-size:160%;
+}
+.page-category {
+  font-size:90%;
+  margin-left:10px;
+}
+
+.liked-by {
+  height:70px;
+  overflow:hidden;
+}
+
+.liked-by-person {
+  display:inline;
+  font-size: 70%;
+}
+#page-form input {
+  display:none;
+}
+
+/* category.html */
+#group-people-hidden {
+  display:none;
+}
+#group-people-more {
+  text-align:center;
+  background-color:#222;
+}
+
+.small-object {
+  border: 1px solid black;
+  width:50px;
+  height:50px;
+  overflow:hidden;
+  display:inline-block;
+}
+#category-info {
+  border-bottom:1px solid black;
+}
+
+#processing {
+  margin:12px;
+}
+
+#processing button {
+  margin: 0 auto;
+}

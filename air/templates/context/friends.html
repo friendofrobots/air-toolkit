@@ -1,0 +1,79 @@
+{% extends "context/context_base.html" %}
+
+{% block head_title %}Friends{% endblock %}
+{% block head_extra %}
+<script type="text/javascript" src="/media/js/context/friends.js"></script>
+{% endblock %}
+
+{% block content %}
+{% include "context/tabbar.html" %}
+
+<div id="title">
+  <h1>Construct Group</h1>
+</div>
+
+<div id="thinking-cover">
+  thinking...
+</div>
+<div id="sidebar">
+  <ul id="relations">
+    {% for filter in filters %}
+    <li id="rel-{{ filter.0.0 }}" class="relation" {% if not filter.1 %}style="display:none"{% endif %}>
+      <h3>{{ filter.0.1 }}</h3>
+      <ul>
+	{% for property in filter.1 %}
+	<li class="filter property">
+	  <span class="property-id">{{ property.id }}</span>
+	  <span class="fakelink">
+	    <span class="filter-name">{{ property.name }}</span>
+	    <span class="filter-activity">({{ property.activity }})</span>
+	  </span>
+	</li>
+	{% endfor %}
+      </ul>
+    </li>
+    {% endfor %}
+    <li id="toplikes" class="relation">
+      <h3>Likes</h3>
+      <ul>
+	{% for like in toplikes %}
+	<li class="filter like">
+	  <span class="like-id">{{ like.id }}</span>
+	  <span class="fakelink">
+	    <span class="filter-name">{{ like.name }}</span>
+	    <span class="filter-activity">({{ like.activity }})</span>
+	  </span>
+	</li>
+	{% endfor %}
+    </li>
+  </ul>
+</div>
+
+<div id="rightContent">
+  <div id="error"></div>
+  <div id="select-options">
+    <span>select:</span>
+    <span id="select-all" class="select-option fakelink">all</span>
+    <span id="select-none" class="select-option fakelink">none</span>
+  </div>
+  <form id="group-form" method="POST" action="{% url toolkit:categoryFromGroup %}">
+    <ul id="friends" class="object-list">
+      {% for friend in friends %}
+      <li class="friend object">
+	<span class="friend-id">{{ friend.id }}</span>
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ friend.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ friend.name }}
+	</div>
+	<input class="friend-select" type="checkbox" value="{{ friend.id }}" name="people"></input>
+      </li>
+      {% endfor %}
+    </ul>
+    <input id="group-name" type="text" value="tempcategory" name="name" style="display:none;"></input>
+    <input id="group-redirect" type="text" value="context:category" name="redirect" style="display:none;"></input>
+    <input id="group-submit" type="submit" value="Start"></input>
+  </form>
+</div>
+{% endblock %}

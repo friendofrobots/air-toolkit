@@ -25,7 +25,7 @@ var cat_likes = [
       <ul class="category_likes">
 	{% for like in likes %}
 	<li class="like object" id="{{ like.id }}">
-	  <a href="{% url s_like category.id like.id %}">
+	  <a href="{% url survey:like category.id like.id %}">
 	    <div class="image-holder">
 	      <img src="https://graph.facebook.com/{{ like.fbid }}/picture?type=normal" />
 	    </div>

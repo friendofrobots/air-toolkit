@@ -1,0 +1,103 @@
+{% extends "context/context_base.html" %}
+
+{% block head_title %}Home{% endblock %}
+{% block head_extra %}
+<script>
+var started = {% if status and status.stage != 0 and status.stage < 3%}true;{% else %}false;{% endif %}
+</script>
+<script type="text/javascript" src="/media/js/context/download.js"></script>
+{% endblock %}
+
+{% block content %}
+<h1>AIR Toolkit Thing</h1>
+
+<div id="boxes">
+  <div id="intro" class="box">
+    <h2>What is this?</h2>
+    <p>
+      This is our goal.
+    </p>
+  </div>
+
+  {% if not status or status.stage < 3 %}
+  <div id="downloading" class="box">
+    <div id="perms">
+      <p>
+	To do this, we need to download and store some data about you and your friends from Facebook.
+	The likes and interests are the core of the system and the offline access is necessary for the team
+	(me) to identify and fix problems as they show at this stage in the process. The rest of the
+	data is to help you find groups of friends who share certain properties. The data we can access
+	is a subset of the data you could see by looking at other profiles and we do not collect any information
+	about you that can't be seen by other people visiting your profile.
+      </p>
+      <p>
+	Specifically, we ask for this data from you and your friends:
+	<ul>
+	  <li>Likes & Interests</li>
+	  <li>Gender</li>
+	  <li>Hometown</li>
+	  <li>Location</li>
+	  <li>Education History</li>
+	  <li>Work History</li>
+	  <li>Religion & Politics</li>
+	  <li>Relationship Status (single, in relationship, married, it's complicated, etc.)</li>
+	  <li>Offline Access</li>
+	</ul>
+      </p>
+      <p>
+	This data is only accessible by me and my advisor and besides using your data in aggregate, we would
+	explicitly ask permission to use specific data.	
+      </p>
+    </div>
+    
+    {% if not status or status.stage == 0 %}
+    <div>
+      <button class="button" id="start">Start Download</button>
+    </div>
+    {% endif %}
+    <p id="error"></p>
+    <div id="starting" class="stages" {% if not status or status.stage == 0 %}style="display:none;"{% endif %}>
+      Thanks! Your download has been added to the queue. If it doesn't appear to be doing anything,
+      it's because other people are using the system is busy and had to place you at the end of the queue.
+      We will contact you when it has finished and checked for errors. Until then, you can feel free to
+      close this page.
+    </div>
+    <div id="stage1" class="stages" {% if not status or status.stage != 1 %}style="display:none;"{% endif %}>
+      downloading user data:
+      <div class="status-bar"><div id="status1" class="status-fill"></div></div>
+      <span id="count1">0</span>/<span id="total1">0</span>
+    </div>
+    <div id="stage2" class="stages" {% if not status or status.stage != 2 %}style="display:none;"{% endif %}>
+      calculating connections:
+      <div class="status-bar"><div id="status2" class="status-fill"></div></div>
+      <span id="count2">0</span>/<span id="total2">0</span>
+    </div>
+    <div id="download-finished" style="display:none">
+      You're all done!
+    </div>
+  </div>
+  {% endif %}
+  
+  <div id="friends-button" class="box vertical-box" {% if status.stage != 3%}style="display:none"{% endif %}>
+    <a href="{% url context:friends %}">
+      <h2>// Find People //</h2>
+    </a>
+    <div class="description">
+      Construct a group of friends to see what sort of likes help define their identity.
+      Grab your friends from elementary school, your family members or your softball team
+      and look for trends in their likes.
+    </div>
+  </div>
+  
+  <div id="pages-button" class="box vertical-box" {% if status.stage != 3%}style="display:none"{% endif %}>
+    <a href="{% url context:pages %}">
+      <h2>// Search Likes //</h2>
+    </a>
+    <div class="description">
+      Search for a particular Like that you would like to know more about.
+      Your favorite band, a brand you identify with or an object whose
+      significance you don't understand.
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,15 +1,21 @@
 <ul id="tabbar">
   <li>
-    <a href="{% url likes %}">Likes</a>
+    <a href="{% url explore:likes %}">Likes</a>
   </li>
   <li>
-    <a href="{% url categories %}">Categories</a>
+    <a href="{% url explore:categories %}">Categories</a>
   </li>
   <li>
-    <a href="{% url friends %}">Friends</a>
+    <a href="{% url explore:friends %}">Friends</a>
   </li>
   <li>
-    <a href="{% url r_home %}" target="_blank">Reflect</a>
+    <a href="{% url reflect:home %}" target="_blank">Reflect</a>
+  </li>
+  <li>
+    <a href="{% url survey:home %}" target="_blank">Survey</a>
+  </li>
+  <li>
+    <a href="{% url context:home %}" target="_blank">Context</a>
   </li>
   {% if allowNew %}
   <li id="new_tab">

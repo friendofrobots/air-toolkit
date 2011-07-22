@@ -5,7 +5,7 @@ from django.db.models import Count, Q
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.shortcuts import get_object_or_404, redirect
 import json
-from toolkit.models import Person, Page, PMI, Category, CategoryScore
+from toolkit.models import *
 from toolkit.forms import CategoryCreateForm
 from toolkit import tasks
 from celery.result import AsyncResult
@@ -13,12 +13,11 @@ from celery.result import AsyncResult
 def home(request, template_name="air_explorer/home.html"):
     if request.user.is_authenticated():
         try:
-            status = request.user.profile.downloadStatus
-            if status.stage < 3:
-                return redirect('download')
+            if request.user.profile.status.stage < 3:
+                return redirect('explore:download')
             ready = True
         except:
-            return redirect('download')
+            return redirect('explore:download')
     else:
         ready = False
     return render_to_response(template_name, {
@@ -29,11 +28,11 @@ def home(request, template_name="air_explorer/home.html"):
 def download(request, template_name="air_explorer/download.html"):
     if request.user.is_authenticated():
         try:
-            stage = request.user.profile.downloadStatus.stage
+            stage = request.user.profile.status.stage
         except:
             stage = None
     else:
-        return redirect('home')
+        return redirect('explore:home')
     return render_to_response(template_name, {
             'path' : request.path,
             "stage" : stage,
@@ -43,11 +42,10 @@ def friends(request, page_num=1, template_name="air_explorer/friends.html"):
     if request.user.is_authenticated():
         profile = request.user.profile
         try:
-            status = profile.downloadStatus
-            if status.stage < 3:
-                return redirect('download')
+            if profile.status.stage < 3:
+                return redirect('explore:download')
         except:
-            return redirect('download')
+            return redirect('explore:download')
         friends = Person.objects.filter(owner=profile).order_by('name')
         paginator = Paginator(friends,96)
         
@@ -61,7 +59,7 @@ def friends(request, page_num=1, template_name="air_explorer/friends.html"):
                 'paginate' : friend_page,
                 }, context_instance=RequestContext(request))
     else:
-        return redirect('home')
+        return redirect('explore:home')
 
 def friend(request, person_id, page_num=1, template_name="air_explorer/friend.html"):
     if request.user.is_authenticated():
@@ -80,7 +78,7 @@ def friend(request, person_id, page_num=1, template_name="air_explorer/friend.ht
             createForm = None
             allowNew = True
     else:
-        return redirect('home')
+        return redirect('explore:home')
     return render_to_response(template_name, {
             'path' : request.path,
             'friend' : person,
@@ -94,11 +92,10 @@ def likes(request, startsWith=None, page_num=1, template_name="air_explorer/like
     if request.user.is_authenticated():
         profile = request.user.profile
         try:
-            status = profile.downloadStatus
-            if status.stage < 3:
-                return redirect('download')
+            if profile.status.stage < 3:
+                return redirect('explore:download')
         except:
-            return redirect('download')
+            return redirect('explore:download')
         if startsWith == None:
             startsWith = 'a'
         pages = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy'))
@@ -133,7 +130,7 @@ def likes(request, startsWith=None, page_num=1, template_name="air_explorer/like
                 'allowNew' : allowNew,
                 }, context_instance=RequestContext(request))
     else:
-        return redirect('home')
+        return redirect('explore:home')
 
 def like(request, page_id, page_num=1, template_name="air_explorer/like.html"):
     if request.user.is_authenticated():
@@ -157,7 +154,7 @@ def like(request, page_id, page_num=1, template_name="air_explorer/like.html"):
             createForm = None
             allowNew = True
     else:
-        return redirect('home')
+        return redirect('explore:home')
     return render_to_response(template_name, {
             'path' : request.path,
             'like' : page,
@@ -170,7 +167,7 @@ def like(request, page_id, page_num=1, template_name="air_explorer/like.html"):
 def categories(request, template_name="air_explorer/categories.html"):
     if request.user.is_authenticated():
         profile = request.user.profile
-        categories = Category.objects.filter(owner=profile).order_by('-id')
+        categories = Category.objects.filter(owner=profile).order_by('-last_updated')
 
         try:
             active = profile.activeCategory
@@ -184,7 +181,7 @@ def categories(request, template_name="air_explorer/categories.html"):
             createForm = None
             allowNew = True
     else:
-        return redirect('home')
+        return redirect('explore:home')
     return render_to_response(template_name, {
             'path' : request.path,
             'categories' : categories,
@@ -205,7 +202,7 @@ def category(request, category_id, page_num=1, template_name="air_explorer/categ
             score_page = paginator.page(paginator.num_pages)
         memberships = category.memberships.order_by('-value')[:12]
     else:
-        return redirect('home')
+        return redirect('explore:home')
     return render_to_response(template_name, {
             'path' : request.path,
             'category' : category,

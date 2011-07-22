@@ -3,7 +3,7 @@ from fbauth.models import Profile
 from toolkit.models import Person, Page, Category
 
 class Survey(models.Model):
-    owner = models.OneToOneField(Profile,related_name="downloadStatus")
+    owner = models.OneToOneField(Profile,related_name="survey")
     category = models.OneToOneField(Category,related_name="surveyResults")
     question_number = 
     # How well does this category represent a group of your friends? (representative)

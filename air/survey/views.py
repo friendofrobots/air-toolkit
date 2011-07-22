@@ -5,20 +5,20 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, redirect
 
 import json
-from toolkit.models import Person, Page, PMI, DownloadStatus, Category, CategoryScore, CategoryMembership
+from toolkit.models import *
 
 def home(request, template_name="survey/home.html"):
     if request.user.is_authenticated():
         try:
             profile = request.user.profile
-            status = profile.downloadStatus
-            category = profile.category_set.order_by('id')[0]
+            status = profile.status
+            category = profile.categories.order_by('id')[0]
         except DownloadStatus.DoesNotExist:
             status = None
             category = None
     else:
         # This doesn't work, I need to figure out how to redirect properly
-        return redirect('login_redirect','s_home')
+        return redirect('auth:login_redirect','survey:home')
     return render_to_response(template_name, {
             'status' : status,
             'category' : category,
@@ -29,7 +29,7 @@ def category(request, category_id=None, template_name="survey/category.html"):
         profile = request.user.profile
         category = get_object_or_404(Category,id=category_id)
     else:
-        return redirect('s_home')
+        return redirect('survey:home')
     return render_to_response(template_name, {
             'category' : category,
             'question_number' : 1,
@@ -63,7 +63,7 @@ def profile(request, category_id=None, person_id=None, template_name="survey/pro
         cat_likes = ','.join(["'"+str(like.id)+"'" for like in person.likes.all() if like.categoryScore.filter(category=category).exists() and like.categoryScore.get(category=category).value > .2])
 
     else:
-        return redirect('s_home')
+        return redirect('survey:home')
     return render_to_response(template_name, {
             'person' : person,
             'category' : category,
@@ -80,7 +80,7 @@ def friends(request, category_id=None, page_num=None, template_name="survey/frie
         profile = request.user.profile
         category = get_object_or_404(Category,id=category_id)
     else:
-        return redirect('s_home')
+        return redirect('survey:home')
     return render_to_response(template_name, {
             'category' : category,
             'memberships' : category.memberships.order_by('-value'),
@@ -96,7 +96,7 @@ def like(request, category_id=None, like_id=None, template_name="survey/like.htm
         category = get_object_or_404(Category,id=category_id)
         like = get_object_or_404(Page,id=like_id)
     else:
-        return redirect('s_home')
+        return redirect('survey:home')
     return render_to_response(template_name, {
             'category' : category,
             'like' : like,

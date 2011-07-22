@@ -14,7 +14,7 @@
   <ul id="likes" class="object-list">
     {% for score in category.getTop %}
     <li class="like object">
-      <a href="{% url s_like category.id score.page.id %}">
+      <a href="{% url survey:like category.id score.page.id %}">
 	<div class="image-holder">
 	  <img src="https://graph.facebook.com/{{ score.page.fbid }}/picture?type=normal" />
 	</div>
@@ -30,7 +30,7 @@
     <hr />
     {% for membership in category.getTopPeople %}
     <li class="profile object">
-      <a href="{% url s_profile category.id membership.member.id %}">
+      <a href="{% url survey:profile category.id membership.member.id %}">
 	<div class="image-holder">
 	  <img src="https://graph.facebook.com/{{ membership.member.fbid }}/picture?type=normal" />
 	</div>

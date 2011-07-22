@@ -2,7 +2,7 @@ from django.db.models import Count, Q, Max, Min
 from django.db import transaction
 from celery.decorators import task
 from celery.result import TaskSetResult
-from toolkit.models import DownloadStatus, Person, Page, PMI, Category, CategoryScore, CategoryMembership
+from toolkit.models import *
 from fbauth.models import Profile
 import json, urllib2, urllib, math, facebook
 
@@ -14,31 +14,54 @@ Then I need to run through and process the PMI information, ideally in
 a task format so I can give progress on it.
 """        
 
-@task(ignore_result=True)
+
+def conc_get_or_create(klass,*args,**kwargs):
+    """
+    Ran into a race condition where two threads would try to get_or_create a PersonProperty,
+    see that none existed and both create their own.
+
+    I added a unique_together property on the models so they will throw an exception if it
+    already exists and this function will catch it and just get instead.
+    """
+    try:
+        obj, created = klass.objects.get_or_create(*args,**kwargs)
+    except:
+        defaults = kwargs.pop('defaults',{})
+        obj = klass.objects.get(*args,**kwargs)
+        created = False
+    return obj,created
+
+@task()
 def dlUser(profile_id,graphapi,fbid,name):
     try:
         profile = Profile.objects.get(id=profile_id)
-        person = Person.objects.create(owner=profile,
-                                       fbid=fbid,
-                                       name=name)
-        # person.dlInfo(graphapi,person)
+        person, created = Person.objects.get_or_create(
+            owner=profile,
+            fbid=fbid,
+            name=name)
+        dlInfo(graphapi,profile,person)
 
         likes = graphapi.get_connections(fbid,"likes")['data']
         for like in likes:
-            if len(like['name']) > 180:
-                like['name'] = like['name'][:180]
-            page, success = Page.objects.get_or_create(
-                owner=profile,
-                fbid=like['id'],
-                defaults={
-                    'name':like['name'],
-                    'category':like['category']
-                    })
-            person.likes.add(page)
+            if not 'name' in like:
+                print like
+            else:
+                if len(like['name']) > 180:
+                    like['name'] = like['name'][:180]
+                page, created = conc_get_or_create(
+                    Page,
+                    owner=profile,
+                    fbid=like['id'],
+                    defaults={
+                        'name':like['name'],
+                        'category':like['category']
+                        })
+                person.likes.add(page)
 
         interests = graphapi.get_connections(fbid,"interests")['data']
         for interest in interests:
-            page, success = Page.objects.get_or_create(
+            page, created = conc_get_or_create(
+                Page,
                 owner=profile,
                 fbid=interest['id'],
                 defaults={
@@ -47,87 +70,148 @@ def dlUser(profile_id,graphapi,fbid,name):
                     })
             person.likes.add(page)
 
-    except (ValueError,IOError,facebook.GraphAPIError,urllib2.URLError), exc:
+    except (ValueError,IOError,NameError,facebook.GraphAPIError,urllib2.URLError), exc:
         print exc
-        dlUser.retry(countdown=15, max_retries=None, throw=False)
+        dlUser.retry(countdown=15, max_retries=100, throw=False)
 
-def dlInfo(graphapi,person):
-    data = graphapi.get_object(fbid)
+def testDl(profile_id):
+    profile = Profile.objects.get(id=profile_id)
+    status, created = DownloadStatus.objects.get_or_create(
+        owner=profile,
+        defaults={'stage':0})
+    graphapi = facebook.GraphAPI(profile.access_token)
+    me = graphapi.get_object('me')
+    friends = [(f['id'],f['name']) for f in graphapi.get_connections('me','friends')['data']]
+    friends.append((me['id'],me['name']))
+
+    subtasks = [dlUser.subtask((profile.id,graphapi,fbid,name)) for (fbid,name) in friends]
+    result = TaskSet(tasks=subtasks).apply_async()
+    result.save()
+    status.stage = 1
+    status.task_id = result.taskset_id
+    status.save()
+    r = checkTaskSet.delay(result,profile.id)
+    return result
+
+def testInfo(profile_id):
+    profile = Profile.objects.get(id=profile_id)
+    graphapi = facebook.GraphAPI(profile.access_token)
+    me = graphapi.get_object('me')
+    friends = [{'id':f['id'],'name':f['name']} for f in graphapi.get_connections('me','friends')['data']]
+    friends.append({'id':me['id'],'name':me['name']})
+
+    for friend in friends:
+        data = graphapi.get_object(friend['id'])
+        friend['data'] = data
+        if 'gender' in data:
+            friend['gender'] = data['gender']
+        if 'hometown' in data:
+            if data['hometown']['name']:
+                if len(data['hometown']['name']) > 200:
+                    hometown = data['hometown']['name'][:200]
+                else:
+                    hometown = data['hometown']['name']
+                friend['hometown'] = hometown
+        if 'location' in data:
+            if data['location']['name']:
+                if len(data['location']['name']) > 200:
+                    location = data['location']['name'][:200]
+                else:
+                    location = data['location']['name']
+                friend['location'] = location
+        if 'education' in data:
+            friend['school'] = []
+            for item in data['education']:
+                if 'school' in item:
+                    if len(item['school']['name']) > 200:
+                        school = item['school']['name'][:200]
+                    else:
+                        school = item['school']['name']
+                    friend['school'].append(school)
+        if 'work' in data:
+            friend['work'] = []
+            for item in data['work']:
+                if 'employer' in item:
+                    if len(item['employer']['name']) > 200:
+                        employer = item['employer']['name'][:200]
+                    else:
+                        employer = item['employer']['name']
+                    friend['work'].append(employer)
+        if 'relationship_status' in data:
+            friend['relationship'] = data['relationship_status']
+    return friends
+    
+
+def dlInfo(graphapi,profile,person):
+    data = graphapi.get_object(person.fbid)
     if 'gender' in data:
-        if len(item['location']['name']) > 200:
-            name = item['location']['name'][:200]
-        else:
-            name = item['location']['name']
-        prop, created = PersonProperty.get_or_create(
-            relation=data['gender'],
-            name=name)
+        prop, created = conc_get_or_create(
+            PersonProperty,
+            owner=profile,
+            relation='gender',
+            name=data['gender'])
         person.properties.add(prop)
     if 'hometown' in data:
-        if len(data['hometown']['name']) > 200:
-            name = data['hometown']['name'][:200]
-        else:
-            name = data['hometown']['name']
-        prop, created = PersonProperty.get_or_create(
-            relation='hometown',
-            name=name)
-        person.properties.add(prop)
+        if data['hometown']['name']:
+            if len(data['hometown']['name']) > 200:
+                hometown = data['hometown']['name'][:200]
+            else:
+                hometown = data['hometown']['name']
+            prop, created = conc_get_or_create(
+                PersonProperty,
+                owner=profile,
+                relation='hometown',
+                name=hometown)
+            person.properties.add(prop)
     if 'location' in data:
-        if len(data['location']['name']) > 200:
-            name = data['location']['name'][:200]
-        else:
-            name = data['location']['name']
-        prop, created = PersonProperty.get_or_create(
-            relation='location',
-            name=name)
-        person.properties.add(prop)
+        if data['location']['name']:
+            if len(data['location']['name']) > 200:
+                location = data['location']['name'][:200]
+            else:
+                location = data['location']['name']
+            prop, created = conc_get_or_create(
+                PersonProperty,
+                owner=profile,
+                relation='location',
+                name=location)
+            person.properties.add(prop)
     if 'education' in data:
         for item in data['education']:
             if 'school' in item:
                 if len(item['school']['name']) > 200:
-                    name = item['school']['name'][:200]
+                    school = item['school']['name'][:200]
                 else:
-                    name = item['school']['name']
-                prop, created = PersonProperty.get_or_create(
+                    school = item['school']['name']
+                prop, created = conc_get_or_create(
+                    PersonProperty,
+                    owner=profile,
                     relation='school',
-                    name=name)
+                    name=school)
                 person.properties.add(prop)
     if 'work' in data:
         for item in data['work']:
             if 'employer' in item:
                 if len(item['employer']['name']) > 200:
-                    name = item['employer']['name'][:200]
+                    employer = item['employer']['name'][:200]
                 else:
-                    name = item['employer']['name']
-                prop, created = PersonProperty.get_or_create(
+                    employer = item['employer']['name']
+                prop, created = conc_get_or_create(
+                    PersonProperty,
+                    owner=profile,
                     relation='work',
-                    name=name)
+                    name=employer)
                 person.properties.add(prop)
-    if 'religion' in data:
-        try:
-            name = data['religion']['name']
-        except:
-            name = data['religion']
-        if len(name) > 200:
-            name = data['religion']['name'][:200]
-        prop, created = PersonProperty.get_or_create(
-            relation='religion',
-            name=name)
+    if 'relationship_status' in data:
+        prop, created = conc_get_or_create(
+            PersonProperty,
+            owner=profile,
+            relation='relationship',
+            name=data['relationship_status'])
         person.properties.add(prop)
-    if 'political' in data:
-        try:
-            name = data['political']['name']
-        except:
-            name = data['political']
-        if len(name) > 200:
-            name = data['religion']['name'][:200]
-        prop, created = PersonProperty.get_or_create(
-            relation='religion',
-            name=name)
     person.save()
 
 @task(ignore_result=True)
-def checkTaskSet(taskset_id,profile_id,status_id):
-    result = TaskSetResult.restore(taskset_id)
+def checkTaskSet(result,profile_id):
     if result.ready():
         profile = Profile.objects.get(id=profile_id)
         pages = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy')).filter(activity__gt=1)
@@ -135,29 +219,28 @@ def checkTaskSet(taskset_id,profile_id,status_id):
 
         subtasks = [calcPMIs.subtask((profile_id,page.id,pages,numpeople)) for page in pages]
         r = TaskSet(tasks=subtasks).apply_async()
-        r2 = checkPMISet.delay(r.taskset_id,profile.id,status_id)
-        status = DownloadStatus.objects.get(id=status_id)
-        status.numpeople = numpeople
-        status.stage = 2
-        status.task_id = r.taskset_id
-        status.save()
+        r2 = checkPMISet.delay(r,profile.id)
+        profile.status.numpeople = numpeople
+        profile.status.stage = 2
+        profile.status.task_id = r.taskset_id
+        profile.status.save()
     else:
-        checkTaskSet.retry(countdown=15, max_retries=None)
+        checkTaskSet.retry(countdown=15, max_retries=100)
 
-def testPMIs(profile_id,status_id):
+def testPMIs(profile_id):
     profile = Profile.objects.get(id=profile_id)
     pages = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy')).filter(activity__gt=1)
     numpeople = Person.objects.filter(likes__in=pages).distinct().count()
 
     subtasks = [calcPMIs.subtask((profile_id,page.id,pages,numpeople)) for page in pages]
     r = TaskSet(tasks=subtasks).apply_async()
-    r2 = checkPMISet.delay(r.taskset_id,profile.id,status_id)
-    status = DownloadStatus.objects.get(id=status_id)
-    status.stage = 2
-    status.task_id = r.taskset_id
-    status.save()
+    r2 = checkPMISet.delay(r,profile.id)
+    profile.status.stage = 2
+    profile.status.task_id = r.taskset_id
+    profile.status.save()
+    return r, r2
 
-@task(ignore_result=True)
+@task()
 def calcPMIs(profile_id, page_id1, pages, numpeople):
     """
     Pmi(i1,i2) = log(Pr(i1,i2) / Pr(i1)Pr(i2))
@@ -178,20 +261,18 @@ def calcPMIs(profile_id, page_id1, pages, numpeople):
                     fromPage=fromPage,
                     toPage=toPage,
                     value=math.log(1.*intersect*numpeople/(fromPage.likedBy.count()*toPage.likedBy.count()),2))
-    downloadStatus = profile.downloadStatus
     agg = PMI.objects.filter(owner=profile).aggregate(Min('value'),Max('value'))
-    downloadStatus.minpmi, downloadStatus.maxpmi = agg['value__min'],agg['value__max']
+    profile.status.minpmi, profile.status.maxpmi = agg['value__min'],agg['value__max']
                     
 @task(ignore_result=True)
-def checkPMISet(taskset_id,profile_id,status_id):
-    result = TaskSetResult.restore(taskset_id)
+def checkPMISet(result,profile_id):
     if result.ready():
-        status = DownloadStatus.objects.get(id=status_id)
-        status.stage = 3
-        status.task_id = ""
-        status.save()
+        profile = Profile.objects.get(id=profile_id)
+        profile.status.stage = 3
+        profile.status.task_id = ""
+        profile.status.save()
     else:
-        checkTaskSet.retry(countdown=15, max_retries=None)
+        checkPMISet.retry(countdown=15, max_retries=100)
 
 @task(ignore_result=True)
 def createCategory(profile_id, category_id,
@@ -203,8 +284,7 @@ def createCategory(profile_id, category_id,
     category.decayrate = decayrate
     category.save()
     category.resetScores()
-    downloadStatus = profile.downloadStatus
-    minpmi, maxpmi = downloadStatus.minpmi, downloadStatus.maxpmi
+    minpmi, maxpmi = profile.status.minpmi, profile.status.maxpmi
     """
     Spreading Activation Algorithm:
     F is firing threshold, D is decay factor, W is link weight

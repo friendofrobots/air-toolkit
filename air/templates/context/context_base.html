@@ -4,9 +4,9 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Air Toolkit - {% block head_title %}{% endblock %}</title>
-    <link rel="stylesheet" href="/media/css/app_style.css" />
+    <link rel="stylesheet" href="/media/css/context/style.css" />
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
-    <script type="text/javascript" src="/media/js/s_survey.js"></script>
+    <script type="text/javascript" src="/media/js/context/notifications.js"></script>
     {% block head_extra %}
     {% endblock %}
   </head>
@@ -14,6 +14,9 @@
   <body>
     <div id="content">
       {% block content %}{% endblock %}
+      {% if user.is_authenticated %}
+      {% include "context/notifications.html" %}
+      {% endif %}
     </div>
   </body>
 </html>

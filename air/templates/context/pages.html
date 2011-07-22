@@ -1,0 +1,52 @@
+{% extends "context/context_base.html" %}
+
+{% block head_title %}Find Page{% endblock %}
+{% block head_extra %}
+<script type="text/javascript" src="/media/js/context/pages.js"></script>
+{% endblock %}
+
+{% block content %}
+{% include "context/tabbar.html" %}
+
+<div id="title">
+  <h1>Find Page</h1>
+  <input id="searchbox" type="text"></input>
+</div>
+
+<div id="thinking-cover">
+  thinking...
+</div>
+<form id="page-form" method="POST" action="{% url toolkit:categoryFromPage %}">
+  <ul id="results" class="page-list">
+  </ul>
+  <ul id="toppages" class="page-list">
+    {% for page in toppages %}
+    <li class="page">
+      <span class="page-id">{{ page.id }}</span>
+      <div class="page-img fakelink">
+	<img src="https://graph.facebook.com/{{ page.fbid }}/picture?type=normal" />
+      </div>
+      <div class="page-title fakelink">
+	{{ page.name }}
+      </div>
+      <div class="page-category">
+	{{ page.category }}
+      </div>
+      <ul class="liked-by">
+	Liked by:
+	{% for person in page.likedBy.all %}
+	{% if forloop.counter0 < 24 %}
+	<li class="liked-by-person">
+	  {{ person.name }}{% if not forloop.counter0 == 23 and not forloop.last %},{% endif %}
+	</li>
+	{% endif %}
+	{% endfor %}
+      </ul>
+      <input class="page-select" type="radio" value="{{ page.id }}" name="seed"></input>
+    </li>
+    {% endfor %}
+  </ul>
+  <input id="page-redirect" type="text" value="context:category" name="redirect"></input>
+  <input id="page-submit" type="submit" value="Start"></input>
+</form>
+{% endblock %}

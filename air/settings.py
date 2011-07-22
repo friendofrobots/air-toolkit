@@ -23,6 +23,15 @@ DATABASES = {
     'default': secrets.getDatabaseSecrets()
 }
 
+"""
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+    }
+}
+"""
+
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
@@ -117,7 +126,9 @@ INSTALLED_APPS = (
     'toolkit',
     'air_explorer',
     'reflect',
+    'context',
     'debug_toolbar',
+    'taggit',
 )
 
 DEBUG_TOOLBAR_PANELS = (
@@ -143,5 +154,7 @@ DEBUG_TOOLBAR_CONFIG = {
  BROKER_USER,
  BROKER_PASSWORD,
  BROKER_VHOST,
- CELERYD_CONCURRENCY,
- CELERY_BROKER_CONNECTION_MAX_RETRIES) = secrets.getCelerySecrets()
+ CELERYD_CONCURRENCY) = secrets.getCelerySecrets()
+
+CELERY_BROKER_CONNECTION_MAX_RETRIES = 100
+BROKER_CONNECTION_MAX_RETRIES = 100

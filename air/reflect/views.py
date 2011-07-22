@@ -5,17 +5,17 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, redirect
 
 import json
-from toolkit.models import Person, Page, PMI, Category, CategoryScore
+from toolkit.models import *
 
 def home(request, template_name="reflect/home.html"):
     if request.user.is_authenticated():
         try:
-            status = request.user.profile.downloadStatus
+            status = request.user.profile.status
         except:
             status = None
     else:
         # This doesn't work, I need to figure out how to redirect properly
-        return redirect('login_redirect','r_home')
+        return redirect('auth:login_redirect','reflect:home')
     return render_to_response(template_name, {
             'status' : status,
             }, context_instance=RequestContext(request))
@@ -29,7 +29,7 @@ def categories(request, category_id=None, template_name="reflect/categories.html
         else:
             category = get_object_or_404(Category,id=category_id)
     else:
-        return redirect('r_home')
+        return redirect('reflect:home')
     return render_to_response(template_name, {
             'category' : category,
             'categories' : categories,
@@ -62,7 +62,7 @@ def profile(request, person_id=None, template_name="reflect/profile.html"):
         mapping = ','.join([s for s in mapping if s[-1] != 'e'] )
                 
     else:
-        return redirect('r_home')
+        return redirect('reflect:home')
     return render_to_response(template_name, {
             'person' : person,
             'categories':categories,
@@ -71,4 +71,4 @@ def profile(request, person_id=None, template_name="reflect/profile.html"):
             }, context_instance=RequestContext(request))
 
 def friends(request, template_name="reflect/profile.html"):
-    return redirect('r_home')
+    return redirect('reflect:home')
