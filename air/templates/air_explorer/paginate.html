@@ -13,7 +13,7 @@
   <ul id="objects" class="object-list">
     {% for object in paginate.object_list %}
     <li class="object">
-      <a href="{% if object.page %}{% url like_start object.page.id %}{% else %}{% if object.toPage %}{% url like_start object.toPage.id %}{% else %}{% url like_start object.id %}{% endif %}{% endif %}"
+      <a href="{% if object.page %}{% url explore:like_start object.page.id %}{% else %}{% if object.toPage %}{% url explore:like_start object.toPage.id %}{% else %}{% url explore:like_start object.id %}{% endif %}{% endif %}"
 	 title="{% for person in object.page.likedBy.all %}{{ person.name }}, {% endfor %}{% for person in object.toPage.likedBy.all %}{{ person.name }}, {% endfor %}">
 	<div class="image-holder">
 	  {% if object.page %}

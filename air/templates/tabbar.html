@@ -19,7 +19,7 @@
   </li>
   {% if allowNew %}
   <li id="new_tab">
-    <form action="{% url categoryNewRedirect path %}" method="post" >
+    <form action="{% url toolkit:categoryNewRedirect path %}" method="post" >
       <input type="submit" class="fakelink" value="New Category"></input>
     </form>
   </li>

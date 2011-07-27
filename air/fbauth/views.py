@@ -7,10 +7,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
 import urllib, urllib2, cgi, facebook
-from fbauth.models import Profile
+from fbauth.models import FBLogin
 
 authorize_url = 'https://graph.facebook.com/oauth/authorize'
 access_token_url = 'https://graph.facebook.com/oauth/access_token'
+
+"""
+I need to figure out how to do this by popping up a new window or something.
+That would make the flow much nicer and less dependent on the toolkit.
+"""
 
 def fblogin(request, redirectTo='explore:home'):
     args = dict(client_id=settings.FB_ID,
@@ -24,7 +29,7 @@ def fblogin(request, redirectTo='explore:home'):
                 urllib.urlencode(args)).read())
         access_token = response["access_token"][-1]
 
-        # Download the user profile
+        # Download the user fblogin
         graph = facebook.GraphAPI(access_token)
         me = graph.get_object('me')
 
@@ -32,35 +37,34 @@ def fblogin(request, redirectTo='explore:home'):
             user = User.objects.get(username=me['id'])
             user.set_password(access_token)
             user.save()
-            profile = user.profile
-            profile.access_token = access_token
-            profile.save()
-        except Profile.DoesNotExist:
+            user.fblogin.access_token = access_token
+            user.fblogin.save()
+        except FBLogin.DoesNotExist:
             user = User.objects.get(username=me['id'])
             user.set_password(access_token)
             user.save()
-            profile = Profile()
-            profile.user = user
-            profile.fbid = me['id']
-            profile.name = me['name']
-            profile.access_token = access_token
-            profile.save()
+            fblogin = FBLogin()
+            fblogin.user = user
+            fblogin.fbid = me['id']
+            fblogin.name = me['name']
+            fblogin.access_token = access_token
+            fblogin.save()
         except User.DoesNotExist:
             user = User.objects.create_user(me['id'],
                                             me['id']+'@facebook.com',
                                             access_token)
-            profile = Profile()
-            profile.user = user
-            profile.fbid = me['id']
-            profile.name = me['name']
-            profile.access_token = access_token
-            profile.save()
+            fblogin = FBLogin()
+            fblogin.user = user
+            fblogin.fbid = me['id']
+            fblogin.name = me['name']
+            fblogin.access_token = access_token
+            fblogin.save()
 
         user = authenticate(username=me['id'],
                             password=access_token)
         login(request, user)
 
-        return redirect(redirectTo)
+        return redirect('toolkit:newUser_redirect', redirectTo)
     elif request.GET.__contains__("error"):
         raise Exception("got an error from facebook")
         return render_to_response("fbauth/login.html", {
@@ -71,6 +75,6 @@ def fblogin(request, redirectTo='explore:home'):
         return HttpResponseRedirect(authorize_url + "?" +
                                     urllib.urlencode(args))
 
-def fblogout(request):
+def fblogout(request,redirectTo="explore:home"):
     logout(request)
-    return redirect('explore:home')
+    return redirect(redirectTo)

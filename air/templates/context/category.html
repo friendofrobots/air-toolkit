@@ -4,64 +4,79 @@
 
 {% block head_extra %}
 <script type="text/javascript" src="/media/js/context/category.js"></script>
+<script>
+var started = {% if not category.ready and category.task_id %}true;{% else %}false;{% endif %}
+var unread = {% if category.unread %}true;{% else %}false;{% endif %}
+var category_id = {{ category.id }};
+</script>
 {% endblock %}
 
 {% block content %}
-{% include "context/tabbar.html" %}
 
 <div id="title">
-  <h1 id="category-title">{{ category.name }}</h1>
+  <h1 id="category-title">
+    <span id="category-name">{{ category.name }}</span>
+    <span id="edit-title" class="fakelink">edit</span>
+  </h1>
+  <input id="edit-textbox" type="text" value="{{ category.name }}"></input>
 </div>
 
 <div id="category-info">
   {% if category.group %}
-  <ul id="group-people" class="object-list">
+  <ul id="category-people" class="small-list">
     {% for person in category.group.people.all %}
     {% if forloop.counter0 == 12 %}
   </ul>
-  <ul id="group-people-hidden" class="small-list">
+  <ul id="category-people-hidden" class="small-list">
     {% endif %}
-    <li class="group-person small-object">
-      <img src="https://graph.facebook.com/{{ person.fbid }}/picture?type=small" alt="{{ person.name }}"/>
+    <li class="category-person small-object" title="{{ person.name }}">
+      <img src="https://graph.facebook.com/{{ person.fbid }}/picture?type=small" />
     </li>
     {% endfor %}
   </ul>
   {# < #}{% if category.group.people.count > 12 %}
-  <div id="group-people-more" class="fakelink">See More</div> {% comment %} onclick, show hidden {% endcomment %}
+  <div id="category-people-more" class="fakelink">See More</div>
   {% endif %}
   {% else %}
   {% for page in category.seeds.all %} {% comment %} There should only be one. {% endcomment %}
   <div id="page-pic">
     <img src="https://graph.facebook.com/{{ page.fbid }}/picture?type=normal" />
   </div>
-  <ul id="page-liked-by" class="object-list">
+  <ul id="category-people" class="small-list">
     {% for person in page.likedBy.all %}
-    <li class="page-person object">
-      <div class="image-holder">
-	<img src="https://graph.facebook.com/{{ person.fbid }}/picture?type=normal" />
-      </div>
-      <div class="title-holder">
-	{{ person.name }}
-      </div>
+    {% if forloop.counter0 == 10 %}
+  </ul>
+  <ul id="category-people-hidden" class="small-list">
+    {% endif %}
+    <li class="category-person small-object" title="{{ person.name }}">
+      <img src="https://graph.facebook.com/{{ person.fbid }}/picture?type=small" />
     </li>
     {% endfor %}
   </ul>
+  {# < #}{% if category.group.people.count > 10 %}
+  <div id="category-people-more" class="fakelink">See More</div>
+  {% endif %}
   {% endfor %}
   {% endif %}
 </div>
 
 {% if not category.ready %}
 <div id="processing">
-  <button {% if category.status %}style="display:none;"{% endif %}>Start Processing</button>
+  <div class="button" id="processing-start"{% if category.task_id %}style="display:none;"{% endif %}>
+    Start Processing
+  </div>
+  <div id="error" style="display:none;"></div>
   <div id="processing-status" {% if not category.status %}style="display:none;"{% endif %}>
-    pages in category so far: <span id="pages_so_far">0</span>
+    pages in category so far: <span id="pages-so-far">0</span>
+    <div id="processing-details" style="display:none;"></div>
   </div>
 </div>
 {% else %}
 <div id="category-objects">
+  <h3>Top Pages</h3>
   <ul id="objects" class="object-list">
     {% for score in score_page.object_list %}
-    <li class="object">
+    <li class="object" title="liked by: {% for person in score.page.likedBy.all %}{{ person.name }}{% if not forloop.last %},{% endif %} {% endfor %}">
       <div class="image-holder">
 	<img src="https://graph.facebook.com/{{ score.page.fbid }}/picture?type=normal" />
       </div>
@@ -74,14 +89,16 @@
 </div>
 
 <div id="top-members">
+  <hr>
+  <h3>Top Members</h3>
   <ul id="members" class="object_list">
     {% for membership in topmembers %}
     <li class="object">
       <div class="image-holder">
-	<img src="https://graph.facebook.com/{{ membership.person.fbid }}/picture?type=normal" />
+	<img src="https://graph.facebook.com/{{ membership.member.fbid }}/picture?type=normal" />
       </div>
       <div class="title-holder">
-	{{ membership.person.name }}
+	{{ membership.member.name }}
       </div>
     </li>
     {% endfor %}

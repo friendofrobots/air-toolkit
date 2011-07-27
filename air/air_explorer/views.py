@@ -13,7 +13,7 @@ from celery.result import AsyncResult
 def home(request, template_name="air_explorer/home.html"):
     if request.user.is_authenticated():
         try:
-            if request.user.profile.status.stage < 3:
+            if request.user.profile.stage < 3:
                 return redirect('explore:download')
             ready = True
         except:
@@ -28,7 +28,7 @@ def home(request, template_name="air_explorer/home.html"):
 def download(request, template_name="air_explorer/download.html"):
     if request.user.is_authenticated():
         try:
-            stage = request.user.profile.status.stage
+            stage = request.user.profile.stage
         except:
             stage = None
     else:
@@ -42,7 +42,7 @@ def friends(request, page_num=1, template_name="air_explorer/friends.html"):
     if request.user.is_authenticated():
         profile = request.user.profile
         try:
-            if profile.status.stage < 3:
+            if profile.stage < 3:
                 return redirect('explore:download')
         except:
             return redirect('explore:download')
@@ -92,17 +92,17 @@ def likes(request, startsWith=None, page_num=1, template_name="air_explorer/like
     if request.user.is_authenticated():
         profile = request.user.profile
         try:
-            if profile.status.stage < 3:
+            if profile.stage < 3:
                 return redirect('explore:download')
         except:
             return redirect('explore:download')
         if startsWith == None:
             startsWith = 'a'
-        pages = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy'))
+        pages = profile.getActivePages()
         if startsWith == u'~':
-            likes = pages.filter(activity__gt=1,name__iregex=r'\A\W').order_by('name','fbid')
+            likes = pages.filter(name__iregex=r'\A\W').order_by('name','fbid')
         else:
-            likes = pages.filter(activity__gt=1,name__istartswith=startsWith).order_by('name','fbid')
+            likes = pages.filter(name__istartswith=startsWith).order_by('name','fbid')
         paginator = Paginator(likes,24)
         
         try:

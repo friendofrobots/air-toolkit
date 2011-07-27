@@ -53,7 +53,7 @@ var started = {% if active and active.task_id %}true;{% else %}false;{% endif %}
       </div>
       {% endcomment %}
       {% if not active %}
-      <form action="{% url categoryReset category.id %}" method="post">
+      <form action="{% url toolkit:categoryReset category.id %}" method="post">
 	<input type="submit" class="reset-category button" value="reset category"></input>
       </form>
       {% endif %}

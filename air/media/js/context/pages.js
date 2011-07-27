@@ -59,5 +59,5 @@ $(document).ready(function() {
     $('#toppages .page-img, #toppages .page-title').click(function() {
 	$(this).parent().find('.page-select').prop('checked',true);
 	$('#page-form').submit();
-    });	    
+    });
 });

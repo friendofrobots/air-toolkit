@@ -3,7 +3,7 @@
 {% block head_title %}Home{% endblock %}
 {% block head_extra %}
 <script>
-var started = {% if status and status.stage != 0 and status.stage < 3%}true;{% else %}false;{% endif %}
+var started = {% if profile.stage != 0 and profile.stage < 3 %}true;{% else %}false;{% endif %}
 </script>
 <script type="text/javascript" src="/media/js/context/download.js"></script>
 {% endblock %}
@@ -19,9 +19,9 @@ var started = {% if status and status.stage != 0 and status.stage < 3%}true;{% e
     </p>
   </div>
 
-  {% if not status or status.stage < 3 %}
+  {% if profile.stage < 3 %}{# > #}
   <div id="downloading" class="box">
-    <div id="perms">
+    <div id="perms" {% if profile.stage > 0 %}style="display:none;"{% endif %}>
       <p>
 	To do this, we need to download and store some data about you and your friends from Facebook.
 	The likes and interests are the core of the system and the offline access is necessary for the team
@@ -49,28 +49,31 @@ var started = {% if status and status.stage != 0 and status.stage < 3%}true;{% e
 	explicitly ask permission to use specific data.	
       </p>
     </div>
-    
-    {% if not status or status.stage == 0 %}
+    <div id="show-perms"{% if profile.stage == 0 %}style="display:none;"{% endif %}>show info</div>
+
+    {% if profile.stage == 0 %}
     <div>
       <button class="button" id="start">Start Download</button>
     </div>
     {% endif %}
     <p id="error"></p>
-    <div id="starting" class="stages" {% if not status or status.stage == 0 %}style="display:none;"{% endif %}>
+    <div id="starting" class="stages" {% if profile.stage == 0 %}style="display:none;"{% endif %}>
       Thanks! Your download has been added to the queue. If it doesn't appear to be doing anything,
       it's because other people are using the system is busy and had to place you at the end of the queue.
       We will contact you when it has finished and checked for errors. Until then, you can feel free to
       close this page.
     </div>
-    <div id="stage1" class="stages" {% if not status or status.stage != 1 %}style="display:none;"{% endif %}>
-      downloading user data:
+    <div id="stage1" class="stages" {% if profile.stage != 1 %}style="display:none;"{% endif %}>
+      <span id="prepare1" class="dl-label">preparing downloads</span>
+      <span id="working1" class="dl-label">downloading user data:</span>
       <div class="status-bar"><div id="status1" class="status-fill"></div></div>
-      <span id="count1">0</span>/<span id="total1">0</span>
+      <span id="count1"></span><span id="total1"></span>
     </div>
-    <div id="stage2" class="stages" {% if not status or status.stage != 2 %}style="display:none;"{% endif %}>
-      calculating connections:
+    <div id="stage2" class="stages" {% if profile.stage != 2 %}style="display:none;"{% endif %}>
+      <span id="prepare2" class="dl-label">preparing calculations</span>
+      <span id="working2" class="dl-label">calculating connections:</span>
       <div class="status-bar"><div id="status2" class="status-fill"></div></div>
-      <span id="count2">0</span>/<span id="total2">0</span>
+      <span id="count2"></span><span id="total2"></span>
     </div>
     <div id="download-finished" style="display:none">
       You're all done!
@@ -78,7 +81,7 @@ var started = {% if status and status.stage != 0 and status.stage < 3%}true;{% e
   </div>
   {% endif %}
   
-  <div id="friends-button" class="box vertical-box" {% if status.stage != 3%}style="display:none"{% endif %}>
+  <div id="friends-button" class="box vertical-box" {% if profile.stage != 3%}style="display:none"{% endif %}>
     <a href="{% url context:friends %}">
       <h2>// Find People //</h2>
     </a>
@@ -89,7 +92,7 @@ var started = {% if status and status.stage != 0 and status.stage < 3%}true;{% e
     </div>
   </div>
   
-  <div id="pages-button" class="box vertical-box" {% if status.stage != 3%}style="display:none"{% endif %}>
+  <div id="pages-button" class="box vertical-box" {% if profile.stage != 3%}style="display:none"{% endif %}>
     <a href="{% url context:pages %}">
       <h2>// Search Likes //</h2>
     </a>

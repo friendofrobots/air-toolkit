@@ -8,16 +8,10 @@ import json
 from toolkit.models import *
 
 def home(request, template_name="reflect/home.html"):
-    if request.user.is_authenticated():
-        try:
-            status = request.user.profile.status
-        except:
-            status = None
-    else:
-        # This doesn't work, I need to figure out how to redirect properly
+    if not request.user.is_authenticated():
         return redirect('auth:login_redirect','reflect:home')
     return render_to_response(template_name, {
-            'status' : status,
+            'profile' : profile,
             }, context_instance=RequestContext(request))
 
 def categories(request, category_id=None, template_name="reflect/categories.html"):
@@ -43,7 +37,7 @@ def profile(request, person_id=None, template_name="reflect/profile.html"):
         """
         profile = request.user.profile
         if not person_id:
-            person = Person.objects.get(owner=profile,fbid=profile.fbid)
+            person = Person.objects.get(owner=profile,fbid=profile.fblogin.fbid)
         else:
             person = get_object_or_404(Person,id=person_id)
         categories = Category.objects.filter(owner=profile).order_by('id')

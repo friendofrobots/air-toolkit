@@ -40,7 +40,7 @@
   <ul class="profiles">
     {% for profile in category.getTopPeople %}
     <li class="profile">
-      <img src="https://graph.facebook.com/{{ profile.fbid }}/picture" />
+      <img src="https://graph.facebook.com/{{ profile.fblogin.fbid }}/picture" />
       {{ profile.name }}
     </li>
     {% endfor %}

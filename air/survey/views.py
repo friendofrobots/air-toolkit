@@ -11,16 +11,14 @@ def home(request, template_name="survey/home.html"):
     if request.user.is_authenticated():
         try:
             profile = request.user.profile
-            status = profile.status
             category = profile.categories.order_by('id')[0]
-        except DownloadStatus.DoesNotExist:
-            status = None
+        except:
             category = None
     else:
         # This doesn't work, I need to figure out how to redirect properly
         return redirect('auth:login_redirect','survey:home')
     return render_to_response(template_name, {
-            'status' : status,
+            'profile' : profile,
             'category' : category,
             }, context_instance=RequestContext(request))
 
@@ -47,7 +45,7 @@ def profile(request, category_id=None, person_id=None, template_name="survey/pro
         profile = request.user.profile
         category = get_object_or_404(Category,id=category_id)
         if not person_id:
-            person = Person.objects.get(owner=profile,fbid=profile.fbid)
+            person = Person.objects.get(owner=profile,fbid=profile.fblogin.fbid)
         else:
             person = get_object_or_404(Person,id=person_id)
 

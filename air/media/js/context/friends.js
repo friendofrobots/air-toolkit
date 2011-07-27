@@ -24,18 +24,25 @@ function get_filtered() {
 
 	    for ( var relation in data['filters'] ) {
 		$('#rel-'+relation+' ul').empty()
+		if ($('#rel-'+relation+' .more-filters').text() == 'less') {
+		    $('#rel-'+relation+' .more-filters').click();
+		}
 		for ( var i in data['filters'][relation] ) {
 		    filter = '<li class="filter property">'+
 			'<span class="property-id">'+data['filters'][relation][i][0]+'</span>'+
 			'<span class="fakelink"><span class="filter-name">'+
 			data['filters'][relation][i][1]+'</span> <span class="filter-activity">'+
 			'('+data['filters'][relation][i][2]+')</span></span></li>';
-		    f = $('#rel-'+relation+' ul').append(filter);
+		    if ( i < 4 ) {
+			f = $('#rel-'+relation+' .filters').append(filter);
+		    } else {
+			f = $('#rel-'+relation+' .filters-hidden').append(filter);
+		    }
 		    if (filters.indexOf(''+data['filters'][relation][i][0]) >-1) {
 			f.children(':last-child').addClass('active');
 		    }
 		}
-		$('#rel-'+relation+' ul:parent').show()
+		$('#rel-'+relation+' ul').parent().show()
 	    }
 	    $('#toplikes ul').empty()
 	    for ( var i in data['likes'] ) {
@@ -44,20 +51,28 @@ function get_filtered() {
 		    '<span class="fakelink"><span class="filter-name">'+
 		    data['likes'][i][1]+'</span> <span class="filter-activity">'+
 		    '('+data['likes'][i][2]+')</span></span></li>';
-		l = $('#toplikes ul').append(like);
+		if ( i < 4 ) {
+		    l = $('#toplikes .filters').append(like);
+		} else {
+		    l = $('#toplikes .filters-hidden').append(like);
+		}
 		if (likes.indexOf(''+data['likes'][i][0]) >-1) {
 		    l.children(':last-child').addClass('active');
 		}
 	    }
-	    $("#thinking-cover").hide();
+	    $('.filters:empty').parent().hide();
+	    $('.filters-hidden:empty').parent().find('.more-filters').hide();
+	    $('.filters:not(:empty)').parent().show();
+	    $('.filters-hidden:not(:empty)').parent().find('.more-filters').show();
 
 	    category_name = $('.active').map(function() {
 		return $(this).parent().parent().find('h3').text()+'-'+$(this).find('.filter-name').text();
 	    }).get().join(', ');
-	    $('#group-name').val(category_name);
+	    $('#group-name').val('Group: '+category_name);
 
 	    set_handlers();
 	    $('.friend-select').prop('checked',true).change();
+	    $("#thinking-cover").hide();
 	    show_hide_submit();
         } else {
             $('#error').text('something terrible has happened').show();
@@ -139,4 +154,11 @@ $(document).ready(function() {
 	show_hide_submit();
     });
     $('.friend-select').prop('checked',true).change();
+    $('.more-filters').toggle(function() {
+	$(this).parent().find('.filters-hidden').slideDown('fast');
+	$(this).text('less');
+    }, function() {
+	$(this).parent().find('.filters-hidden').slideUp('fast');
+	$(this).text('more');
+    });
 });

@@ -6,7 +6,6 @@
 {% endblock %}
 
 {% block content %}
-{% include "context/tabbar.html" %}
 
 <div id="title">
   <h1>Construct Group</h1>
@@ -20,8 +19,12 @@
     {% for filter in filters %}
     <li id="rel-{{ filter.0.0 }}" class="relation" {% if not filter.1 %}style="display:none"{% endif %}>
       <h3>{{ filter.0.1 }}</h3>
-      <ul>
+      <ul class="filters">
 	{% for property in filter.1 %}
+	{% if forloop.counter0 == 5 %}
+      </ul>
+      <ul class="filters-hidden">
+	{% endif %}
 	<li class="filter property">
 	  <span class="property-id">{{ property.id }}</span>
 	  <span class="fakelink">
@@ -31,12 +34,19 @@
 	</li>
 	{% endfor %}
       </ul>
+      {# < #}{% if filter.1|length > 5 %}
+      <div class="more-filters">more</div>
+      {% endif %}
     </li>
     {% endfor %}
     <li id="toplikes" class="relation">
       <h3>Likes</h3>
-      <ul>
+      <ul class="filters">
 	{% for like in toplikes %}
+	{% if forloop.counter0 == 5 %}
+      </ul>
+      <ul class="filters-hidden">
+	{% endif %}
 	<li class="filter like">
 	  <span class="like-id">{{ like.id }}</span>
 	  <span class="fakelink">
@@ -45,6 +55,10 @@
 	  </span>
 	</li>
 	{% endfor %}
+      </ul>
+      {# < #}{% if toplikes|length > 5 %}
+      <div class="more-filters">more</div>
+      {% endif %}
     </li>
   </ul>
 </div>

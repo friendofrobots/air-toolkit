@@ -1,7 +1,7 @@
 from toolkit.models import *
 from django.contrib import admin
 
-admin.site.register(DownloadStatus)
+admin.site.register(Profile)
 admin.site.register(Person)
 admin.site.register(PersonProperty)
 admin.site.register(Page)

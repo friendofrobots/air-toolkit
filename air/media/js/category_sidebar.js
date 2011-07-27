@@ -85,7 +85,6 @@ function creation_status() {
             update_creation(data);
         }
     });
-
 }
 
 $(document).ready(function() {

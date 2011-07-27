@@ -5,7 +5,7 @@
 {% if user.is_athenticated %}
 {% block head_extra %}
 <script>
-var started = {% if status and status.stage != 0 %}true;{% else %}false;{% endif %}
+var started = {% if profile.stage != 0 %}true;{% else %}false;{% endif %}
 var redirect = true;
 </script>
 {% endblock %}
@@ -33,13 +33,13 @@ var redirect = true;
     </div>
   </div>
 
-  {% if not status %}
+  {% if profile.stage == 0 %}
   <div id="startButton">
     <button class="button" id="start">Start Download</button>
   </div>
   {% endif %}
   {% comment %}
-  <div id="downloading" {% if not status or status.stage == 0 or status.stage == 4 %}style="display:none;"{% endif %}>
+  <div id="downloading" {% if profile.stage == 0 or profile.stage == 4 %}style="display:none;"{% endif %}>
     <p id="error"></p>
     <p id="starting" class="stages">
       Your download has been started. It takes a while, so you should come
@@ -47,13 +47,13 @@ var redirect = true;
       close this page and go on about your day. Just come back to this url
       to check if it's done.
     </p>
-    <p id="stage1" class="stages" {% if not status or status.stage != 1 %}style="display:none;"{% endif %}>
+    <p id="stage1" class="stages" {% if profile.stage != 1 %}style="display:none;"{% endif %}>
       downloading user data: <span id="count1">0</span>/<span id="total1">0</span>
     </p>
-    <p id="stage2" class="stages" {% if not status or status.stage != 2 %}style="display:none;"{% endif %}>
+    <p id="stage2" class="stages" {% if profile.stage != 2 %}style="display:none;"{% endif %}>
       calculating pmis: <span id="count2">0</span>/<span id="total2">0</span> (this one will take a bit longer)
     </p>
-    <p id="stage2" class="stages" {% if not status or status.stage != 3 %}style="display:none;"{% endif %}>
+    <p id="stage2" class="stages" {% if profile.stage != 3 %}style="display:none;"{% endif %}>
       finding categories
     </p>
     <p id="stage3" class="stages" style="display:none;">
@@ -62,7 +62,7 @@ var redirect = true;
   </div>
   {% endcomment %}
 
-  <div id="getstarted" {% if not status or status.stage != 3 %}style="display:none;"{% endif %}>
+  <div id="getstarted" {% if profile.stage != 3 %}style="display:none;"{% endif %}>
     <a class="button" href="/reflect/categories/">Get Started</a>
   </div>
 </div>

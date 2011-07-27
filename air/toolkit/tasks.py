@@ -3,7 +3,6 @@ from django.db import transaction
 from celery.decorators import task
 from celery.result import TaskSetResult
 from toolkit.models import *
-from fbauth.models import Profile
 import json, urllib2, urllib, math, facebook
 
 from celery.task.sets import TaskSet
@@ -44,7 +43,7 @@ def dlUser(profile_id,graphapi,fbid,name):
         likes = graphapi.get_connections(fbid,"likes")['data']
         for like in likes:
             if not 'name' in like:
-                print like
+                print 'like with no name: ',like
             else:
                 if len(like['name']) > 180:
                     like['name'] = like['name'][:180]
@@ -73,13 +72,13 @@ def dlUser(profile_id,graphapi,fbid,name):
     except (ValueError,IOError,NameError,facebook.GraphAPIError,urllib2.URLError), exc:
         print exc
         dlUser.retry(countdown=15, max_retries=100, throw=False)
+    except Exception,exc:
+        print profile_id, fbid, name
+        raise exc
 
 def testDl(profile_id):
     profile = Profile.objects.get(id=profile_id)
-    status, created = DownloadStatus.objects.get_or_create(
-        owner=profile,
-        defaults={'stage':0})
-    graphapi = facebook.GraphAPI(profile.access_token)
+    graphapi = facebook.GraphAPI(profile.fblogin.access_token)
     me = graphapi.get_object('me')
     friends = [(f['id'],f['name']) for f in graphapi.get_connections('me','friends')['data']]
     friends.append((me['id'],me['name']))
@@ -87,15 +86,15 @@ def testDl(profile_id):
     subtasks = [dlUser.subtask((profile.id,graphapi,fbid,name)) for (fbid,name) in friends]
     result = TaskSet(tasks=subtasks).apply_async()
     result.save()
-    status.stage = 1
-    status.task_id = result.taskset_id
-    status.save()
+    profile.stage = 1
+    profile.task_id = result.taskset_id
+    profile.save()
     r = checkTaskSet.delay(result,profile.id)
     return result
 
 def testInfo(profile_id):
     profile = Profile.objects.get(id=profile_id)
-    graphapi = facebook.GraphAPI(profile.access_token)
+    graphapi = facebook.GraphAPI(profile.fblogin.access_token)
     me = graphapi.get_object('me')
     friends = [{'id':f['id'],'name':f['name']} for f in graphapi.get_connections('me','friends')['data']]
     friends.append({'id':me['id'],'name':me['name']})
@@ -214,34 +213,33 @@ def dlInfo(graphapi,profile,person):
 def checkTaskSet(result,profile_id):
     if result.ready():
         profile = Profile.objects.get(id=profile_id)
-        pages = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy')).filter(activity__gt=1)
-        numpeople = Person.objects.filter(likes__in=pages).distinct().count()
+        numpeople = profile.getActivePeople().count()
 
-        subtasks = [calcPMIs.subtask((profile_id,page.id,pages,numpeople)) for page in pages]
+        subtasks = [calcPMIs.subtask((profile_id,page.id,numpeople)) for page in pages]
         r = TaskSet(tasks=subtasks).apply_async()
+        r.save()
         r2 = checkPMISet.delay(r,profile.id)
-        profile.status.numpeople = numpeople
-        profile.status.stage = 2
-        profile.status.task_id = r.taskset_id
-        profile.status.save()
+        profile.numpeople = numpeople
+        profile.stage = 2
+        profile.task_id = r.taskset_id
+        profile.save()
     else:
         checkTaskSet.retry(countdown=15, max_retries=100)
 
 def testPMIs(profile_id):
     profile = Profile.objects.get(id=profile_id)
-    pages = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy')).filter(activity__gt=1)
-    numpeople = Person.objects.filter(likes__in=pages).distinct().count()
+    numpeople = profile.getActivePeople().count()
 
-    subtasks = [calcPMIs.subtask((profile_id,page.id,pages,numpeople)) for page in pages]
+    subtasks = [calcPMIs.subtask((profile_id,page.id,numpeople)) for page in pages]
     r = TaskSet(tasks=subtasks).apply_async()
     r2 = checkPMISet.delay(r,profile.id)
-    profile.status.stage = 2
-    profile.status.task_id = r.taskset_id
-    profile.status.save()
+    profile.stage = 2
+    profile.task_id = r.taskset_id
+    profile.save()
     return r, r2
 
 @task()
-def calcPMIs(profile_id, page_id1, pages, numpeople):
+def calcPMIs(profile_id, page_id1, numpeople):
     """
     Pmi(i1,i2) = log(Pr(i1,i2) / Pr(i1)Pr(i2))
                = log(num(i1,i2)*totalPeople / num(i1)num(i2))
@@ -250,41 +248,41 @@ def calcPMIs(profile_id, page_id1, pages, numpeople):
       lower id to the one with the higher id (note: ids are strings,
       so the sort is alphabetical in this case)
     """
-    profile = Profile.objects.get(id=profile_id)
-    fromPage = Page.objects.get(id=page_id1)
-    with transaction.commit_on_success():
-        for toPage in pages:
-            intersect = fromPage.likedBy.filter(id__in=[lb.id for lb in toPage.likedBy.all()]).distinct().count()
-            if intersect>0:
+    try:
+        profile = Profile.objects.get(id=profile_id)
+        pages = profile.getActivePages()
+        fromPage = Page.objects.get(id=page_id1)
+        likeCount = fromPage.likedBy.count()
+        with transaction.commit_on_success():
+            for toPage in pages.filter(likedBy__in=fromPage.likedBy.all()):
+                intersect = fromPage.likedBy.filter(id__in=toPage.likedBy.all()).distinct().count()
                 PMI.objects.get_or_create(
                     owner=profile,
                     fromPage=fromPage,
                     toPage=toPage,
-                    value=math.log(1.*intersect*numpeople/(fromPage.likedBy.count()*toPage.likedBy.count()),2))
-    agg = PMI.objects.filter(owner=profile).aggregate(Min('value'),Max('value'))
-    profile.status.minpmi, profile.status.maxpmi = agg['value__min'],agg['value__max']
+                    value=math.log(1.*intersect*numpeople/(likeCount*toPage.likedBy.count()),2))
+    except Exception, exc:
+        print profile_id, page_id1
+        raise exc
                     
 @task(ignore_result=True)
 def checkPMISet(result,profile_id):
     if result.ready():
         profile = Profile.objects.get(id=profile_id)
-        profile.status.stage = 3
-        profile.status.task_id = ""
-        profile.status.save()
+        agg = PMI.objects.filter(owner=profile).aggregate(Min('value'),Max('value'))
+        profile.minpmi, profile.maxpmi = agg['value__min'],agg['value__max']
+        profile.stage = 3
+        profile.task_id = ""
+        profile.save()
     else:
         checkPMISet.retry(countdown=15, max_retries=100)
 
 @task(ignore_result=True)
-def createCategory(profile_id, category_id,
-                   startvalue, threshold, decayrate):
+def createCategory(profile_id, category_id, auto=False):
     profile = Profile.objects.get(id=profile_id)
     category = Category.objects.get(id=category_id)
-    category.startvalue = startvalue
-    category.threshold = threshold
-    category.decayrate = decayrate
-    category.save()
-    category.resetScores()
-    minpmi, maxpmi = profile.status.minpmi, profile.status.maxpmi
+    category.resetScores(auto)
+    minpmi, maxpmi = profile.minpmi, profile.maxpmi
     """
     Spreading Activation Algorithm:
     F is firing threshold, D is decay factor, W is link weight
@@ -293,9 +291,9 @@ def createCategory(profile_id, category_id,
         (cap at 1, mark all fired so they don't fire again)
         nodes with A[i]>F fire next time
     """
-    category.scores.filter(page__in=category.seeds.all()).update(value=startvalue)
-    toFire = category.scores.filter(fired=False,value__gte=threshold)
+    toFire = category.scores.filter(fired=False,value__gte=category.threshold)
     # going back and forth between nodes and score, need to clear this up
+    decay = category.decayrate
     try:
         while toFire:
             if toFire.count() > 600:
@@ -307,17 +305,22 @@ def createCategory(profile_id, category_id,
                     for pmi in score1.page.pmisFrom.all():
                         if score1.page != pmi.toPage:
                             score2 = pmi.toPage.categoryScore.get(category=category)
-                            newValue = score2.value + (score1.value*pmi.normalized_value()*decayrate)
+                            newValue = score2.value + (score1.value*pmi.normalized_value()*decay)
                             if newValue > 1:
                                 newValue = 1.0
                             score2.value = newValue
                             score2.save()
                     score1.fired = True
                     score1.save()
-                toFire = category.scores.filter(fired=False,value__gte=threshold)
-                decayrate = decayrate**2
-        calcMemberships(profile.id, category.id)
+                toFire = category.scores.filter(fired=False,value__gte=category.threshold)
+                decay = decay**2
+        category.calcMemberships()
+    except Exception, e:
+        raise e
     finally:
+        category = Category.objects.get(id=category_id)
         category.task_id = ""
         category.active = None
+        category.ready = True
+        category.unread = True
         category.save()

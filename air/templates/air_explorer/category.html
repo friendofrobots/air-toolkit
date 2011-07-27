@@ -30,7 +30,7 @@
   </div>
 </div>
 
-{% url category_start category.id as page_url%}
+{% url toolkit:category_start category.id as page_url%}
 {% include "air_explorer/paginate.html" %}
 
 <div id="second-title">
@@ -38,7 +38,7 @@
   <ul id="top-members" class="object-list">
     {% for membership in memberships %}
     <li class="object">
-      <a href="{% url friend_start membership.member.id %}">
+      <a href="{% url explore:friend_start membership.member.id %}">
 	<div class="image-holder">
 	  <img src="https://graph.facebook.com/{{ membership.member.fbid }}/picture?type=normal" />
 	</div>

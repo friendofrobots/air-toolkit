@@ -1,0 +1,38 @@
+<div id="toolbar">
+  <div id="toolbar-top">
+    <ul id="tabs">
+      //
+      <li>
+	<a href="{% url context:home %}">Home</a>
+      </li>
+      //
+      <li>
+	<a href="{% url context:friends %}">Find People</a>
+      </li>
+      //
+      <li>
+	<a href="{% url context:pages %}">Find Likes</a>
+      </li>
+      //
+      {% block tabs %}{% endblock %}
+      {# < #}{% if categories.count > 0 %}
+      <li id="notify-top">
+	<span id="unread-count" {# < #}{% if unread.count > 0 %}class="unread-red"{% endif %}>
+	  {{ unread.count }}
+	</span>
+	Unread
+      </li>
+      {% endif %}
+    </ul>
+
+  </div>
+
+  <ul id="notifications">
+    {% for category in categories %}
+    <li id="notify-{{ category.id }}" class="notify-category {% if category.unread %}unread{% endif %}">
+      <div class="category-id">{{ category.id }}</div>
+      <a href="{% url context:category category.id %}">{{ category.name }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>

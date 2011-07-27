@@ -7,7 +7,6 @@ from django.db.models import Q, Count
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
 import json
-from operator import itemgetter
 from toolkit.models import *
 
 def home(request, template_name="context/home.html"):
@@ -19,20 +18,13 @@ def home(request, template_name="context/home.html"):
       other for finding individual objects
     """
     if request.user.is_authenticated():
-        try:
-            profile = request.user.profile
-            status = profile.status
-
-            categories = Category.objects.filter(owner=profile,status="").order_by('-last_updated')
-            unread = categories.filter(unread=True)
-        except DownloadStatus.DoesNotExist:
-            status = None
-            categories = None
-            unread = None
+        profile = request.user.profile
+        categories = Category.objects.filter(owner=profile).order_by('-last_updated')
+        unread = categories.filter(unread=True)
     else:
         return redirect('auth:login_redirect','context:home')
     return render_to_response(template_name, {
-            'status' : status,
+            'profile' : profile,
             'categories' : categories,
             'unread' : unread,
             }, context_instance=RequestContext(request))
@@ -44,20 +36,18 @@ def friends(request, template_name="context/friends.html"):
     """
     if request.user.is_authenticated():
         profile = request.user.profile
-        counted = Person.objects.filter(owner=profile).annotate(activity=Count('likes'))
-        friends = counted.filter(activity__gt=0).order_by('-activity','fbid')
+        friends = profile.getActivePeople().order_by('name','fbid')
         filters = []
         for relation in PersonProperty.RELATIONS:
             properties = PersonProperty.objects.filter(owner=profile,
                                                        relation=relation[0],
                                                        people__in=friends).distinct()
             ordered = properties.annotate(activity=Count('people')).order_by('-activity','id')
-            filters.append((relation,[prop for prop in ordered[:5]]))
+            filters.append((relation,[prop for prop in ordered]))
 
-        likes = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy'))
-        toplikes = likes.filter(activity__gt=0).order_by('-activity','fbid')[:8]
+        toplikes = profile.getActivePages().order_by('-activity','fbid')[:16]
 
-        categories = Category.objects.filter(owner=profile,status="").order_by('-last_updated')
+        categories = Category.objects.filter(owner=profile).order_by('-last_updated')
         unread = categories.filter(unread=True)
     else:
         return redirect('context:home')
@@ -77,8 +67,7 @@ def filtered_friends(request):
     if request.user.is_authenticated():
         profile = request.user.profile
         if request.method == "GET":
-            counted = Person.objects.filter(owner=profile).annotate(activity=Count('likes'))
-            filtered_people = counted.filter(activity__gt=0).order_by('-activity','fbid')
+            filtered_people = profile.getActivePeople().order_by('name','fbid')
             filters = dict([(relation[0],[]) for relation in PersonProperty.RELATIONS])
             for prop_id in request.GET.getlist('filters[]'):
                 filtered_people = filtered_people.filter(properties=prop_id)
@@ -91,14 +80,12 @@ def filtered_friends(request):
                                                            relation=relation[0],
                                                            people__in=filtered_people).distinct()
                 props = properties.annotate(new_activity=Count('people')).order_by('-new_activity','id')
-                new_filters[relation[0]] = [[prop.id,prop.name,prop.new_activity] for prop in props[:5]]
+                new_filters[relation[0]] = [[prop.id,prop.name,prop.new_activity] for prop in props]
 
             likes = Page.objects.filter(owner=profile,
                                         likedBy__in=filtered_people).distinct()
             toplikes = [[like.id,like.name,like.new_activity] for like in 
-                        likes.annotate(new_activity=Count('likedBy')).order_by('-new_activity','fbid')[:8]]
-            
-
+                        likes.annotate(new_activity=Count('likedBy')).order_by('-new_activity','fbid')[:16]]
             response_data = {
                 'people': [[x.id, x.name, x.fbid] for x in filtered_people],
                 'filters': new_filters,
@@ -122,9 +109,8 @@ def pages(request, template_name="context/pages.html"):
     if request.user.is_authenticated():
         profile = request.user.profile
         # Top active_pages
-        counted = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy'))
-        pages = counted.filter(activity__gt=1).order_by('-activity')
-        categories = Category.objects.filter(owner=profile,status="").order_by('-last_updated')
+        pages = profile.getActivePages().order_by('-activity')
+        categories = Category.objects.filter(owner=profile).order_by('-last_updated')
         unread = categories.filter(unread=True)
     else:
         return redirect('context:home')
@@ -144,12 +130,11 @@ def page_lookup(request):
         if request.method == "GET":
             if request.GET.has_key('query'):
                 query = request.GET.get('query')
-                counted = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy'))
-                active = counted.filter(activity__gt=1)
+                active = profile.getActivePages()
                 starts = active.filter(name__istartswith=query).order_by('-activity')
-                contains = active.filter(name__icontains=query).order_by('-activity').exclude(name__istartswith=query)
+                contains = active.filter(name__icontains=query).order_by('-activity')
                 results = list(starts)
-                results.extend(contains)
+                results.extend(contains.exclude(name__istartswith=query))
                 
                 page = int(request.GET.get('page',1))
                 response_data = {
@@ -176,7 +161,7 @@ def page_lookup(request):
  
 def category(request, category_id=None, template_name="context/category.html"):
     """
-    Display download status if downloading
+    Display category status if calculating
     else display category and friends
     """
     if request.user.is_authenticated():
@@ -194,7 +179,7 @@ def category(request, category_id=None, template_name="context/category.html"):
             source = 'page'
             topmembers = category.memberships.order_by('-value')[:6]
 
-        categories = Category.objects.filter(owner=profile,status="").order_by('-last_updated')
+        categories = Category.objects.filter(owner=profile).order_by('-last_updated')
         unread = categories.filter(unread=True)
     return render_to_response(template_name, {
             'category' : category,
@@ -226,7 +211,7 @@ def category_more(request, category_id=None, page_num=1):
             }
 
 def browse(request):
-    categories = Category.objects.filter(owner=profile,status="").order_by('-last_updated')
+    categories = Category.objects.filter(owner=profile).order_by('-last_updated')
     unread = categories.filter(unread=True)
     return render_to_response(template_name, {
             'categories' : categories,

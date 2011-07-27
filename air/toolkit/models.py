@@ -1,12 +1,14 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Count
 from django.db import transaction
-from fbauth.models import Profile
+from fbauth.models import FBLogin
 from taggit.managers import TaggableManager
 import json, pickle, math
 
-class DownloadStatus(models.Model):
-    owner = models.OneToOneField(Profile,related_name="status")
+class Profile(models.Model):
+    user = models.OneToOneField(User,related_name='profile')
+    fblogin = models.OneToOneField(FBLogin,related_name='profile')
     stage = models.IntegerField(choices=(
             (0,'not yet started'),
             (1,'downloading user data'),
@@ -18,9 +20,15 @@ class DownloadStatus(models.Model):
     numpeople = models.IntegerField(blank=True,null=True) # filtered for people with likes
     minpmi = models.FloatField(blank=True,null=True)
     maxpmi = models.FloatField(blank=True,null=True)
+    
+    def getActivePages(self):
+        return self.page_set.annotate(activity=Count('likedBy')).filter(activity__gt=1)
+
+    def getActivePeople(self):
+        return self.person_set.filter(likes__in=self.getActivePages()).distinct()
 
     def __unicode__(self):
-        return self.owner.name + "'s Status"
+        return self.fblogin.name
 
 class Page(models.Model):
     owner = models.ForeignKey(Profile)
@@ -84,14 +92,13 @@ class PMI(models.Model):
         unique_together = (('owner','fromPage','toPage'))
     
     def npmi(self):
-        numpeople = self.owner.status.numpeople
+        numpeople = self.owner.numpeople
         npmi = -1. * self.value / math.log(1.*max(self.fromPage.likedBy.count(),
                                                   self.toPage.likedBy.count())/numpeople,2)
         return (1 + npmi)/2
 
     def normalized_value(self):
-        status = self.owner.status
-        return (self.value - status.minpmi) / (status.maxpmi - status.minpmi)
+        return (self.value - self.owner.minpmi) / (self.owner.maxpmi - self.owner.minpmi)
 
     def __unicode__(self):
         return self.fromPage.name +","+ self.toPage.name +"=>"+ unicode(self.value)
@@ -106,13 +113,13 @@ class Category(models.Model):
 
     ready = models.BooleanField(default=False)
     unread = models.BooleanField(default=False)
-    last_updated = models.DateField(auto_now=True)
+    last_updated = models.DateTimeField(auto_now=True)
 
     startvalue = models.FloatField(default=0.6)
     threshold = models.FloatField(default=0.4)
     decayrate = models.FloatField(default=0.3)
 
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     def getASeed(self):
         return self.seeds.all()[0]
@@ -138,25 +145,43 @@ class Category(models.Model):
             status = []
         return status
 
-    def resetScores(self):
-        if not category.scores.exists():
-            pages = Page.objects.filter(owner=profile).annotate(activity=Count('likedBy')).filter(activity__gt=1)
+    def resetScores(self, auto=True):
+        if not self.scores.exists():
+            pages = self.owner.getActivePages()
             for page in pages:
-                CategoryScore.objects.get_or_create(owner=profile,
-                                                    category=category,
+                CategoryScore.objects.get_or_create(owner=self.owner,
+                                                    category=self,
                                                     page=page)
-        self.scores.all().update(value=0)
+        self.scores.all().update(value=0,fired=False)
         try:
-            self.scores.filter(page__likedBy__in=self.group.people.all())
-            seedCount = {}
-            for person in self.group.people.all():
-                for like in person.likes.all():
-                    if like not in seedCount:
-                        seedCount[like] = 0
-                    seedCount[like] += 1
-        mult = self.startvalue/(1.*max(seedCount.iteritems(),key=lambda x : x[1]))
+            scores = self.scores.filter(page__likedBy__in=self.group.people.all()).distinct()
+            act = scores.annotate(activity=Count('page__likedBy'))
+            mult = self.startvalue/(1.*max(act,key=lambda x : x.activity).activity)
+            for score in act:
+                score.value = score.activity * mult
+                score.save()
+            if auto:
+                self.threshold = self.scores.order_by('-value')[2].value
+                self.save()
         except PersonGroup.DoesNotExist:
             self.scores.filter(page__in=self.seeds.all()).update(value=self.startvalue)
+
+    def calcMemberships(self):
+        with transaction.commit_on_success():
+            if not self.memberships.exists():
+                people = self.owner.getActivePeople()
+                for person in people:
+                    CategoryMembership.objects.get_or_create(owner=self.owner,
+                                                             category=self,
+                                                             member=person)
+        self.memberships.update(value=0)
+        with transaction.commit_on_success():
+            for membership in self.memberships.all():
+                value = 0
+                for score in self.scores.filter(page__in=person.likes.all()):
+                    value += score.value
+                membership.value = value
+                membership.save()
 
     def __unicode__(self):
         return self.name
@@ -170,34 +195,6 @@ class CategoryScore(models.Model):
 
     def normalized_value(self):
         return self.value
-
-    def getPage(self):
-        return self.page
-
-    def resetScores(self):
-        if not self.scores.exists():
-            pages = Page.objects.filter(owner=self.owner).annotate(activity=Count('likedBy')).filter(activity__gt=1)
-            for page in pages:
-                CategoryScore.objects.get_or_create(owner=self.owner,
-                                                    category=self,
-                                                    page=page)
-        self.scores.update(value=0.0,fired=False)
-        try:
-            self.collection.seedCategory()
-        except:
-            self.scores.filter(page__in=self.seeds.all()).update(value=self.startvalue)
-
-    def calcMemberships(self):
-        with transaction.commit_on_success():
-            for person in Person.objects.filter(owner=self.owner):
-                membership = 0
-                for score in self.scores.filter(page__in=person.likes.all()):
-                    membership += score.value
-                    CategoryMembership.objects.get_or_create(
-                        owner=self.owner,
-                        category=self,
-                        member=person,
-                        value=membership)
 
     def __unicode__(self):
         return self.category.name + ': ' + self.page.name + ' - ' + unicode(self.value)

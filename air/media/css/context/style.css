@@ -14,7 +14,7 @@ ul {
 #content {
   margin: 0 auto;
   width:760px;
-  height: 800px;
+  height: 764px;
   position: relative;
   overflow:auto;
 }
@@ -32,25 +32,38 @@ button, .button {
   font-size:100%;
   padding:6px;
   display:block;
+  cursor:pointer;
+}
+button:active, .button:active {
+  background-color:#DDF;
 }
 
-/* tabbar.html */
-#tabbar {
-  padding: 0 10px;
-  border-top: 2px solid black;
+/* toolbar.html */
+#toolbar {
+  min-height:12px;
+  width:740px;
 }
-#tabbar li {
-  display: inline-block;
-  border-width: 0 2px 2px 2px;
-  border-style: solid;
-  border-color: black;
-  padding: 2px;
+#toolbar-top {
+  border-bottom:2px solid black;
+  border-top:1px solid black;
+  background-color:#FFF;
+  position:relative;
+}
+
+#tabs {
+  padding: 0 10px;
   margin:0;
+}
+
+#tabs li {
+  display: inline-block;
+  padding: 4px 2px;
+  margin: 0 2px;
   text-align: center;
 }
-#tabbar a {
+
+#tabs a {
   font-weight:bold;
-  border: none;
   background-color:white;
   display: inline;
   padding:0;
@@ -59,21 +72,12 @@ button, .button {
   font-size: 100%;
 }
 
-/* notifications.html */
-#notifications {
-  position:fixed;
-  bottom:0;
-  min-height:12px;
-  width:750px;
-  border-top:2px solid black;
-  background-color:#FFF;
-}
-
 #notify-top {
-  text-align:center;
   cursor:pointer;
-  padding:2px;
-  border-bottom:1px solid black;
+  border-right:1px solid black;
+  border-left:1px solid black;
+  float:right;
+  width:300px;
 }
 .unread-red {
   display:inline-block;
@@ -84,9 +88,26 @@ button, .button {
   vertical-align:bottom;
 }
 
-#notify-categories {
+.unread {
+  font-weight:bold;
+}
+
+#notifications {
   display:none;
-  padding-left:40px;
+  position:absolute;
+  padding:4px;
+  left:418px;
+  border-width: 0 1px 1px 1px;
+  border-style:solid;
+  border-color: black;
+  margin-top:0;
+  width:296px;
+  font-size:80%;
+  background-color:#FFF;
+}
+#notifications li {
+  height:15px;
+  overflow:hidden;
 }
 
 /* object-list */
@@ -152,6 +173,16 @@ button, .button {
   vertical-align:top;
 }
 
+#show-perms {
+  text-align:center;
+  cursor:pointer;
+  text-decoration:underline;
+}
+
+.stages {
+  margin: 8px 0;
+}
+
 .status-bar {
   width:400px;
   border: 1px solid black;
@@ -161,8 +192,15 @@ button, .button {
 .status-fill {
   height:10px;
   background-color:black;
+  width:0;
 }
 
+.dl-label {
+  display:inline-block;
+  width:175px;
+  display:none;
+  text-align:right;
+}
 
 /* friends.html */
 /* sidebar */
@@ -200,6 +238,17 @@ button, .button {
   background-color: #DBDFEB;
 }
 
+.filters-hidden {
+  display:none;
+}
+
+.more-filters {
+  background-color:#F4F4F4;
+  text-align:center;
+  font-size:75%;
+  cursor:pointer;
+}
+
 /* rightContent */
 #rightContent {
   width: 493px;
@@ -234,12 +283,11 @@ button, .button {
 
 #group-submit {
   position:fixed;
-  bottom: 0;
+  bottom: 36px;
   right:20px;
   background-color: #FFF;
   border: 2px solid black;
   font-size:150%;
-  
 }
 
 /* pages.html */
@@ -285,12 +333,12 @@ button, .button {
 }
 
 /* category.html */
-#group-people-hidden {
+#category-people-hidden {
   display:none;
 }
-#group-people-more {
+#category-people-more {
   text-align:center;
-  background-color:#222;
+  background-color:#DDD;
 }
 
 .small-object {
@@ -299,6 +347,7 @@ button, .button {
   height:50px;
   overflow:hidden;
   display:inline-block;
+  vertical-align:top;
 }
 #category-info {
   border-bottom:1px solid black;
@@ -308,6 +357,24 @@ button, .button {
   margin:12px;
 }
 
-#processing button {
+#processing .button {
   margin: 0 auto;
+  text-align:center;
+  width: 130px;
+}
+
+#edit-title {
+  display:inline-block;
+  margin:6px;
+  font-size:30%;
+  font-weight:normal;
+  text-decoration:underline;
+  color:blue;
+}
+
+#edit-textbox {
+  display:none;
+  font-weight:bold;
+  font-size:2em;
+  width:95%
 }

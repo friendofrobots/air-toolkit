@@ -1,4 +1,4 @@
-from fbauth.models import Profile
+from fbauth.models import FBLogin
 from django.contrib import admin
 
-admin.site.register(Profile)
+admin.site.register(FBLogin)

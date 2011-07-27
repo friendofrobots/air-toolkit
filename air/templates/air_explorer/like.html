@@ -28,7 +28,7 @@ var started = {% if active and active.task_id %}true{% else %}false{% endif %};
   </h1>
 </div>
 
-{% url like_start like.id as page_url%}
+{% url explore:like_start like.id as page_url%}
 {% include "air_explorer/paginate.html" %}
 
 <div id="second-title">
@@ -36,7 +36,7 @@ var started = {% if active and active.task_id %}true{% else %}false{% endif %};
   <ul id="likedBy" class="object-list">
     {% for person in like.likedBy.all %}
     <li class="object">
-      <a href="{% url friend_start person.id %}">
+      <a href="{% url explore:friend_start person.id %}">
 	<div class="image-holder">
 	  <img src="https://graph.facebook.com/{{ person.fbid }}/picture?type=normal" />
 	</div>

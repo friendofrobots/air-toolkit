@@ -13,9 +13,9 @@
 
   <body>
     <div id="content">
+      {% include "context/toolbar.html" %}
       {% block content %}{% endblock %}
       {% if user.is_authenticated %}
-      {% include "context/notifications.html" %}
       {% endif %}
     </div>
   </body>
