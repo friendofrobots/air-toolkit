@@ -22,10 +22,10 @@ class Profile(models.Model):
     maxpmi = models.FloatField(blank=True,null=True)
     
     def getActivePages(self):
-        return self.page_set.annotate(activity=Count('likedBy')).filter(activity__gt=1)
+        return self.page_set.all()
 
     def getActivePeople(self):
-        return self.person_set.filter(likes__in=self.getActivePages()).distinct()
+        return self.person_set.all()
 
     def __unicode__(self):
         return self.fblogin.name
