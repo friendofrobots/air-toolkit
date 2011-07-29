@@ -109,7 +109,7 @@ def pages(request, template_name="context/pages.html"):
     if request.user.is_authenticated():
         profile = request.user.profile
         # Top active_pages
-        pages = profile.getActivePages().annotate(activity=Count('likedBy')).order_by('-activity')
+        pages = profile.getActivePages().order_by('-activity')
         categories = Category.objects.filter(owner=profile).order_by('-last_updated')
         unread = categories.filter(unread=True)
     else:
@@ -173,18 +173,18 @@ def category(request, category_id=None, template_name="context/category.html"):
 
         try:
             category.group
-            source = 'group'
-            topmembers = category.memberships.exclude(person__in=category.group.people).order_by('-value')[:6]
-        except:
-            source = 'page'
+            topmembers = category.memberships.exclude(member__in=category.group.people.all()).order_by('-value')[:6]
+            people = category.group.people.order_by('name')
+        except PersonGroup.DoesNotExist:
             topmembers = category.memberships.order_by('-value')[:6]
+            people = None
 
         categories = Category.objects.filter(owner=profile).order_by('-last_updated')
         unread = categories.filter(unread=True)
     return render_to_response(template_name, {
             'category' : category,
             'score_page' : score_page,
-            'source' : source,
+            'people' : people,
             'topmembers' : topmembers,
             'categories' : categories,
             'unread' : unread,

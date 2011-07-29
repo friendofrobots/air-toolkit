@@ -22,10 +22,10 @@ class Profile(models.Model):
     maxpmi = models.FloatField(blank=True,null=True)
     
     def getActivePages(self):
-        return self.page_set.all()
+        return self.page_set.annotate(activity=Count('likedBy')).filter(activity__gt=1)
 
     def getActivePeople(self):
-        return self.person_set.all()
+        return self.person_set.filter(likes__in=self.getActivePages()).distinct()
 
     def __unicode__(self):
         return self.fblogin.name
@@ -162,7 +162,7 @@ class Category(models.Model):
                 score.save()
             if auto:
                 self.threshold = self.scores.order_by('-value')[2].value
-                self.decayrate = self.threshold * .6
+                self.decayrate = max(.18, self.startvalue - self.threshold / 2)
                 self.save()
         except PersonGroup.DoesNotExist:
             self.scores.filter(page__in=self.seeds.all()).update(value=self.startvalue)
@@ -213,9 +213,6 @@ class PersonGroup(models.Model):
     owner = models.ForeignKey(Profile)
     category = models.OneToOneField(Category,related_name="group")
     people = models.ManyToManyField(Person,related_name="group")
-
-    def seedCategory(self):
-        pass
 
     def __unicode__(self):
         return self.category.name + ' Group'

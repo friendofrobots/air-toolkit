@@ -1,13 +1,13 @@
 <div id="sidebar">
   <ul id="tabs">
     <li class="tab {% if tab == 'category' %}active{% endif %}">
-      <a href="{% url s_category_start category.id %}" id="category-tab">Category</a>
+      <a href="{% url survey:category_start category.id %}" id="category-tab">Category</a>
     </li>
     <li class="tab {% if tab == 'friends' %}active{% endif %}">
-      <a href="{% url s_friends_start category.id %}" id="friends-tab">Friends</a>
+      <a href="{% url survey:friends_start category.id %}" id="friends-tab">Friends</a>
     </li>
     <li class="tab {% if tab == 'profile' %}active{% endif %}">
-      <a href="{% url s_userprofile category.id %}" id="profile-tab">Profile</a>
+      <a href="{% url survey:userprofile category.id %}" id="profile-tab">Profile</a>
     </li>
   </ul>
 </div>

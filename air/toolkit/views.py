@@ -459,6 +459,8 @@ def categoryReset(request,category_id):
             except Category.DoesNotExist:
                 category = Category.objects.get(id=category_id)
                 category.active = profile
+                category.unread = False
+                category.ready = False
                 category.task_id = ""
                 category.status = ""
                 category.save()

@@ -22,9 +22,9 @@ var category_id = {{ category.id }};
 </div>
 
 <div id="category-info">
-  {% if category.group %}
+  {% if people %}
   <ul id="category-people" class="small-list">
-    {% for person in category.group.people.all %}
+    {% for person in people %}
     {% if forloop.counter0 == 12 %}
   </ul>
   <ul id="category-people-hidden" class="small-list">
@@ -34,7 +34,7 @@ var category_id = {{ category.id }};
     </li>
     {% endfor %}
   </ul>
-  {# < #}{% if category.group.people.count > 12 %}
+  {# < #}{% if people.count > 12 %}
   <div id="category-people-more" class="fakelink">See More</div>
   {% endif %}
   {% else %}
@@ -53,7 +53,7 @@ var category_id = {{ category.id }};
     </li>
     {% endfor %}
   </ul>
-  {# < #}{% if category.group.people.count > 10 %}
+  {# < #}{% if people.count > 10 %}
   <div id="category-people-more" class="fakelink">See More</div>
   {% endif %}
   {% endfor %}
