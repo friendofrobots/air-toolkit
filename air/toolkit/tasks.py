@@ -214,6 +214,7 @@ def checkTaskSet(result,profile_id):
     if result.ready():
         profile = Profile.objects.get(id=profile_id)
         profile.page_set.annotate(activity=Count('likedBy')).exclude(activity__gt=1)
+        profile.person_set.exclude(likes__in=profile.page_set.all()).distinct()
         numpeople = profile.getActivePeople().count()
 
         subtasks = [calcPMIs.subtask((profile_id,page.id,numpeople)) for page in pages]

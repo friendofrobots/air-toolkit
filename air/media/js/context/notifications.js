@@ -13,6 +13,8 @@ $(document).ready(function() {
 		$('#unread-count').text(data['unread'].length);
 		if (data['unread'].length>0) {
 		    $('#unread-count').addClass("unread-red");
+		} else {
+		    $('#unread-count').removeClass("unread-red");
 		}
 	    }
 	});

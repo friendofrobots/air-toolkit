@@ -5,7 +5,7 @@
 {% if user.is_athenticated %}
 {% block head_extra %}
 <script>
-var started = {% if profile.stage != 0 %}true;{% else %}false;{% endif %}
+var started = {% if profile.stage != 0 and profile.stage != 3 %}true;{% else %}false;{% endif %}
 var redirect = true;
 </script>
 {% endblock %}
@@ -39,7 +39,7 @@ var redirect = true;
   </div>
   {% endif %}
   {% comment %}
-  <div id="downloading" {% if profile.stage == 0 or profile.stage == 4 %}style="display:none;"{% endif %}>
+  <div id="downloading" {% if profile.stage == 0 or profile.stage == 3 %}style="display:none;"{% endif %}>
     <p id="error"></p>
     <p id="starting" class="stages">
       Your download has been started. It takes a while, so you should come
@@ -52,9 +52,6 @@ var redirect = true;
     </p>
     <p id="stage2" class="stages" {% if profile.stage != 2 %}style="display:none;"{% endif %}>
       calculating pmis: <span id="count2">0</span>/<span id="total2">0</span> (this one will take a bit longer)
-    </p>
-    <p id="stage2" class="stages" {% if profile.stage != 3 %}style="display:none;"{% endif %}>
-      finding categories
     </p>
     <p id="stage3" class="stages" style="display:none;">
       You're all done!

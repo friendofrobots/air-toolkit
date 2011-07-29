@@ -68,7 +68,7 @@ function get_filtered() {
 	    category_name = $('.active').map(function() {
 		return $(this).parent().parent().find('h3').text()+'-'+$(this).find('.filter-name').text();
 	    }).get().join(', ');
-	    $('#group-name').val('Group: '+category_name);
+	    $('#group-name').val(category_name);
 
 	    set_handlers();
 	    $('.friend-select').prop('checked',true).change();

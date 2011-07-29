@@ -45,7 +45,7 @@ def friends(request, template_name="context/friends.html"):
             ordered = properties.annotate(activity=Count('people')).order_by('-activity','id')
             filters.append((relation,[prop for prop in ordered]))
 
-        toplikes = profile.getActivePages().order_by('-activity','fbid')[:16]
+        toplikes = profile.getActivePages().annotate(activity=Count('likedBy')).order_by('-activity','fbid')[:16]
 
         categories = Category.objects.filter(owner=profile).order_by('-last_updated')
         unread = categories.filter(unread=True)
@@ -109,7 +109,7 @@ def pages(request, template_name="context/pages.html"):
     if request.user.is_authenticated():
         profile = request.user.profile
         # Top active_pages
-        pages = profile.getActivePages().order_by('-activity')
+        pages = profile.getActivePages().annotate(activity=Count('likedBy')).order_by('-activity')
         categories = Category.objects.filter(owner=profile).order_by('-last_updated')
         unread = categories.filter(unread=True)
     else:
@@ -130,9 +130,9 @@ def page_lookup(request):
         if request.method == "GET":
             if request.GET.has_key('query'):
                 query = request.GET.get('query')
-                active = profile.getActivePages()
-                starts = active.filter(name__istartswith=query).order_by('-activity')
-                contains = active.filter(name__icontains=query).order_by('-activity')
+                pages = profile.getActivePages().annotate(activity=Count('likedBy'))
+                starts = pages.filter(name__istartswith=query).order_by('-activity')
+                contains = pages.filter(name__icontains=query).order_by('-activity')
                 results = list(starts)
                 results.extend(contains.exclude(name__istartswith=query))
                 

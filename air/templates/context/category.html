@@ -30,7 +30,7 @@ var category_id = {{ category.id }};
   <ul id="category-people-hidden" class="small-list">
     {% endif %}
     <li class="category-person small-object" title="{{ person.name }}">
-      <img src="https://graph.facebook.com/{{ person.fbid }}/picture?type=small" />
+      <img src="https://graph.facebook.com/{{ person.fbid }}/picture?type=square" />
     </li>
     {% endfor %}
   </ul>
@@ -49,7 +49,7 @@ var category_id = {{ category.id }};
   <ul id="category-people-hidden" class="small-list">
     {% endif %}
     <li class="category-person small-object" title="{{ person.name }}">
-      <img src="https://graph.facebook.com/{{ person.fbid }}/picture?type=small" />
+      <img src="https://graph.facebook.com/{{ person.fbid }}/picture?type=square" />
     </li>
     {% endfor %}
   </ul>
@@ -77,12 +77,14 @@ var category_id = {{ category.id }};
   <ul id="objects" class="object-list">
     {% for score in score_page.object_list %}
     <li class="object" title="liked by: {% for person in score.page.likedBy.all %}{{ person.name }}{% if not forloop.last %},{% endif %} {% endfor %}">
-      <div class="image-holder">
-	<img src="https://graph.facebook.com/{{ score.page.fbid }}/picture?type=normal" />
-      </div>
-      <div class="title-holder">
-	{{ score.page.name }}
-      </div>
+      <a href="http://www.facebook.com/pages/{{ score.page.name }}/{{ score.page.fbid }}" target="_blank">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ score.page.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ score.page.name }}
+	</div>
+      </a>
     </li>
     {% endfor %}
   </ul>
@@ -94,12 +96,14 @@ var category_id = {{ category.id }};
   <ul id="members" class="object_list">
     {% for membership in topmembers %}
     <li class="object">
-      <div class="image-holder">
-	<img src="https://graph.facebook.com/{{ membership.member.fbid }}/picture?type=normal" />
-      </div>
-      <div class="title-holder">
-	{{ membership.member.name }}
-      </div>
+      <a href="http://www.facebook.com/profile.php?id={{ membership.member.fbid }}" target="_blank">
+	<div class="image-holder">
+	  <img src="https://graph.facebook.com/{{ membership.member.fbid }}/picture?type=normal" />
+	</div>
+	<div class="title-holder">
+	  {{ membership.member.name }}
+	</div>
+      </a>
     </li>
     {% endfor %}
   </ul>

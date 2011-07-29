@@ -34,33 +34,23 @@ def fblogin(request, redirectTo='explore:home'):
         me = graph.get_object('me')
 
         try:
-            user = User.objects.get(username=me['id'])
-            user.set_password(access_token)
-            user.save()
-            user.fblogin.access_token = access_token
-            user.fblogin.save()
-        except FBLogin.DoesNotExist:
-            user = User.objects.get(username=me['id'])
-            user.set_password(access_token)
-            user.save()
-            fblogin = FBLogin()
-            fblogin.user = user
-            fblogin.fbid = me['id']
-            fblogin.name = me['name']
+            fblogin = FBLogin.objects.get(fbid=me['id'])
+            fblogin.user.set_password(access_token)
+            fblogin.user.save()
             fblogin.access_token = access_token
             fblogin.save()
-        except User.DoesNotExist:
+        except FBLogin.DoesNotExist:
             user = User.objects.create_user(me['id'],
                                             me['id']+'@facebook.com',
                                             access_token)
-            fblogin = FBLogin()
-            fblogin.user = user
-            fblogin.fbid = me['id']
-            fblogin.name = me['name']
-            fblogin.access_token = access_token
-            fblogin.save()
+            fblogin = FBLogin.objects.create(
+                user=user,
+                fbid=me['id'],
+                name=me['name'],
+                access_token=access_token,
+                )
 
-        user = authenticate(username=me['id'],
+        user = authenticate(username=fblogin.user.username,
                             password=access_token)
         login(request, user)
 

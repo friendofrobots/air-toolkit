@@ -31,7 +31,7 @@ var mapping = {
       <h3>{{ facebook_category }}</h3>
       <ul class="category_likes">
 	{% for like in likes %}
-	<li class="like" id="{{ like.id }}">
+	<li class="like object" id="{{ like.id }}">
 	  <div class="image-holder">
 	    <img src="https://graph.facebook.com/{{ like.fbid }}/picture?type=normal" />
 	  </div>

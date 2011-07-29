@@ -24,7 +24,7 @@
     {% for score in category.getTop %}
     <li class="like object">
       <div class="image-holder">
-	<img src="https://graph.facebook.com/{{ score.entity.fbid }}/picture?type=normal" />
+	<img src="https://graph.facebook.com/{{ score.page.fbid }}/picture?type=normal" />
       </div>
       <div class="title-holder">
 	{{ score.page.name }}
@@ -56,52 +56,4 @@
   </div>
 </div>
 
-<div id="survey">
-  <h2>
-    Question 1:
-  </h2>
-  <div class="question">
-    How well does this category represent a group of your friends?
-  </div>
-  <div class="labels">
-    <div class="label-spacer"></div>
-    <div class="label">1</div>
-    <div class="label">2</div>
-    <div class="label">3</div>
-    <div class="label">4</div>
-    <div class="label">5</div>
-    <div class="label">6</div>
-    <div class="label">7</div>
-    <div class="label-spacer"></div>
-  </div>
-  <div class="radios">
-    <div class="end-label">
-      not at all
-    </div>
-    <div class="question-radio">
-      <input type="radio" name="q1" value="1"></input>
-    </div>
-    <div class="question-radio">
-      <input type="radio" name="q1" value="2"></input>
-    </div>
-    <div class="question-radio">
-      <input type="radio" name="q1" value="3"></input>
-    </div>
-    <div class="question-radio">
-      <input type="radio" name="q1" value="4"></input>
-    </div>
-    <div class="question-radio">
-      <input type="radio" name="q1" value="5"></input>
-    </div>
-    <div class="question-radio">
-      <input type="radio" name="q1" value="6"></input>
-    </div>
-    <div class="question-radio">
-      <input type="radio" name="q1" value="7"></input>
-    </div>
-    <div class="end-label">
-      perfect match
-    </div>
-  </div>
-</div>
 {% endblock %}

@@ -11,13 +11,13 @@ def home(request, template_name="reflect/home.html"):
     if not request.user.is_authenticated():
         return redirect('auth:login_redirect','reflect:home')
     return render_to_response(template_name, {
-            'profile' : profile,
+            'profile' : request.user.profile,
             }, context_instance=RequestContext(request))
 
 def categories(request, category_id=None, template_name="reflect/categories.html"):
     if request.user.is_authenticated():
         profile = request.user.profile
-        categories = Category.objects.filter(owner=profile).order_by('id')
+        categories = Category.objects.filter(owner=profile).order_by('-last_updated')
         if not category_id:
             category = categories[0]
         else:
@@ -40,10 +40,10 @@ def profile(request, person_id=None, template_name="reflect/profile.html"):
             person = Person.objects.get(owner=profile,fbid=profile.fblogin.fbid)
         else:
             person = get_object_or_404(Person,id=person_id)
-        categories = Category.objects.filter(owner=profile).order_by('id')
+        categories = Category.objects.filter(owner=profile).order_by('-last_updated')
 
         fbcategories = {}
-        for like in person.likes.order_by('-category'):
+        for like in person.likes.order_by('category'):
             if like.category not in fbcategories:
                 fbcategories[like.category] = []
             fbcategories[like.category].append(like)

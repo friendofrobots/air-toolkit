@@ -162,6 +162,7 @@ class Category(models.Model):
                 score.save()
             if auto:
                 self.threshold = self.scores.order_by('-value')[2].value
+                self.decayrate = self.threshold * .6
                 self.save()
         except PersonGroup.DoesNotExist:
             self.scores.filter(page__in=self.seeds.all()).update(value=self.startvalue)
@@ -178,7 +179,7 @@ class Category(models.Model):
         with transaction.commit_on_success():
             for membership in self.memberships.all():
                 value = 0
-                for score in self.scores.filter(page__in=person.likes.all()):
+                for score in self.scores.filter(page__in=membership.member.likes.all()):
                     value += score.value
                 membership.value = value
                 membership.save()

@@ -260,7 +260,7 @@ def createCategoryFromGroup(request):
                                                    name=request.POST.get('name','tempcategoryname'))
                 group = PersonGroup.objects.create(owner=profile,
                                                    category=category)
-                group.people.add(*[Person.objects.get(id=x) for x in people])
+                group.people.add(*Person.objects.filter(id__in=people))
                 if category.name == 'tempcategoryname':
                     category.name = 'Category '+unicode(category.id)
                 category.save()
@@ -293,8 +293,11 @@ def createCategoryFromPage(request):
             if request.POST.__contains__('seed'):
                 seed = Page.objects.get(id=request.POST.get('seed'))
                 category = Category.objects.create(owner=profile,
-                                                   name='Page: '+seed.name)
+                                                   name='People who like '+seed.name)
                 category.seeds.add(seed)
+                group = PersonGroup.objects.create(owner=profile,
+                                                   category=category)
+                group.people.add(*Person.objects.filter(id__in=seed.likedBy.all()))
                 if request.POST.__contains__('redirect'):
                     return redirect(request.POST.get('redirect'),category.id)
                 else:
@@ -402,13 +405,20 @@ def markRead(request, category_id=None):
     if request.user.is_authenticated():
         if request.method == "POST":
             category = Category.objects.get(id=category_id)
-            category.unread = False
-            category.save()
-            response_data = {
-                "success":True,
-                "id":category.id,
-                "name":category.name,
-                }
+            if category.unread:
+                category.unread = False
+                category.save()
+                response_data = {
+                    "success":True,
+                    "id":category.id,
+                    "name":category.name,
+                    }
+            else:
+                response_data = {
+                    "success":False,
+                    "id":category.id,
+                    "name":category.name,
+                    }
         else:
             response_data = {
                 "error":"must be post",

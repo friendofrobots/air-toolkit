@@ -4,8 +4,8 @@ function start_creation() {
     $("#processing-start").hide();
     $.post('/t/category/'+category_id+'/start/', {
 	'startvalue':.3,
-	'threshold':.25,
-	'decayrate':.1,
+	'threshold':.2,
+	'decayrate':.25,
     }, function(data) {
         if (data['error']) {
 	    $('#error').text(data['error']).show();
