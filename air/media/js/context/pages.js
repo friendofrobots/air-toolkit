@@ -53,7 +53,7 @@ $(document).ready(function() {
 	} else {
 	    last_timeout = setTimeout(function() {
 		getresults($('#searchbox').val());
-	    },1000);
+	    },500);
 	}
     });
     $('#toppages .page-img, #toppages .page-title').click(function() {

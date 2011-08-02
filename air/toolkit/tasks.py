@@ -11,8 +11,7 @@ from celery.task.sets import TaskSet
 So I need a download tasks, process them and dump them in the database
 Then I need to run through and process the PMI information, ideally in
 a task format so I can give progress on it.
-"""        
-
+"""
 
 def conc_get_or_create(klass,*args,**kwargs):
     """
@@ -221,7 +220,6 @@ def checkTaskSet(result,profile_id):
         r = TaskSet(tasks=subtasks).apply_async()
         r.save()
         r2 = checkPMISet.delay(r,profile.id)
-        profile.numpeople = numpeople
         profile.stage = 2
         profile.task_id = r.taskset_id
         profile.save()
@@ -279,10 +277,18 @@ def checkPMISet(result,profile_id):
     else:
         checkPMISet.retry(countdown=15, max_retries=100)
 
+class ScoreForProcessing(object):
+    def __init__(self,score):
+        self.pk = score.id
+        self.page_id = score.page_id
+        self.value = score.value
+        self.fired = False
+
 @task(ignore_result=True)
 def createCategory(profile_id, category_id, auto=False):
     profile = Profile.objects.get(id=profile_id)
     category = Category.objects.get(id=category_id)
+    category.clearStatus(processing=True)
     category.resetScores(auto)
     minpmi, maxpmi = profile.minpmi, profile.maxpmi
     """
@@ -292,37 +298,40 @@ def createCategory(profile_id, category_id, auto=False):
         For each link [i,j] adjust A[j] = A[j] + (A[i]*W[i,j]*D)
         (cap at 1, mark all fired so they don't fire again)
         nodes with A[i]>F fire next time
-    """
-    toFire = category.scores.filter(fired=False,value__gte=category.threshold)
+        """
+    scores = dict([(score.page_id,ScoreForProcessing(score)) for score in category.scores.all()])
+                                  
+    toFire = [score for score in scores.itervalues() if score.value > category.threshold and not score.fired]
     # going back and forth between nodes and score, need to clear this up
     decay = category.decayrate
-    try:
-        while toFire:
-            if toFire.count() > 600:
-                category.addNumToStatus(str(toFire.count())+', got too big so I had to quit')
-                break
-            category.addNumToStatus(toFire.count())
-            with transaction.commit_on_success():
-                for score1 in toFire:
-                    for pmi in score1.page.pmisFrom.all():
-                        if score1.page != pmi.toPage:
-                            score2 = pmi.toPage.categoryScore.get(category=category)
-                            newValue = score2.value + (score1.value*pmi.normalized_value()*decay)
-                            if newValue > 1:
-                                newValue = 1.0
-                            score2.value = newValue
-                            score2.save()
-                    score1.fired = True
-                    score1.save()
-                toFire = category.scores.filter(fired=False,value__gte=category.threshold)
-                decay = decay**2
-        category.calcMemberships()
-    except Exception, e:
-        raise e
-    finally:
-        category = Category.objects.get(id=category_id)
-        category.task_id = ""
-        category.active = None
-        category.ready = True
-        category.unread = True
-        category.save()
+    while len(toFire) > 0:
+        if len(toFire) > 600:
+            category.newRoundStatus(len(toFire))
+            category.status['error'] = 'got too big, so I quit'
+            category.save()
+            break
+        category.newRoundStatus(len(toFire))
+        for score1 in toFire:
+            for pmi in profile.pmi_set.filter(fromPage__id=score1.page_id):
+                if score1.page_id != pmi.toPage_id:
+                    score2 = scores[pmi.toPage_id]
+                    npmi = (pmi.value-minpmi)/(maxpmi-minpmi)
+                    newValue = score2.value + (score1.value*npmi*decay)
+                    score2.value = newValue if newValue < 1 else 1.0
+            score1.fired = True
+        toFire = [score for score in scores.itervalues() if score.value > category.threshold and not score.fired]
+        decay = decay**2
+
+    with transaction.commit_on_success():
+        for score in scores.itervalues():
+            if score.value > 0:
+                category.scores.filter(id=score.pk).update(value=score.value)
+
+    category = Category.objects.get(id=category_id)
+    category.calcMemberships()
+    category.task_id = ""
+    category.active = None
+    category.ready = True
+    category.unread = True
+    category.status['processing'] = False
+    category.save()

@@ -7,7 +7,7 @@
 	<a href="{% url like_start seed.id %}">
           {{ seed.name }}
 	</a>
-	{% if not active.task_id %}
+	{% if not active.status.processing %}
 	<span class="delete-seed">[x]</span>
 	{% endif %}
 	<span class="seed-id">{{ seed.id }}</span>
@@ -15,7 +15,7 @@
     </li>
     {% endfor %}
   </ul>
-  <form id="creation-form" method="post" {% if active.task_id %}style="display:none"{% endif %}>
+  <form id="creation-form" method="post" {% if active.status.processing %}style="display:none"{% endif %}>
     <fieldset id="toggle-creation-options">
       <legend>Show Options</legend>
       <ul id="creation-options">
@@ -26,7 +26,7 @@
       <input type="submit" class="button" id="start-creation" value="Start Creation" {% if not active.seeds.all %}disabled="disabled"{% endif %}></input>
     </div>
   </form>
-  <div id="creation-status" {% if not active.task_id %}style="display:none;"{% endif %}>
+  <div id="creation-status" {% if not active.status.processing %}style="display:none;"{% endif %}>
     <p>
       Creating {{ active.name }}...
     </p>

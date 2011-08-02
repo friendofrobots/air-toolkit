@@ -1,92 +1,51 @@
-<script>
-var question_number = {{ question_number }};
-</script>
+<script type="text/javascript" src="/media/js/s_survey.js"></script>
 
+<div id="survey-spacer"></div>
 <div id="survey">
-  <ul id="questions">
-    <li id="q1" class="activeq question">
-      <h2>
-	Question 1:
-      </h2>
-      <div class="question-text">
-	How well does this category represent a group of your friends?
-      </div>
-      {% include "survey/radios.html" with left_end="not at all" right_end="perfect match" %}
-    </li>
-    <li id="q2" class="question">
-      <h2>
-	Question 2:
-      </h2>
-      <div class="question-text">
-	Is this category a positive or negative representation of those friends?
-      </div>
-      {% include "survey/radios.html" with left_end="very negative" right_end="very positive" %}
-    </li>
-    <li id="q3" class="question">
-      <h2>
-	Question 3:
-      </h2>
-      <div class="question-text">
-	Is there a single person that best represents this category?
-      </div>
-      {% include "survey/radios.html" with left_end="not at all" right_end="perfect match" %}
-    </li>
-    <li id="q4" class="question">
-      <h2>
-	Question 4:
-      </h2>
-      <div class="question-text">
-	How central are these objects to the category?
-      </div>
-      {% include "survey/radios.html" with left_end="not at all" right_end="very central" %}
-    </li>
-    <li id="q5" class="question">
-      <h2>
-	Question 5:
-      </h2>
-      <div class="question-text">
-	Are there any surprising items in the category?
-      </div>
-      {% include "survey/radios.html" with left_end="not at all" right_end="very surprising" %}
-    </li>
-    <li id="q6" class="question">
-      <h2>
-	Question 6:
-      </h2>
-      <div class="question-text">
-	Are the people associated with the category surprising?
-      </div>
-      {% include "survey/radios.html" with left_end="not at all" right_end="very surprising" %}
-    </li>
-    <li id="q7" class="question">
-      <h2>
-	Question 7:
-      </h2>
-      <div class="question-text">
-	Would the top people associated with this category make a useful Facebook List?
-      </div>
-      {% include "survey/radios.html" with left_end="not at all useful" right_end="very useful" %}
-    </li>
-    <li id="q8" class="question">
-      <h2>
-	Question 8:
-      </h2>
-      <div class="question-text">
-	Would you like to have these people grouped together for privacy reasons?
-	<div class="help-text">(either hiding things from them or hiding things they post from others)</div>
-      </div>
-      {% include "survey/radios.html" with left_end="not at all" right_end="very much" %}
-    </li>
-    <li id="q9" class="question">
-      <h2>
-	Question 9:
-      </h2>
-      <div class="question-text">
-	Would the people associated with this group make a useful Facebook Group?
-      </div>
-      {% include "survey/radios.html" with left_end="not at all" right_end="very much" %}
-    </li>
-  </ul>
-  <div id="survey-left" class="fakelink survey-nav">Previous</div>
-  <div id="survey-right" class="fakelink survey-nav">Next</div>
+  <div id="survey-bar" class="fakelink">Show Survey</div>
+  <div id="survey-questions">
+    <ul id="questions">
+      <li id="q1" class="activeq question">
+	<h3>
+	  Please provide at least 2 labels for the social categories you see represented in these likes
+	</h3>
+	<input type="text"></input>
+	<input type="text"></input>
+	<span style="color:#AAA;">+more</span>
+      </li>
+      <li id="q2" class="question" style="height:160px;">
+	<h3>
+	  Please choose 2 Pages that are surprising and explain why they are surprising
+	</h3>
+	<div id="object1" style="display:inline-block; width:300px; margin:10px;">
+	  <label for="object1">First Page:</label><input type="text" name="object1"></input>
+	  <textarea style="width:100%"></textarea>
+	</div>
+	<div id="object2" style="display:inline-block; width:300px; margin:10px;">
+	  <label for="object2">Second Page:</label><input type="text" name="object2"></input>
+	  <textarea style="width:100%"></textarea>
+	</div>
+      </li>
+      <li id="q3" class="question">
+	<h3>
+	  Please choose 2 Pages that are obvious and explain why they are surprising
+	</h3>
+	<div id="object1" style="display:inline-block; width:300px; margin:10px;">
+	  <label for="object1">First Page:</label><input type="text" name="object1"></input>
+	  <textarea style="width:100%"></textarea>
+	</div>
+	<div id="object2" style="display:inline-block; width:300px; margin:10px;">
+	  <label for="object2">Second Page:</label><input type="text" name="object2"></input>
+	  <textarea style="width:100%"></textarea>
+	</div>
+      <li id="q4" class="question">
+	<h3>
+	  Any further comments about the category?
+	</h3>
+	<textarea style="width:500px; height:80px;"></textarea>
+      </li>
+    </ul>
+    <div id="survey-left" class="fakelink survey-nav">Previous</div>
+    <div id="survey-right" class="fakelink survey-nav">Next</div>
+  </div>
 </div>

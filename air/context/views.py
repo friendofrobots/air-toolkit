@@ -158,7 +158,7 @@ def page_lookup(request):
             'error' : 'user must be logged in'
             }
     return HttpResponse(json.dumps(response_data), mimetype='application/json')
- 
+
 def category(request, category_id=None, template_name="context/category.html"):
     """
     Display category status if calculating
@@ -172,7 +172,6 @@ def category(request, category_id=None, template_name="context/category.html"):
         score_page = paginator.page(1)
 
         try:
-            category.group
             topmembers = category.memberships.exclude(member__in=category.group.people.all()).order_by('-value')[:6]
             people = category.group.people.order_by('name')
         except PersonGroup.DoesNotExist:

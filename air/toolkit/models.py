@@ -4,11 +4,14 @@ from django.db.models import Count
 from django.db import transaction
 from fbauth.models import FBLogin
 from taggit.managers import TaggableManager
+from picklefield.fields import PickledObjectField
+from itertools import groupby
 import json, pickle, math
 
 class Profile(models.Model):
     user = models.OneToOneField(User,related_name='profile')
     fblogin = models.OneToOneField(FBLogin,related_name='profile')
+    studying = models.BooleanField(default=False)
     stage = models.IntegerField(choices=(
             (0,'not yet started'),
             (1,'downloading user data'),
@@ -17,7 +20,6 @@ class Profile(models.Model):
             ), default=0)
     last_updated = models.DateTimeField(auto_now=True)
     task_id = models.CharField(max_length=200,blank=True)
-    numpeople = models.IntegerField(blank=True,null=True) # filtered for people with likes
     minpmi = models.FloatField(blank=True,null=True)
     maxpmi = models.FloatField(blank=True,null=True)
     
@@ -92,7 +94,7 @@ class PMI(models.Model):
         unique_together = (('owner','fromPage','toPage'))
     
     def npmi(self):
-        numpeople = self.owner.numpeople
+        numpeople = self.owner.getActivePeople().count()
         npmi = -1. * self.value / math.log(1.*max(self.fromPage.likedBy.count(),
                                                   self.toPage.likedBy.count())/numpeople,2)
         return (1 + npmi)/2
@@ -109,7 +111,7 @@ class Category(models.Model):
     seeds = models.ManyToManyField(Page,blank=True,related_name="seedOf")
     active = models.OneToOneField(Profile,related_name="activeCategory",blank=True,null=True)
     task_id = models.CharField(max_length=200,blank=True)
-    status = models.TextField(blank=True)
+    status = PickledObjectField(blank=True,default={'rounds':[],'processing':False,'error':''})
 
     ready = models.BooleanField(default=False)
     unread = models.BooleanField(default=False)
@@ -121,8 +123,8 @@ class Category(models.Model):
 
     tags = TaggableManager(blank=True)
 
-    def getASeed(self):
-        return self.seeds.all()[0]
+    def getTopPage(self):
+        return self.scores.order_by('-value','page__fbid')[0].page
 
     def getTop(self,num=12):
         return self.scores.order_by('-value','page__fbid')[:num]
@@ -130,12 +132,27 @@ class Category(models.Model):
     def getTopPeople(self,num=4):
         return self.memberships.order_by('-value','member__fbid')[:num]
 
-    def addNumToStatus(self,num):
-        if not self.status:
-            self.status = pickle.dumps([])
-        newstatus = pickle.loads(str(self.status))
-        newstatus.append(num)
-        self.status = pickle.dumps(newstatus)
+    def reset(self):
+        self.unread = False
+        self.ready = False
+        self.task_id = ""
+        self.status = {'rounds':[],'processing':False,'error':''}
+        self.save()
+
+    def clearStatus(self,processing=False):
+        self.status = {'rounds':[],'processing':processing,'error':''}
+        self.save()
+
+    def newRoundStatus(self,num):
+        status = self.status
+        status['rounds'].append(num)
+        self.status = status
+        self.save()
+
+    def updateRoundStatus(self,num):
+        status = self.status
+        status['rounds'][-1] = num
+        self.status = status
         self.save()
 
     def getStatus(self):
@@ -152,20 +169,22 @@ class Category(models.Model):
                 CategoryScore.objects.get_or_create(owner=self.owner,
                                                     category=self,
                                                     page=page)
-        self.scores.all().update(value=0,fired=False)
-        try:
-            scores = self.scores.filter(page__likedBy__in=self.group.people.all()).distinct()
-            act = scores.annotate(activity=Count('page__likedBy'))
-            mult = self.startvalue/(1.*max(act,key=lambda x : x.activity).activity)
-            for score in act:
-                score.value = score.activity * mult
-                score.save()
-            if auto:
-                self.threshold = self.scores.order_by('-value')[2].value
-                self.decayrate = max(.18, self.startvalue - self.threshold / 2)
-                self.save()
-        except PersonGroup.DoesNotExist:
-            self.scores.filter(page__in=self.seeds.all()).update(value=self.startvalue)
+        with transaction.commit_on_success():
+            self.scores.all().update(value=0,fired=False)
+            try:
+                scores = self.scores.filter(page__likedBy__in=self.group.people.all()).distinct()
+                act = scores.annotate(activity=Count('page__likedBy'))
+                max_act = max(act,key=lambda x : x.activity).activity
+                mult = self.startvalue/(1.*max_act)
+                for act_value,iterscores in groupby(sorted(act,key=lambda a : a.activity),lambda x : x.activity):
+                    self.scores.filter(id__in=act.filter(activity=act_value)).update(value=act_value*mult)
+                if auto:
+                    self.threshold = max(min(self.scores.order_by('-value')[2].value - .01,.2),.15)
+                    self.decayrate = min(.18, self.startvalue * max_act/10)
+                    
+                    self.save()
+            except PersonGroup.DoesNotExist:
+                self.scores.filter(page__in=self.seeds.all()).update(value=self.startvalue)
 
     def calcMemberships(self):
         with transaction.commit_on_success():

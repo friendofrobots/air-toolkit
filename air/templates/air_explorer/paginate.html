@@ -42,7 +42,7 @@
 	</div>
 	{% endif %}
       </a>
-      {% if active and not active.task_id %}
+      {% if active and not active.status.processing %}
       <div id="controls-{% if object.page %}{{ object.page.id }}{% else %}{% if object.toPage %}{{ object.toPage.id }}{% else %}{{ object.id }}{% endif %}{% endif %}" class="like-controls">
 	{% if object.page %}
 	{% if object.page in active.seeds.all %}

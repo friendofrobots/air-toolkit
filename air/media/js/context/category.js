@@ -20,7 +20,6 @@ function start_creation() {
 function update_creation(data) {
     $("#processing-status").show()
     if (data['status'] != "completed") {
-	$('#pages-so-far').text(data['num_pages']);
 	rounds = '';
 	for (var i in data['status']) {
 	    r = parseInt(i)+1;
@@ -28,7 +27,6 @@ function update_creation(data) {
 	}
 	$('#processing-details').html(rounds);
     } else {
-	$.post('/category/'+data['id']+'/read/');
 	window.location.reload('true');
     }
 }

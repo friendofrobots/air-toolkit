@@ -35,10 +35,11 @@ def fblogin(request, redirectTo='explore:home'):
 
         try:
             fblogin = FBLogin.objects.get(fbid=me['id'])
-            fblogin.user.set_password(access_token)
+            fblogin.user.backend = 'django.contrib.auth.backends.ModelBackend'
             fblogin.user.save()
             fblogin.access_token = access_token
             fblogin.save()
+            user = fblogin.user
         except FBLogin.DoesNotExist:
             user = User.objects.create_user(me['id'],
                                             me['id']+'@facebook.com',
@@ -49,9 +50,9 @@ def fblogin(request, redirectTo='explore:home'):
                 name=me['name'],
                 access_token=access_token,
                 )
+            user = authenticate(username=fblogin.user.username,
+                                password=access_token)
 
-        user = authenticate(username=fblogin.user.username,
-                            password=access_token)
         login(request, user)
 
         return redirect('toolkit:newUser_redirect', redirectTo)

@@ -209,3 +209,23 @@ def category(request, category_id, page_num=1, template_name="air_explorer/categ
             'paginate' : score_page,
             'memberships' : memberships,
             }, context_instance=RequestContext(request))
+
+def category_raw(request, category_id, template_name="air_explorer/category_raw.html"):
+    if request.user.is_authenticated():
+        profile = request.user.profile
+        category = get_object_or_404(Category,id=category_id)
+        scores = category.scores.filter(page__likedBy__in=category.group.people.all()).distinct()
+        act = scores.annotate(activity=Count('page__likedBy')).order_by('-activity','page__fbid')
+        mult = 1./(1.*max(act,key=lambda x : x.activity).activity)
+
+        paginator = Paginator(act,24)
+
+        score_page = paginator.page(1)
+    else:
+        return redirect('explore:home')
+    return render_to_response(template_name, {
+            'path' : request.path,
+            'category' : category,
+            'score_page' : score_page,
+            'mult' : mult,
+            }, context_instance=RequestContext(request))

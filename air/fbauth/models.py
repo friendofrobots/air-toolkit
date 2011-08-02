@@ -3,7 +3,7 @@ from django.db import models
 
 class FBLogin(models.Model):
     user = models.OneToOneField(User,related_name='fblogin')
-    fbid = models.CharField(unique=True,max_length=30)
+    fbid = models.CharField(db_index=True,unique=True,max_length=30)
     name = models.CharField(max_length=200)
     access_token = models.CharField(max_length=200,blank=True)
 

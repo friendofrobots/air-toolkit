@@ -4,7 +4,7 @@
 
 {% block head_extra %}
 <script>
-var started = {% if active and active.task_id %}true{% else %}false{% endif %};
+var started = {% if active and active.status.processing %}true{% else %}false{% endif %};
 </script>
 <script type="text/javascript" src="/media/js/category_sidebar.js"></script>
 {% endblock %}
@@ -13,50 +13,50 @@ var started = {% if active and active.task_id %}true{% else %}false{% endif %};
 {% include "tabbar.html" %}
 
 <ul id="page-tabs">
-  <li><a href="{% url likes_start '0' %}">0</a></li>
-  <li><a href="{% url likes_start '1' %}">1</a></li>
-  <li><a href="{% url likes_start '2' %}">2</a></li>
-  <li><a href="{% url likes_start '3' %}">3</a></li>
-  <li><a href="{% url likes_start '4' %}">4</a></li>
-  <li><a href="{% url likes_start '5' %}">5</a></li>
-  <li><a href="{% url likes_start '6' %}">6</a></li>
-  <li><a href="{% url likes_start '7' %}">7</a></li>
-  <li><a href="{% url likes_start '8' %}">8</a></li>
-  <li><a href="{% url likes_start '9' %}">9</a></li>
-  <li><a href="{% url likes_start 'a' %}">A</a></li>
-  <li><a href="{% url likes_start 'b' %}">B</a></li>
-  <li><a href="{% url likes_start 'c' %}">C</a></li>
-  <li><a href="{% url likes_start 'd' %}">D</a></li>
-  <li><a href="{% url likes_start 'e' %}">E</a></li>
-  <li><a href="{% url likes_start 'f' %}">F</a></li>
-  <li><a href="{% url likes_start 'g' %}">G</a></li>
-  <li><a href="{% url likes_start 'h' %}">H</a></li>
-  <li><a href="{% url likes_start 'i' %}">I</a></li>
-  <li><a href="{% url likes_start 'j' %}">J</a></li>
-  <li><a href="{% url likes_start 'k' %}">K</a></li>
-  <li><a href="{% url likes_start 'l' %}">L</a></li>
-  <li><a href="{% url likes_start 'm' %}">M</a></li>
-  <li><a href="{% url likes_start 'n' %}">N</a></li>
-  <li><a href="{% url likes_start 'o' %}">O</a></li>
-  <li><a href="{% url likes_start 'p' %}">P</a></li>
-  <li><a href="{% url likes_start 'q' %}">Q</a></li>
-  <li><a href="{% url likes_start 'r' %}">R</a></li>
-  <li><a href="{% url likes_start 's' %}">S</a></li>
-  <li><a href="{% url likes_start 't' %}">T</a></li>
-  <li><a href="{% url likes_start 'u' %}">U</a></li>
-  <li><a href="{% url likes_start 'v' %}">V</a></li>
-  <li><a href="{% url likes_start 'w' %}">W</a></li>
-  <li><a href="{% url likes_start 'x' %}">X</a></li>
-  <li><a href="{% url likes_start 'y' %}">Y</a></li>
-  <li><a href="{% url likes_start 'z' %}">Z</a></li>
-  <li><a href="{% url likes_start '~' %}">#</a></li>
+  <li><a href="{% url explore:likes_start '0' %}">0</a></li>
+  <li><a href="{% url explore:likes_start '1' %}">1</a></li>
+  <li><a href="{% url explore:likes_start '2' %}">2</a></li>
+  <li><a href="{% url explore:likes_start '3' %}">3</a></li>
+  <li><a href="{% url explore:likes_start '4' %}">4</a></li>
+  <li><a href="{% url explore:likes_start '5' %}">5</a></li>
+  <li><a href="{% url explore:likes_start '6' %}">6</a></li>
+  <li><a href="{% url explore:likes_start '7' %}">7</a></li>
+  <li><a href="{% url explore:likes_start '8' %}">8</a></li>
+  <li><a href="{% url explore:likes_start '9' %}">9</a></li>
+  <li><a href="{% url explore:likes_start 'a' %}">A</a></li>
+  <li><a href="{% url explore:likes_start 'b' %}">B</a></li>
+  <li><a href="{% url explore:likes_start 'c' %}">C</a></li>
+  <li><a href="{% url explore:likes_start 'd' %}">D</a></li>
+  <li><a href="{% url explore:likes_start 'e' %}">E</a></li>
+  <li><a href="{% url explore:likes_start 'f' %}">F</a></li>
+  <li><a href="{% url explore:likes_start 'g' %}">G</a></li>
+  <li><a href="{% url explore:likes_start 'h' %}">H</a></li>
+  <li><a href="{% url explore:likes_start 'i' %}">I</a></li>
+  <li><a href="{% url explore:likes_start 'j' %}">J</a></li>
+  <li><a href="{% url explore:likes_start 'k' %}">K</a></li>
+  <li><a href="{% url explore:likes_start 'l' %}">L</a></li>
+  <li><a href="{% url explore:likes_start 'm' %}">M</a></li>
+  <li><a href="{% url explore:likes_start 'n' %}">N</a></li>
+  <li><a href="{% url explore:likes_start 'o' %}">O</a></li>
+  <li><a href="{% url explore:likes_start 'p' %}">P</a></li>
+  <li><a href="{% url explore:likes_start 'q' %}">Q</a></li>
+  <li><a href="{% url explore:likes_start 'r' %}">R</a></li>
+  <li><a href="{% url explore:likes_start 's' %}">S</a></li>
+  <li><a href="{% url explore:likes_start 't' %}">T</a></li>
+  <li><a href="{% url explore:likes_start 'u' %}">U</a></li>
+  <li><a href="{% url explore:likes_start 'v' %}">V</a></li>
+  <li><a href="{% url explore:likes_start 'w' %}">W</a></li>
+  <li><a href="{% url explore:likes_start 'x' %}">X</a></li>
+  <li><a href="{% url explore:likes_start 'y' %}">Y</a></li>
+  <li><a href="{% url explore:likes_start 'z' %}">Z</a></li>
+  <li><a href="{% url explore:likes_start '~' %}">#</a></li>
 </ul>
 
 <div id="title">
   <h1>Likes</h1>
 </div>
 
-{% url likes_start startswith as page_url %}
+{% url explore:likes_start startswith as page_url %}
 {% include "air_explorer/paginate.html" %}
 
 {% if active %}

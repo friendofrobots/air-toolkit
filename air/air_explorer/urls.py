@@ -14,6 +14,7 @@ urlpatterns = patterns('air_explorer.views',
     url(r'^category/$', 'categories', name='categories'),
     url(r'^category/(\d+)/$', 'category', name='category_start'),
     url(r'^category/(\d+)/(\d+)$', 'category', name='category_page'),
+    url(r'^category/raw/(\d+)/$', 'category_raw', name='category_raw'),
     url(r'^download/$', 'download', name='download'),
     url(r'^$', 'home', name='home'),
 )

@@ -4,7 +4,7 @@
 
 {% block head_extra %}
 <script>
-var started = {% if active and active.task_id %}true;{% else %}false;{% endif %}
+var started = {% if active and active.status.processing %}true;{% else %}false;{% endif %}
 </script>
 <script type="text/javascript" src="/media/js/categories.js"></script>
 {% endblock %}

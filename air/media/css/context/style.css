@@ -352,6 +352,9 @@ button:active, .button:active {
 #category-info {
   border-bottom:1px solid black;
 }
+#category-info .small-list {
+  padding: 0 25px;
+}
 
 #processing {
   margin:12px;
@@ -377,4 +380,84 @@ button:active, .button:active {
   font-weight:bold;
   font-size:2em;
   width:95%
+}
+
+/* survey.html */
+#survey {
+  position: fixed;
+  width: 736px;
+  bottom: 0px;
+  border-top: 2px solid #000;
+  background-color: #FFF;
+  margin: 0 auto;
+  z-index: 20;
+}
+
+
+#survey-bar {
+  color: #AAA;
+  text-align:center;
+}
+#survey-questions {
+  display:none;
+  padding:20px;
+  height:140px;
+}
+#survey .question-text {
+  margin-bottom: 20px;
+}
+#survey .help-text {
+  color: #333;
+  font-size: 50%;
+}
+
+.label {
+  display:inline-block;
+  width:16px;
+  text-align:center;
+}
+.question-radio {
+  display:inline-block;
+}
+.end-label, .label-spacer {
+  display:inline-block;
+  width:120px;
+  text-align:center;
+}
+
+.labels,.radios {
+  width: 400px;
+  margin: 0 auto;
+  text-align:center;
+}
+
+.question {
+  display:none;
+}
+.activeq {
+  display:block;
+}
+
+.survey-nav {
+  position:absolute;
+  padding:2px;
+  border-color: #888;
+  border-style: solid;
+  color: #888;
+  font-weight: 200;
+  display:none;
+}
+#survey-left {
+  top: 0;
+  left: 0;
+  border-width: 0 1px 1px 0;
+}
+#survey-right {
+  top: 0;
+  right: 0;
+  border-width: 0 0 1px 1px;
+}
+
+#survey-spacer {
+  height:20px;
 }

@@ -28,29 +28,24 @@
       <li><div class="label">Decay Rate :</div> <div class="value">{{ category.decayrate }}</div></li>
     </ul>
   </div>
-  <a href="{% url explore:category_raw category.id %}">View Raw Data</a>
 </div>
 
-{% url toolkit:category_start category.id as page_url%}
-{% include "air_explorer/paginate.html" %}
-
-<div id="second-title">
-  <h2>top members</h2>
-  <ul id="top-members" class="object-list">
-    {% for membership in memberships %}
+<div id="subject">
+  <ul id="objects" class="object-list">
+    {% for score in score_page.object_list %}
     <li class="object">
-      <a href="{% url explore:friend_start membership.member.id %}">
+      <a href="{% url explore:like_start score.page.id %}" title="{% for person in score.page.likedBy.all %}{{ person.name }}, {% endfor %}">
 	<div class="image-holder">
-	  <img src="https://graph.facebook.com/{{ membership.member.fbid }}/picture?type=normal" />
+	  <img src="https://graph.facebook.com/{{ score.page.fbid }}/picture?type=normal" />
 	</div>
 	<div class="title-holder">
-	  {{ membership.member.name }}
+	  {{ score.page.name }}
 	</div>
 	<div class="value-bar">
 	  <div class="filled-bar"></div>
 	</div>
 	<div class="value-num">
-	  {{ membership.value }}
+	  {{ score.activity }}
 	</div>
       </a>
     </li>

@@ -338,7 +338,7 @@ def startCategoryCreation(request):
                 category.save()
                 response_data = {
                     "stage":1,
-                    "status": category.getStatus(),
+                    "status": category.status['rounds'],
                     "id": category.id,
                     "name": category.name,
                     }
@@ -371,7 +371,7 @@ def startCreation(request, category_id=None):
             category.task_id = result.task_id
             category.save()
             response_data = {
-                "status": category.getStatus(),
+                "status": category.status['rounds'],
                 "id": category.id,
                 "name": category.name,
                 }
@@ -390,7 +390,7 @@ def categoryStatus(request, category_id=None):
         profile = request.user.profile
         category = Category.objects.get(id=category_id)
         response_data = {
-            "status": category.getStatus() if category.task_id else "completed",
+            "status": category.status['rounds'] if category.task_id else "completed",
             "num_pages": category.scores.filter(value__gt=0).count(),
             "id": category.id,
             "name": category.name,
@@ -458,11 +458,8 @@ def categoryReset(request,category_id):
                 profile.activeCategory
             except Category.DoesNotExist:
                 category = Category.objects.get(id=category_id)
+                category.reset()
                 category.active = profile
-                category.unread = False
-                category.ready = False
-                category.task_id = ""
-                category.status = ""
                 category.save()
         return redirect('explore:categories')
     else:

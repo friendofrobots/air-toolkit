@@ -5,7 +5,7 @@
 {% block head_extra %}
 <script type="text/javascript" src="/media/js/context/category.js"></script>
 <script>
-var started = {% if not category.ready and category.task_id %}true;{% else %}false;{% endif %}
+var started = {% if not category.ready and category.status.processing %}true;{% else %}false;{% endif %}
 var unread = {% if category.unread %}true;{% else %}false;{% endif %}
 var category_id = {{ category.id }};
 </script>
@@ -62,12 +62,14 @@ var category_id = {{ category.id }};
 
 {% if not category.ready %}
 <div id="processing">
-  <div class="button" id="processing-start"{% if category.task_id %}style="display:none;"{% endif %}>
+  <div class="button" id="processing-start"{% if category.status.processing %}style="display:none;"{% endif %}>
     Start Processing
   </div>
   <div id="error" style="display:none;"></div>
-  <div id="processing-status" {% if not category.status %}style="display:none;"{% endif %}>
-    pages in category so far: <span id="pages-so-far">0</span>
+  <div id="processing-status" {% if not category.status.processing %}style="display:none;"{% endif %}>
+    Processing has begun. Hang out here for a bit or explore the rest of the site
+    and we'll let you know when it's done.
+    <p>processing...</p>
     <div id="processing-details" style="display:none;"></div>
   </div>
 </div>
@@ -108,6 +110,10 @@ var category_id = {{ category.id }};
     {% endfor %}
   </ul>
 </div>
+{% endif %}
+
+{% if 1 or user.profile.surveying %}
+{% include "survey/survey.html" %}
 {% endif %}
 
 {% endblock %}
