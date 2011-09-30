@@ -4,9 +4,7 @@
 
 {% block head_extra %}
 <script>
-var mapping = {
-  {{ mapping|safe }}
-}
+var mapping = {{ mapping|safe }};
 </script>
 <script type="text/javascript" src="/media/js/r_profile.js"></script>
 {% endblock %}

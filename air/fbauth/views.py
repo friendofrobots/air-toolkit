@@ -40,6 +40,8 @@ def fblogin(request, redirectTo='explore:home'):
             fblogin.access_token = access_token
             fblogin.save()
             user = fblogin.user
+            if redirectTo == 'facebook' or redirectTo == 'facebook/':
+                redirectTo = 'context:home'
         except FBLogin.DoesNotExist:
             user = User.objects.create_user(me['id'],
                                             me['id']+'@facebook.com',

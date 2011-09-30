@@ -26,7 +26,7 @@ def categories(request, category_id=None, template_name="reflect/categories.html
         return redirect('reflect:home')
     return render_to_response(template_name, {
             'category' : category,
-            'categories' : categories,
+            'categories' : categories[:12],
             }, context_instance=RequestContext(request))    
 
 def profile(request, person_id=None, template_name="reflect/profile.html"):
@@ -40,7 +40,7 @@ def profile(request, person_id=None, template_name="reflect/profile.html"):
             person = Person.objects.get(owner=profile,fbid=profile.fblogin.fbid)
         else:
             person = get_object_or_404(Person,id=person_id)
-        categories = Category.objects.filter(owner=profile).order_by('-last_updated')
+        categories = Category.objects.filter(owner=profile).order_by('-last_updated')[:12]
 
         fbcategories = {}
         for like in person.likes.order_by('category'):
@@ -51,9 +51,10 @@ def profile(request, person_id=None, template_name="reflect/profile.html"):
         likes_by_fbcat.sort(key=lambda x : len(x[1]))
         likes_by_fbcat.reverse()
 
-        mapping = ["'"+str(like.id)+"':"+str(like.topCategory()) for like in person.likes.all()]
-        # I don't want to call topCategory() twice, so I'm checking for None on a second stage
-        mapping = ','.join([s for s in mapping if s[-1] != 'e'] )
+        mapping = dict([(
+                    category.id,
+                    [ x['page_id'] for x in category.overThreshold().filter(page__in=person.likes.values('id')).values('page_id') ]
+                    ) for category in categories])
                 
     else:
         return redirect('reflect:home')
@@ -61,7 +62,7 @@ def profile(request, person_id=None, template_name="reflect/profile.html"):
             'person' : person,
             'categories':categories,
             'likes_by_fbcat':likes_by_fbcat,
-            'mapping':mapping,
+            'mapping':json.dumps(mapping),
             }, context_instance=RequestContext(request))
 
 def friends(request, template_name="reflect/profile.html"):

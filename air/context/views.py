@@ -172,7 +172,7 @@ def category(request, category_id=None, template_name="context/category.html"):
         score_page = paginator.page(1)
 
         try:
-            topmembers = category.memberships.exclude(member__in=category.group.people.all()).order_by('-value')[:6]
+            topmembers = category.memberships.order_by('-value')[:6]
             people = category.group.people.order_by('name')
         except PersonGroup.DoesNotExist:
             topmembers = category.memberships.order_by('-value')[:6]

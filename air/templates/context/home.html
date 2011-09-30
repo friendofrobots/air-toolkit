@@ -9,13 +9,14 @@ var started = {% if profile.stage != 0 and profile.stage < 3 %}true;{% else %}fa
 {% endblock %}
 
 {% block content %}
-<h1>AIR Toolkit Thing</h1>
+<h1>AIR Group Persona Application</h1>
 
 <div id="boxes">
   <div id="intro" class="box">
     <h2>What is this?</h2>
     <p>
-      This is our goal.
+      This is an application meant to help you learn more about your friends by finding patterns in the
+      pages they "Like".
     </p>
   </div>
 
@@ -24,11 +25,11 @@ var started = {% if profile.stage != 0 and profile.stage < 3 %}true;{% else %}fa
     <div id="perms" {% if profile.stage > 0 %}style="display:none;"{% endif %}>
       <p>
 	To do this, we need to download and store some data about you and your friends from Facebook.
-	The likes and interests are the core of the system and the offline access is necessary for the team
-	(me) to identify and fix problems as they show at this stage in the process. The rest of the
+	The likes and interests are the core of the system and the he rest of the
 	data is to help you find groups of friends who share certain properties. The data we can access
 	is a subset of the data you could see by looking at other profiles and we do not collect any information
-	about you that can't be seen by other people visiting your profile.
+	about you that can't be seen by other people visiting your profile. We will also never post anything
+        from your profile.
       </p>
       <p>
 	Specifically, we ask for this data from you and your friends:
@@ -41,7 +42,6 @@ var started = {% if profile.stage != 0 and profile.stage < 3 %}true;{% else %}fa
 	  <li>Work History</li>
 	  <li>Religion & Politics</li>
 	  <li>Relationship Status (single, in relationship, married, it's complicated, etc.)</li>
-	  <li>Offline Access</li>
 	</ul>
       </p>
       <p>
@@ -86,21 +86,35 @@ var started = {% if profile.stage != 0 and profile.stage < 3 %}true;{% else %}fa
       <h2>// Find People //</h2>
     </a>
     <div class="description">
-      Construct a group of friends to see what sort of likes help define their identity.
+      Construct a group of friends to see what sort of likes are most central to that group.
       Grab your friends from elementary school, your family members or your softball team
       and look for trends in their likes.
+    </div>
+    <div class="button-holder">
+      <a class="button" href="{% url context:friends %}">Find People</a>
     </div>
   </div>
   
   <div id="pages-button" class="box vertical-box" {% if profile.stage != 3%}style="display:none"{% endif %}>
     <a href="{% url context:pages %}">
-      <h2>// Search Likes //</h2>
+      <h2>// Find Likes //</h2>
     </a>
     <div class="description">
       Search for a particular Like that you would like to know more about.
       Your favorite band, a brand you identify with or an object whose
       significance you don't understand.
     </div>
+    <div class="button-holder">
+      <a class="button" href="{% url context:pages %}">Find Likes</a>
+    </div>
   </div>
+  {% if user.profile.studying and 0 %}
+  <div id="survey-link" class="box vertical-box" style="height:90px;">
+    Finished? Fill out the survey!
+    <div class="button-holder">
+      <a class="button" href="https://spreadsheets.google.com/spreadsheet/viewform?hl=en_US&formkey=dFQ4Q3Bfdi0xOUhfNWRwNUZOaWZSMEE6MQ#gid=0" target="_blank">Survey</a>
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

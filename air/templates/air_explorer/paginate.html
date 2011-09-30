@@ -62,7 +62,7 @@
 	<span class="seed-id">{{ object.toPage.id }}</span>
 
 	{% else %}
-	{% if object.id in active.seeds.all %}
+	{% if object in active.seeds.all %}
 	<span class="delete-seed">[x]</span>
 	{% else %}
 	<span class="add-seed">[+]</span>

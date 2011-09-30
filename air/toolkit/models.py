@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.db import transaction
 from fbauth.models import FBLogin
 from taggit.managers import TaggableManager
@@ -27,7 +27,7 @@ class Profile(models.Model):
         return self.page_set.annotate(activity=Count('likedBy')).filter(activity__gt=1)
 
     def getActivePeople(self):
-        return self.person_set.filter(likes__in=self.getActivePages()).distinct()
+        return self.person_set.filter(likes__in=self.getActivePages().only('id')).distinct()
 
     def __unicode__(self):
         return self.fblogin.name
@@ -132,6 +132,9 @@ class Category(models.Model):
     def getTopPeople(self,num=4):
         return self.memberships.order_by('-value','member__fbid')[:num]
 
+    def overThreshold(self, thresh=None):
+        return self.scores.filter(value__gt=thresh if thresh else self.threshold)
+
     def reset(self):
         self.unread = False
         self.ready = False
@@ -155,53 +158,48 @@ class Category(models.Model):
         self.status = status
         self.save()
 
-    def getStatus(self):
-        if self.status:
-            status = pickle.loads(str(self.status))
-        else:
-            status = []
-        return status
+    def firedCount(self):
+        return sum(self.status['rounds'])
 
-    def resetScores(self, auto=True):
+    def resetScores(self, auto=True, gt=0):
         if not self.scores.exists():
             pages = self.owner.getActivePages()
             for page in pages:
                 CategoryScore.objects.get_or_create(owner=self.owner,
                                                     category=self,
                                                     page=page)
-        with transaction.commit_on_success():
-            self.scores.all().update(value=0,fired=False)
-            try:
-                scores = self.scores.filter(page__likedBy__in=self.group.people.all()).distinct()
-                act = scores.annotate(activity=Count('page__likedBy'))
-                max_act = max(act,key=lambda x : x.activity).activity
-                mult = self.startvalue/(1.*max_act)
+        self.scores.all().update(value=0,fired=False)
+        try:
+            scores = self.scores.filter(page__likedBy__in=self.group.people.only('id')).distinct()
+            act = scores.annotate(activity=Count('page__likedBy'))
+            max_act = max(act,key=lambda x : x.activity).activity
+            mult = self.startvalue/(1.*max_act)
+            
+            with transaction.commit_on_success():    
                 for act_value,iterscores in groupby(sorted(act,key=lambda a : a.activity),lambda x : x.activity):
-                    self.scores.filter(id__in=act.filter(activity=act_value)).update(value=act_value*mult)
-                if auto:
-                    self.threshold = max(min(self.scores.order_by('-value')[2].value - .01,.2),.15)
-                    self.decayrate = min(.18, self.startvalue * max_act/10)
-                    
-                    self.save()
-            except PersonGroup.DoesNotExist:
-                self.scores.filter(page__in=self.seeds.all()).update(value=self.startvalue)
+                    if act_value > gt:
+                        self.scores.filter(id__in=[sc.id for sc in iterscores]).update(value=act_value*mult)
+            if auto:
+                ordered = self.scores.order_by('-value')
+                self.threshold = max(min(ordered[2].value - .01,.2),.12)
+                self.decayrate = min(.18, self.startvalue * max_act/10)
+                self.save()
+        except PersonGroup.DoesNotExist:
+            self.scores.filter(page__in=self.seeds.only('id')).update(value=self.startvalue)
 
     def calcMemberships(self):
-        with transaction.commit_on_success():
-            if not self.memberships.exists():
-                people = self.owner.getActivePeople()
-                for person in people:
-                    CategoryMembership.objects.get_or_create(owner=self.owner,
-                                                             category=self,
-                                                             member=person)
-        self.memberships.update(value=0)
-        with transaction.commit_on_success():
-            for membership in self.memberships.all():
-                value = 0
-                for score in self.scores.filter(page__in=membership.member.likes.all()):
-                    value += score.value
-                membership.value = value
-                membership.save()
+        if not self.memberships.exists():
+            people = self.owner.getActivePeople()
+            for person in people.filter(likes__categoryScore__in=self.scores.all()).distinct():
+                try:
+                    CategoryMembership.objects.create(owner=self.owner,
+                                                      category=self,
+                                                      member=person)
+                except e:
+                    pass
+        for membership in self.memberships.select_related('member'):
+            agg = self.scores.filter(page__in=membership.member.likes.all()).aggregate(Sum('value'))
+            self.memberships.filter(id=membership.id).update(value=agg['value__sum'])
 
     def __unicode__(self):
         return self.name
@@ -216,6 +214,9 @@ class CategoryScore(models.Model):
     def normalized_value(self):
         return self.value
 
+    class Meta:
+        unique_together = (('owner','category','page'))
+
     def __unicode__(self):
         return self.category.name + ': ' + self.page.name + ' - ' + unicode(self.value)
 
@@ -224,6 +225,9 @@ class CategoryMembership(models.Model):
     category = models.ForeignKey(Category,related_name="memberships")
     member = models.ForeignKey(Person,related_name="categoryMembership")
     value = models.FloatField(default=0.0)
+
+    class Meta:
+        unique_together = (('owner','category','member'))
 
     def __unicode__(self):
         return self.category.name + ': ' + self.member.name + ' - ' + unicode(self.value)

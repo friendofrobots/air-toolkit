@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block head_title %}likes{% endblock %}
+{% block head_title %}Pages{% endblock %}
 
 {% block head_extra %}
 <script>
@@ -53,7 +53,7 @@ var started = {% if active and active.status.processing %}true{% else %}false{% 
 </ul>
 
 <div id="title">
-  <h1>Likes</h1>
+  <h1>Pages</h1>
 </div>
 
 {% url explore:likes_start startswith as page_url %}

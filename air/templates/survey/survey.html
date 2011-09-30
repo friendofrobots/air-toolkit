@@ -7,42 +7,87 @@
     <ul id="questions">
       <li id="q1" class="activeq question">
 	<h3>
-	  Please provide at least 2 labels for the social categories you see represented in these likes
-	</h3>
-	<input type="text"></input>
-	<input type="text"></input>
-	<span style="color:#AAA;">+more</span>
+          Question 1
+        </h3>
+	<div class="question-text">
+          How well does this group of likes represent the likes of any individual person?
+	</div>
+        {% include "survey/radios.html" with left_end="not at all" right_end="perfect match" name="individual" %}
       </li>
-      <li id="q2" class="question" style="height:160px;">
+      <li id="q2" class="question">
 	<h3>
-	  Please choose 2 Pages that are surprising and explain why they are surprising
-	</h3>
-	<div id="object1" style="display:inline-block; width:300px; margin:10px;">
-	  <label for="object1">First Page:</label><input type="text" name="object1"></input>
-	  <textarea style="width:100%"></textarea>
+          Question 2
+        </h3>
+        <div class="question-text">
+          Please fill in the following blanks with descriptive titles of subgroups you
+          would make if you were to divide this set of likes.
 	</div>
-	<div id="object2" style="display:inline-block; width:300px; margin:10px;">
-	  <label for="object2">Second Page:</label><input type="text" name="object2"></input>
-	  <textarea style="width:100%"></textarea>
-	</div>
+	<input type="text" id="subgroup1" name="subgroup1"></input>
+	<input type="text" id="subgroup2" name="subgroup2"></input>
+	<input type="text" id="subgroup3" name="subgroup3"></input>
       </li>
       <li id="q3" class="question">
 	<h3>
-	  Please choose 2 Pages that are obvious and explain why they are surprising
-	</h3>
-	<div id="object1" style="display:inline-block; width:300px; margin:10px;">
-	  <label for="object1">First Page:</label><input type="text" name="object1"></input>
-	  <textarea style="width:100%"></textarea>
+          Question 3
+        </h3>
+        <div class="question-text">
+	  If I showed you this collection of Likes without telling you how it was generated,
+          what would you see as the unifying factor? (It's okay if it's the same or different
+          than what we actually used)
 	</div>
-	<div id="object2" style="display:inline-block; width:300px; margin:10px;">
-	  <label for="object2">Second Page:</label><input type="text" name="object2"></input>
-	  <textarea style="width:100%"></textarea>
-	</div>
+        <input id="unifying" type="text" name="unifying"></input>
+      </li>
       <li id="q4" class="question">
 	<h3>
-	  Any further comments about the category?
-	</h3>
-	<textarea style="width:500px; height:80px;"></textarea>
+          Question 4
+        </h3>
+        <div class="question-text">
+	  Are there any likes you are surprised about? Please choose up to 2 and describe
+          what about them you find surprising.
+	</div>
+	<div id="surprise1">
+          <div id="surprise1-image" class="surprise-image image-holder">
+            <img></img>
+          </div>
+          <input type="text" id="surprise1-id" name="surprise1-id" style="display:none"></input>
+	  <textarea id="surprise1-describe" class="surprise-describe"></textarea>
+	</div>
+	<div id="surprise2">
+          <div id="surprise2-image" class="surprise-image image-holder">
+            <img></img>
+          </div>
+          <input type="text" id="surprise2-id" name="surprise2-id" style="display:none"></input>
+	  <textarea id="surprise2-describe" class="surprise-describe"></textarea>
+	</div>
+      </li>
+      <li id="q5" class="question">
+	<h3>
+          Question 5
+        </h3>
+	<div class="question-text">
+          If you were hiring an actor to play someone in this group of people,
+          how useful would this list be in describing what sort of persona they should take?
+	</div>
+        {% include "survey/radios.html" with left_end="not at all" right_end="extremely useful" name="actor" %}
+      </li>
+      <li id="q6" class="question">
+	<h3>
+          Question 6
+        </h3>
+	<div class="question-text">
+          How much have you learned from this group of likes that you didn't know or didn't realize
+          about the people before?
+	</div>
+        {% include "survey/radios.html" with left_end="absolutely nothing" right_end="I learned a lot" name="learned" %}
+      </li>
+      <li id="q7" class="question">
+	<h3>
+          Question 7
+        </h3>
+        <div class="question-text">
+	  Do you have any further thoughts about the category?
+	</div>
+	<textarea id="further-thoughts"></textarea>
       </li>
     </ul>
     <div id="survey-left" class="fakelink survey-nav">Previous</div>

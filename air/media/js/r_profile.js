@@ -4,10 +4,8 @@ $(document).ready(function() {
 	$('.active').removeClass('active');
 	$(this).addClass('active');
 	$(".filter").show();
-	for (var key in mapping) {
-	    if (mapping[key] == cat_id) {
-		$("#"+key).find('.filter').hide();
-	    }
+	for (var i in mapping[cat_id]) {
+	    $("#"+mapping[cat_id][i]).find('.filter').hide();
 	}
     });
 });

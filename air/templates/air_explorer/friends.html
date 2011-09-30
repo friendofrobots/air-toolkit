@@ -11,12 +11,12 @@
 
 <div class="page-nav">
   <div class="left-nav">
-    {% if paginate.has_other_pages %}<a href="{% url friends_start %}1">first</a>{% endif %}
-    {% if paginate.has_previous %}<a href="{% url friends_start %}{{ paginate.previous_page_number }}">prev</a>{% endif %}
+    {% if paginate.has_other_pages %}<a href="{% url explore:friends_start %}1">first</a>{% endif %}
+    {% if paginate.has_previous %}<a href="{% url explore:friends_start %}{{ paginate.previous_page_number }}">prev</a>{% endif %}
   </div>
   <div class="right-nav">
-    {% if paginate.has_next %}<a href="{% url friends_start %}{{ paginate.next_page_number }}">next</a>{% endif %}
-    {% if paginate.has_other_pages %}<a href="{% url friends_start %}{{ paginate.paginator.num_pages }}">last</a>{% endif %}
+    {% if paginate.has_next %}<a href="{% url explore:friends_start %}{{ paginate.next_page_number }}">next</a>{% endif %}
+    {% if paginate.has_other_pages %}<a href="{% url explore:friends_start %}{{ paginate.paginator.num_pages }}">last</a>{% endif %}
   </div>
 </div>
 
@@ -24,7 +24,7 @@
   <ul id="objects" class="object-list">
     {% for object in paginate.object_list %}
     <li class="object">
-      <a href="{% url friend_start object.id %}">
+      <a href="{% url explore:friend_start object.id %}">
 	<div class="image-holder">
 	  <img src="https://graph.facebook.com/{{ object.fbid }}/picture?type=normal" />
 	</div>
@@ -39,12 +39,12 @@
 
 <div class="page-nav">
   <div class="left-nav">
-    {% if paginate.has_other_pages %}<a href="{% url friends_start %}1">first</a>{% endif %}
-    {% if paginate.has_previous %}<a href="{% url friends_start %}{{ paginate.previous_page_number }}">prev</a>{% endif %}
+    {% if paginate.has_other_pages %}<a href="{% url explore:friends_start %}1">first</a>{% endif %}
+    {% if paginate.has_previous %}<a href="{% url explore:friends_start %}{{ paginate.previous_page_number }}">prev</a>{% endif %}
   </div>
   <div class="right-nav">
-    {% if paginate.has_next %}<a href="{% url friends_start %}{{ paginate.next_page_number }}">next</a>{% endif %}
-    {% if paginate.has_other_pages %}<a href="{% url friends_start %}{{ paginate.paginator.num_pages }}">last</a>{% endif %}
+    {% if paginate.has_next %}<a href="{% url explore:friends_start %}{{ paginate.next_page_number }}">next</a>{% endif %}
+    {% if paginate.has_other_pages %}<a href="{% url explore:friends_start %}{{ paginate.paginator.num_pages }}">last</a>{% endif %}
   </div>
 </div>
 

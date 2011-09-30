@@ -10,7 +10,7 @@ FB_ID, FB_KEY, FB_SECRET, FB_PERMS = secrets.getFBSecrets()
 
 djcelery.setup_loader()
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -109,7 +109,7 @@ TEMPLATE_DIRS = (
     os.path.join(PROJECT_ROOT, "templates"),
 )
 
-INTERNAL_IPS = ('127.0.0.1','18.181.3.122')#,'24.61.9.221','128.31.33.3')
+INTERNAL_IPS = ('127.0.0.1')
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -125,6 +125,7 @@ INSTALLED_APPS = (
     'fbauth',
     'toolkit',
     'air_explorer',
+    'survey',
     'reflect',
     'context',
     'debug_toolbar',

@@ -41,9 +41,7 @@ def dlUser(profile_id,graphapi,fbid,name):
 
         likes = graphapi.get_connections(fbid,"likes")['data']
         for like in likes:
-            if not 'name' in like:
-                print 'like with no name: ',like
-            else:
+            try:
                 if len(like['name']) > 180:
                     like['name'] = like['name'][:180]
                 page, created = conc_get_or_create(
@@ -54,7 +52,18 @@ def dlUser(profile_id,graphapi,fbid,name):
                         'name':like['name'],
                         'category':like['category']
                         })
-                person.likes.add(page)
+            except KeyError:
+                print 'like with no missing attribute: ',like
+                like = graphapi.get_object(like['id'])
+                page, created = conc_get_or_create(
+                    Page,
+                    owner=profile,
+                    fbid=like['id'],
+                    defaults={
+                        'name':like['name'],
+                        'category':like['category']
+                        })
+            person.likes.add(page)
 
         interests = graphapi.get_connections(fbid,"interests")['data']
         for interest in interests:
@@ -212,8 +221,7 @@ def dlInfo(graphapi,profile,person):
 def checkTaskSet(result,profile_id):
     if result.ready():
         profile = Profile.objects.get(id=profile_id)
-        profile.page_set.annotate(activity=Count('likedBy')).exclude(activity__gt=1)
-        profile.person_set.exclude(likes__in=profile.page_set.all()).distinct()
+        pages = profile.getActivePages()
         numpeople = profile.getActivePeople().count()
 
         subtasks = [calcPMIs.subtask((profile_id,page.id,numpeople)) for page in pages]
@@ -228,6 +236,7 @@ def checkTaskSet(result,profile_id):
 
 def testPMIs(profile_id):
     profile = Profile.objects.get(id=profile_id)
+    pages = profile.getActivePages()
     numpeople = profile.getActivePeople().count()
 
     subtasks = [calcPMIs.subtask((profile_id,page.id,numpeople)) for page in pages]
@@ -254,13 +263,17 @@ def calcPMIs(profile_id, page_id1, numpeople):
         fromPage = Page.objects.get(id=page_id1)
         likeCount = fromPage.likedBy.count()
         with transaction.commit_on_success():
-            for toPage in pages.filter(likedBy__in=fromPage.likedBy.all()):
-                intersect = fromPage.likedBy.filter(id__in=toPage.likedBy.all()).distinct().count()
-                PMI.objects.get_or_create(
-                    owner=profile,
-                    fromPage=fromPage,
-                    toPage=toPage,
-                    value=math.log(1.*intersect*numpeople/(likeCount*toPage.likedBy.count()),2))
+            filtered = pages.filter(likedBy__in=fromPage.likedBy.values('id'))
+            for toPage in filtered.annotate(distinct_count=Count('likedBy',distinct=True)):
+                intersect = toPage.activity/toPage.distinct_count
+                try:
+                    PMI.objects.create(
+                        owner=profile,
+                        fromPage=fromPage,
+                        toPage=toPage,
+                        value=math.log(1.*(intersect)*numpeople/(likeCount*toPage.distinct_count),2))
+                except:
+                    pass
     except Exception, exc:
         print profile_id, page_id1
         raise exc

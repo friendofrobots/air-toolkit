@@ -4,7 +4,7 @@
     {% for seed in active.seeds.all %}
     <li id="seed-{{ seed.id }}">
       <h3>
-	<a href="{% url like_start seed.id %}">
+	<a href="{% url explore:like_start seed.id %}">
           {{ seed.name }}
 	</a>
 	{% if not active.status.processing %}
@@ -40,7 +40,7 @@
       {{ active.name }} Created.
     </p>
     <p>
-      <a href="{% url categories %}" class="button">View Categories</a>
+      <a href="{% url explore:categories %}" class="button">View Categories</a>
     </p>
   </div>
 </div>

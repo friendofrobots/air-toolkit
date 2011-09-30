@@ -208,7 +208,6 @@ a, .fakelink {
 /* Survey */
 #survey {
   position: absolute;
-  height: 155px;
   width: 736px;
   bottom: 0px;
   border: 2px solid #000;
@@ -218,7 +217,7 @@ a, .fakelink {
 }
 
 #survey #questions {
-  margin-left: 80px;
+  padding:10px 20px;
 }
 #survey .question-text {
   margin-bottom: 20px;
@@ -304,3 +303,31 @@ a, .fakelink {
   right: 0;
   border-width: 0 0 0 1px;
 }
+
+#q2 input {
+  width:200px;
+}
+#q3 input {
+  width:500px;
+}
+#q4 #surprise1, #q4 #surprise2 {
+  display:inline-block;
+  width:340px;
+}
+#q4 .surprise-image {
+  width:100px;
+  border: 1px solid #AAA;
+  display:inline-block;
+  vertical-align:top;
+}
+#q4 .surprise-describe {
+  height:96px;
+  width:200px
+}
+#q4 .selected {
+  border:2px solid #00F;
+}
+#q7 #further-thoughts {
+  width:640px;
+  height:100px;
+} 

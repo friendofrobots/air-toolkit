@@ -228,7 +228,7 @@ button:hover, .button:hover {
   border: 1px solid black;
 }
 #category-info ul {
-  width:200px;
+  width:195px;
   margin:0 20px;
   display: inline-block;
   vertical-align:top;
@@ -293,4 +293,31 @@ button:hover, .button:hover {
   border: none;
   font-size: 50%;
   vertical-align:text-top;
+}
+
+/* survey results */
+#results .question-text {
+  background-color: #DDD;
+  padding:4px;
+  margin:6px 0;
+}
+.result-answer {
+  margin:10px;
+  vertical-align:top;
+}
+
+.result-question #surprise1, .result-question #surprise2 {
+  display:inline-block;
+  width:340px;
+}
+.result-answer .surprise-image {
+  width:100px;
+  border: 1px solid #AAA;
+  display:inline-block;
+  vertical-align:top;
+}
+.result-answer .surprise-describe {
+  height:96px;
+  width:200px;
+  display:inline-block;
 }

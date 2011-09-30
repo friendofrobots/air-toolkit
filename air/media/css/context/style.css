@@ -31,7 +31,7 @@ button, .button {
   font-weight: bold;
   font-size:100%;
   padding:6px;
-  display:block;
+  display:inline-block;
   cursor:pointer;
 }
 button:active, .button:active {
@@ -104,6 +104,7 @@ button:active, .button:active {
   width:296px;
   font-size:80%;
   background-color:#FFF;
+  z-index:20;
 }
 #notifications li {
   height:15px;
@@ -156,14 +157,27 @@ button:active, .button:active {
 }
 
 /* home.html */
+#boxes {
+  margin:0 auto;
+  width: 716px;
+}
+
 .box {
   border: 2px solid black;
   margin: 4px;
   padding: 12px;
   width: 678px;
+  position:relative;
 }
 .box h2 {
   margin: 4px;
+}
+.box .button-holder {
+  text-align:center;
+  margin:20px 0;
+  position:absolute;
+  bottom:10px;
+  width:319px;
 }
 
 .vertical-box {
@@ -286,7 +300,6 @@ button:active, .button:active {
   bottom: 36px;
   right:20px;
   background-color: #FFF;
-  border: 2px solid black;
   font-size:150%;
 }
 
@@ -340,7 +353,10 @@ button:active, .button:active {
   text-align:center;
   background-color:#DDD;
 }
-
+#category-objects .object-list, #top-members .object-list {
+  margin:0 auto;
+  width:660px;
+}
 .small-object {
   border: 1px solid black;
   width:50px;
@@ -393,15 +409,14 @@ button:active, .button:active {
   z-index: 20;
 }
 
-
 #survey-bar {
   color: #AAA;
   text-align:center;
 }
 #survey-questions {
   display:none;
-  padding:20px;
-  height:140px;
+  padding:10px 20px;
+  height:200px;
 }
 #survey .question-text {
   margin-bottom: 20px;
@@ -409,6 +424,10 @@ button:active, .button:active {
 #survey .help-text {
   color: #333;
   font-size: 50%;
+}
+
+#survey h3 {
+  margin-top:0;
 }
 
 .label {
@@ -421,12 +440,12 @@ button:active, .button:active {
 }
 .end-label, .label-spacer {
   display:inline-block;
-  width:120px;
+  width:140px;
   text-align:center;
 }
 
 .labels,.radios {
-  width: 400px;
+  width: 450px;
   margin: 0 auto;
   text-align:center;
 }
@@ -461,3 +480,31 @@ button:active, .button:active {
 #survey-spacer {
   height:20px;
 }
+
+#q2 input {
+  width:200px;
+}
+#q3 input {
+  width:500px;
+}
+#q4 #surprise1, #q4 #surprise2 {
+  display:inline-block;
+  width:340px;
+}
+#q4 .surprise-image {
+  width:100px;
+  border: 1px solid #AAA;
+  display:inline-block;
+  vertical-align:top;
+}
+#q4 .surprise-describe {
+  height:96px;
+  width:200px
+}
+#q4 .selected {
+  border:2px solid #00F;
+}
+#q7 #further-thoughts {
+  width:640px;
+  height:100px;
+} 

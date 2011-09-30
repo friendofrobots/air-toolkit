@@ -9,9 +9,12 @@
 
 <div id="title">
   <h1>Find Page</h1>
+  {% if toppages %}
   <input id="searchbox" type="text"></input>
+  {% endif %}
 </div>
 
+{% if toppages %}
 <div id="thinking-cover">
   thinking...
 </div>
@@ -48,4 +51,14 @@
   <input id="page-redirect" type="text" value="context:category" name="redirect"></input>
   <input id="page-submit" type="submit" value="Start"></input>
 </form>
+{% else %}
+<div id="nodata" class="box">
+  <p>
+    We're not going to be able to do much without your data. Come back when the download is complete.
+  </p>
+  <div class="button" id="return" style="display:inline-block">
+    <a href="{% url context:home %}">Go Back</a>
+  </div>
+</div>
+{% endif %}
 {% endblock %}

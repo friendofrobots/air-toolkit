@@ -6,6 +6,7 @@ function update(data){
 	clearInterval(interval_id);
     }
     if (data['stage'] > 0) {
+	$('#starting').show();
 	$('#stage1').show();
 	$('#prepare1').hide();
 	$('#working1').css('display','inline-block');
@@ -77,6 +78,7 @@ $(document).ready(function() {
 	$(this).hide();
 	$('#perms').hide();
 	$('#show-perms').show();
+	$('#starting').show();
 	$('#stage1').show();
 	$('#prepare1').css('display','inline-block');
         $.post('/t/download/start/',function(data) {

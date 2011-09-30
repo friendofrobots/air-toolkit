@@ -86,6 +86,9 @@ var category_id = {{ category.id }};
 	<div class="title-holder">
 	  {{ score.page.name }}
 	</div>
+        <div class="page-id">
+          {{ score.page.id }}
+        </div>
       </a>
     </li>
     {% endfor %}
@@ -95,7 +98,7 @@ var category_id = {{ category.id }};
 <div id="top-members">
   <hr>
   <h3>Top Members</h3>
-  <ul id="members" class="object_list">
+  <ul id="members" class="object-list">
     {% for membership in topmembers %}
     <li class="object">
       <a href="http://www.facebook.com/profile.php?id={{ membership.member.fbid }}" target="_blank">
@@ -112,7 +115,7 @@ var category_id = {{ category.id }};
 </div>
 {% endif %}
 
-{% if 1 or user.profile.surveying %}
+{% if user.profile.studying %}
 {% include "survey/survey.html" %}
 {% endif %}
 

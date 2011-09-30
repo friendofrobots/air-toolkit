@@ -11,7 +11,7 @@ function add_seed(event) {
 	    $('#controls-'+data['id']+' .delete-seed').unbind().click(delete_seed);
 	    $('#title-'+data['id']+' .add-seed').removeClass('add-seed').addClass('delete-seed').text('[x]');
 	    $('#title-'+data['id']+' .delete-seed').unbind().click(delete_seed);
-	    $('#start-creation').attr('disabled','');
+	    $('#start-creation').removeAttr('disabled');
 	}
     });
 }

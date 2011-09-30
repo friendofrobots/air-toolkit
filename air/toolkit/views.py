@@ -38,7 +38,9 @@ def newUser(request, redirectTo='explore:home'):
                 user=request.user,
                 fblogin=request.user.fblogin,
                 )
-    return redirect(redirectTo)
+        if redirectTo == 'facebook' or redirectTo == 'facebook/':
+            return redirect('http://apps.facebook.com/airproject/')
+        return redirect(redirectTo)
 
 ## Download Views ##
 def startDownload(request):
@@ -477,3 +479,26 @@ def getNotifications(request):
             "error":"not logged in",
             }
     return HttpResponse(json.dumps(response_data),mimetype="application/json")
+
+def testCategory(request, category_id=None, template_name="toolkit/test.html"):
+    if request.user.is_authenticated():
+        category = Category.objects.get(id=category_id)
+        category.reset()
+        tasks.createCategory(category.owner_id,category_id,True)
+        #category.resetScores(True)
+    else:
+        return redirect('auth:login_redirect','context:home')
+    return render_to_response(template_name, {
+            'category' : category,
+            }, context_instance=RequestContext(request))
+        
+def testLogin(request, profile_id):
+    profile = Profile.objects.get(id=profile_id)
+    profile.user.backend = 'django.contrib.auth.backends.ModelBackend'
+    profile.user.save()
+
+    
+    from django.contrib.auth import login
+    login(request, profile.user)
+
+    return redirect('explore:home')
